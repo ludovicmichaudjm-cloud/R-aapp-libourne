@@ -25,12 +25,10 @@
 const SUPABASE_URL  = 'https://mvcidplmvqaokftoszex.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12Y2lkcGxtdnFhb2tmdG9zemV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzk4MTUsImV4cCI6MjA4ODk1NTgxNX0.MiQoOve99hax2yEDq8cVpnD3GoK19cp6nb1I5xDGDzY';
 
-const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
   auth: { persistSession: true, autoRefreshToken: true },
   realtime: { params: { eventsPerSecond: 10 } }
 });
-// Alias global pour compatibilité avec tout le code
-const supabaseClient = sbClient;
 
 let currentUser     = null;
 let userRole        = null;
@@ -512,7 +510,8 @@ console.log('✅ Supabase initialisé');
       .sidebar{display:none}.main{padding:20px 16px}
       .stats-row{grid-template-columns:repeat(2,1fr)}
       .modules-grid,.ext-grid,.admin-panel-grid,.doc-grid{grid-template-columns:1fr}
-      .tabs{width:100%;overflow-x:auto}
+      .tabs{width:100%;overflow-x:visible;flex-wrap:wrap;justify-content:center;gap:4px}
+      .tab-btn{flex:1;min-width:calc(50% - 8px);text-align:center;font-size:12px;padding:6px 8px}
       .viewer-sidebar{display:none}.viewer-slide,.pdf-page{max-width:100%}
       .slide-body{padding:20px 22px}.slide-header{padding:20px 22px 16px}
       .pdf-page{padding:28px 22px}.slide-two-col{grid-template-columns:1fr}
@@ -1872,7 +1871,7 @@ async function startUpload() {
         };
         
         // Sauvegarder dans Firestore
-        const { data: docRef, error: addErr } = await sbClient.from('documents').insert(docData).select().single(); if(addErr) throw addErr;
+        const { data: docRef, error: addErr } = await supabase.from('documents').insert(docData).select().single(); if(addErr) throw addErr;
         
         // Log activité
         await logActivity('upload_document', {
@@ -2248,7 +2247,7 @@ async function loadDocumentsList() {
     const docsList = document.getElementById('docs-list');
     docsList.innerHTML = '<div class="docs-loading">⏳ Chargement...</div>';
     
-    let sbQuery = sbClient.from('documents').select('*').order('date_creation', { ascending: false });
+    let sbQuery = supabase.from('documents').select('*').order('date_creation', { ascending: false });
     
     // Si admin (pas super admin), ne voir que ses docs
     if (userRole === 'admin') {
@@ -2353,7 +2352,7 @@ async function viewDocument(docId) {
   if (!doc) return;
   
   // Incrémenter vues
-  await sbClient.from('documents').update({
+  await supabase.from('documents').update({
     nb_vues: (data.nb_vues||0)+1
   });
   
@@ -2396,7 +2395,7 @@ async function saveDocChanges() {
       .map(t => t.trim())
       .filter(t => t);
     
-    await sbClient.from('documents').update({
+    await supabase.from('documents').update({
       titre,
       description: document.getElementById('edit-doc-description').value.trim(),
       tags,
@@ -2430,7 +2429,7 @@ async function deleteDocument(docId) {
     await storage.ref(doc.storagePath).delete();
     
     // Supprimer de Firestore
-    await sbClient.from('documents').delete().eq('id', docId);
+    await supabase.from('documents').delete().eq('id', docId);
     
     await logActivity('delete_document', { docId, titre: doc.titre });
     
@@ -2742,7 +2741,7 @@ async function loadStats() {
     setEl('stat-total-downloads', docs.reduce((s, d) => s + (d.nb_telechargements || 0), 0).toLocaleString('fr-FR'));
 
     if (userRole === 'superadmin') {
-      const { data: users } = await sbClient.from('profiles').select('id').eq('actif', true);
+      const { data: users } = await supabase.from('profiles').select('id').eq('actif', true);
       setEl('stat-total-users', users?.length || 0);
     }
 
@@ -2818,7 +2817,7 @@ function loadRecentDocuments(docs) {
 // Activité récente
 async function loadRecentActivity() {
   try {
-    const { data: logs } = await sbClient.from('activity_logs')
+    const { data: logs } = await supabase.from('activity_logs')
       .select('*').order('created_at', { ascending: false }).limit(10);
     const container = document.getElementById('stats-activity');
     if (!container) return;
@@ -3077,7 +3076,7 @@ async function loadUsersList() {
     usersListEl.innerHTML = '<div class="users-loading">⏳ Chargement...</div>';
     
     
-    const { data: usersLoaded, error: usersLoadErr } = await sbClient.from('profiles').select('*').order('nom'); if(usersLoadErr) throw usersLoadErr; allUsers = (usersLoaded||[]).map(u=>({uid:u.id,...u}));
+    const { data: usersLoaded, error: usersLoadErr } = await supabase.from('profiles').select('*').order('nom'); if(usersLoadErr) throw usersLoadErr; allUsers = (usersLoaded||[]).map(u=>({uid:u.id,...u}));
     
     renderUsers(allUsers);
     
@@ -3190,7 +3189,7 @@ async function saveUser() {
     if (isEditMode) {
       // Mise à jour
       const uid = document.getElementById('edit-user-id').value;
-      await sbClient.from('profiles').update({
+      await supabase.from('profiles').update({
         nom,
         service,
         role
@@ -3237,7 +3236,7 @@ OU configurez une Cloud Function pour automatiser ceci.`);
 // Activer/désactiver utilisateur
 async function toggleUserStatus(uid, activate) {
   try {
-    await sbClient.from('profiles').update({
+    await supabase.from('profiles').update({
       actif: activate
     });
     
@@ -3260,7 +3259,7 @@ async function deleteUser(uid) {
   }
   
   try {
-    await sbClient.from('profiles').delete().eq('id', uid);
+    await supabase.from('profiles').delete().eq('id', uid);
     
     showToast('✅ Document utilisateur supprimé (supprimez aussi dans Auth)', 'success');
     loadUsersList();
@@ -3967,7 +3966,7 @@ tick();setInterval(tick,1000);
 
 <!-- JavaScript -->
 <script>
-allUsers = [];
+let allUsers = [];
 let isEditMode = false;
 
 // Charger la liste des utilisateurs
@@ -3981,7 +3980,7 @@ async function loadUsersList() {
     const usersListEl = document.getElementById('users-list');
     usersListEl.innerHTML = '<div class="users-loading">⏳ Chargement...</div>';
     
-    const { data: usersLoaded, error: usersLoadErr } = await sbClient.from('profiles').select('*').order('nom'); if(usersLoadErr) throw usersLoadErr; allUsers = (usersLoaded||[]).map(u=>({uid:u.id,...u}));
+    const { data: usersLoaded, error: usersLoadErr } = await supabase.from('profiles').select('*').order('nom'); if(usersLoadErr) throw usersLoadErr; allUsers = (usersLoaded||[]).map(u=>({uid:u.id,...u}));
     
     renderUsers(allUsers);
     
@@ -4094,7 +4093,7 @@ async function saveUser() {
     if (isEditMode) {
       // Mise à jour
       const uid = document.getElementById('edit-user-id').value;
-      await sbClient.from('profiles').update({
+      await supabase.from('profiles').update({
         nom,
         service,
         role
@@ -4141,7 +4140,7 @@ OU configurez une Cloud Function pour automatiser ceci.`);
 // Activer/désactiver utilisateur
 async function toggleUserStatus(uid, activate) {
   try {
-    await sbClient.from('profiles').update({
+    await supabase.from('profiles').update({
       actif: activate
     });
     
@@ -4164,7 +4163,7 @@ async function deleteUser(uid) {
   }
   
   try {
-    await sbClient.from('profiles').delete().eq('id', uid);
+    await supabase.from('profiles').delete().eq('id', uid);
     
     showToast('✅ Document utilisateur supprimé (supprimez aussi dans Auth)', 'success');
     loadUsersList();
@@ -4192,7 +4191,7 @@ console.log('✅ Gestionnaire d\'utilisateurs chargé');
 // ═══ SYSTÈME D'AUTHENTIFICATION & RÔLES ═══
 
 // Observer l'état de connexion (remplace auth.onAuthStateChanged)
-sbClient.auth.onAuthStateChange(async (event, session) => {
+supabase.auth.onAuthStateChange(async (event, session) => {
   if (session?.user) {
     currentUser = session.user;
     await loadUserProfile(session.user.id);
@@ -4242,7 +4241,7 @@ async function loadUserProfile(uid) {
   } catch (error) {
     console.error('Erreur chargement profil:', error);
     showToast('Erreur de chargement du profil', 'error');
-    await sbClient.auth.signOut();
+    await supabase.auth.signOut();
   }
 }
 
@@ -4250,7 +4249,7 @@ async function loadUserProfile(uid) {
 async function supabaseLogin(email, password) {
   try {
     showToast('Connexion en cours...', 'info');
-    const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       let message = 'Erreur de connexion';
@@ -4275,7 +4274,7 @@ async function supabaseLogout() {
       await logActivity('logout', { userId: currentUser.id });
     }
     cleanupNotifications();
-    await sbClient.auth.signOut();
+    await supabase.auth.signOut();
     showToast('Déconnexion réussie', 'success');
   } catch (error) {
     console.error('Erreur déconnexion:', error);
@@ -4374,7 +4373,7 @@ function showApp() {
 // Log d'activité
 async function logActivity(action, details = {}) {
   try {
-    await sbClient.from('activity_logs').insert({
+    await supabase.from('activity_logs').insert({
       action,
       details,
       user_id:    currentUser?.id    || null,
@@ -4507,7 +4506,7 @@ function renderNotificationsDropdown(notifs) {
 // Créer une notification
 async function createNotification(data) {
   try {
-    const { error } = await sbClient.from('notifications').insert({
+    const { error } = await supabase.from('notifications').insert({
       type:         data.type         || 'info',
       titre:        data.titre,
       message:      data.message,
@@ -4585,7 +4584,7 @@ function formatNotificationTime(isoString) {
 // Nettoyer les listeners
 function cleanupNotifications() {
   if (realtimeChannel) {
-    sbClient.removeChannel(realtimeChannel);
+    supabase.removeChannel(realtimeChannel);
     realtimeChannel = null;
   }
 }
@@ -4702,10 +4701,10 @@ async function openPdfViewer(docId) {
   let url = PDF_URLS[docId];
   if(!url && currentUser) {
     try {
-      const { data } = await sbClient.from('documents').select('storage_path,titre')
+      const { data } = await supabase.from('documents').select('storage_path,titre')
         .ilike('titre','%'+docId.replace(/-/g,' ')+'%').limit(1).maybeSingle();
       if(data?.storage_path) {
-        const { data: u } = sbClient.storage.from(STORAGE_BUCKET).getPublicUrl(data.storage_path);
+        const { data: u } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(data.storage_path);
         url = u?.publicUrl;
       }
     } catch(e) {}
@@ -4970,10 +4969,10 @@ async function simulateDownload(){
   if(currentDoc && currentUser){
     // Chercher le fichier dans Supabase
     try {
-      const { data } = await sbClient.from('documents').select('storage_path,titre,telechargeable')
+      const { data } = await supabase.from('documents').select('storage_path,titre,telechargeable')
         .ilike('titre','%'+currentDoc.title.substring(0,20)+'%').limit(1).maybeSingle();
       if(data?.storage_path && data.telechargeable){
-        const { data: url } = sbClient.storage.from(STORAGE_BUCKET).getPublicUrl(data.storage_path);
+        const { data: url } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(data.storage_path);
         if(url?.publicUrl){ const a=document.createElement('a');a.href=url.publicUrl;a.download=currentDoc.title;a.click(); return; }
       }
     } catch(e){}
@@ -5218,7 +5217,7 @@ tick();setInterval(tick,1000);
 
 <!-- JavaScript -->
 <script>
-allUsers = [];
+let allUsers = [];
 let isEditMode = false;
 
 // Charger la liste des utilisateurs
@@ -5231,7 +5230,7 @@ async function loadUsersList() {
   try {
     const usersListEl = document.getElementById('users-list');
     if(usersListEl) usersListEl.innerHTML = '<div class="users-loading">⏳ Chargement...</div>';
-    const { data, error } = await sbClient.from('profiles').select('*').order('nom');
+    const { data, error } = await supabase.from('profiles').select('*').order('nom');
     if(error) throw error;
     allUsers = (data || []).map(u => ({...u, uid: u.id}));
     
@@ -5343,7 +5342,7 @@ async function saveUser() {
   try {
     if (isEditMode) {
       const uid = document.getElementById('edit-user-id').value;
-      const { error } = await sbClient.from('profiles').update({ nom, role }).eq('id', uid);
+      const { error } = await supabase.from('profiles').update({ nom, role }).eq('id', uid);
       if(error) throw error;
       
       showToast('✅ Utilisateur modifié', 'success');
@@ -5385,7 +5384,7 @@ OU configurez une Cloud Function pour automatiser ceci.`);
 // Activer/désactiver utilisateur
 async function toggleUserStatus(uid, activate) {
   try {
-    const { error } = await sbClient.from('profiles').update({ actif: activate }).eq('id', uid);
+    const { error } = await supabase.from('profiles').update({ actif: activate }).eq('id', uid);
     if(error) throw error;
     
     showToast(`✅ Utilisateur ${activate ? 'activé' : 'désactivé'}`, 'success');
@@ -5407,7 +5406,7 @@ async function deleteUser(uid) {
   }
   
   try {
-    const { error } = await sbClient.from('profiles').delete().eq('id', uid);
+    const { error } = await supabase.from('profiles').delete().eq('id', uid);
     if(error) throw error;
     
     showToast('✅ Document utilisateur supprimé (supprimez aussi dans Auth)', 'success');
@@ -5485,7 +5484,7 @@ function formatFileSize(bytes) {
 // Charger les documents depuis Supabase
 async function loadDocumentsList(categorie) {
   try {
-    let query = sbClient.from('documents').select('*').eq('actif', true);
+    let query = supabase.from('documents').select('*').eq('actif', true);
     if (categorie) query = query.eq('categorie', categorie);
     query = query.order('date_creation', { ascending: false });
     const { data, error } = await query;
@@ -5509,7 +5508,7 @@ async function openDoc(docId) {
     if (error) throw error;
 
     // Log de consultation
-    await sbClient.from('activity_logs').insert({
+    await supabase.from('activity_logs').insert({
       action: 'view_document',
       user_id: currentUser?.id || null,
       user_email: currentUser?.email || 'anonymous',
@@ -5517,12 +5516,12 @@ async function openDoc(docId) {
     });
 
     // Incrémenter le compteur de vues
-    await sbClient.from('documents')
+    await supabase.from('documents')
       .update({ nb_vues: (data.nb_vues || 0) + 1 })
       .eq('id', docId);
 
     if (data.storage_path) {
-      const { data: urlData } = sbClient.storage
+      const { data: urlData } = supabase.storage
         .from(STORAGE_BUCKET)
         .getPublicUrl(data.storage_path);
       if (urlData?.publicUrl) {
@@ -5557,7 +5556,7 @@ async function startUpload(file, categorie, metadata = {}) {
     const storagePath = `${categorie}/${timestamp}_${safeName}`;
 
     // Upload vers Storage
-    const { error: uploadError } = await sbClient.storage
+    const { error: uploadError } = await supabase.storage
       .from(STORAGE_BUCKET)
       .upload(storagePath, file, {
         contentType: file.type,
@@ -5613,9 +5612,9 @@ async function startUpload(file, categorie, metadata = {}) {
 async function loadStats() {
   try {
     const [docsResult, usersResult, logsResult] = await Promise.all([
-      sbClient.from('documents').select('id, categorie, nb_vues, date_creation').eq('actif', true),
-      sbClient.from('profiles').select('id, role, actif'),
-      sbClient.from('activity_logs').select('id, action, created_at').gte('created_at',
+      supabase.from('documents').select('id, categorie, nb_vues, date_creation').eq('actif', true),
+      supabase.from('profiles').select('id, role, actif'),
+      supabase.from('activity_logs').select('id, action, created_at').gte('created_at',
         new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
     ]);
 
@@ -5683,7 +5682,7 @@ async function deleteUser(userId) {
   if (!hasPermission('delete_all')) { showToast('Permission insuffisante', 'error'); return; }
   if (!confirm('Supprimer cet utilisateur ?')) return;
   try {
-    const { error } = await sbClient.from('profiles').delete().eq('id', userId);
+    const { error } = await supabase.from('profiles').delete().eq('id', userId);
     if (error) throw error;
     showToast('✅ Utilisateur supprimé', 'success');
     await logActivity('delete_user', { user_id: userId });
@@ -5746,7 +5745,7 @@ async function simulateDownload(docId, filename) {
     if (error || !data) { showToast('Document introuvable', 'error'); return; }
     if (!data.telechargeable) { showToast('Ce document ne peut pas être téléchargé', 'warning'); return; }
 
-    const { data: urlData } = sbClient.storage
+    const { data: urlData } = supabase.storage
       .from(STORAGE_BUCKET)
       .getPublicUrl(data.storage_path);
 
@@ -5756,8 +5755,8 @@ async function simulateDownload(docId, filename) {
       a.download = filename || data.titre;
       a.click();
 
-      await sbClient.from('documents')
-        .update({ nb_telechargements: sbClient.rpc('increment', { x: 1 }) })
+      await supabase.from('documents')
+        .update({ nb_telechargements: supabase.rpc('increment', { x: 1 }) })
         .eq('id', docId);
 
       await logActivity('download_document', { doc_id: docId, titre: data.titre });
