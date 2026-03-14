@@ -510,8 +510,7 @@ console.log('✅ Supabase initialisé');
       .sidebar{display:none}.main{padding:20px 16px}
       .stats-row{grid-template-columns:repeat(2,1fr)}
       .modules-grid,.ext-grid,.admin-panel-grid,.doc-grid{grid-template-columns:1fr}
-      .tabs{width:100%;overflow-x:visible;flex-wrap:wrap;justify-content:center;gap:4px}
-      .tab-btn{flex:1;min-width:calc(50% - 8px);text-align:center;font-size:12px;padding:6px 8px}
+      .tabs{width:100%;overflow-x:auto}
       .viewer-sidebar{display:none}.viewer-slide,.pdf-page{max-width:100%}
       .slide-body{padding:20px 22px}.slide-header{padding:20px 22px 16px}
       .pdf-page{padding:28px 22px}.slide-two-col{grid-template-columns:1fr}
@@ -4853,7 +4852,7 @@ function switchTab(section,tabId,btn){
 // openExternalTool defined above
 
 // ═══ VIEWER ═══
-const DOCS={
+DOCS={
   'sdra-ventilation':{type:'ppt',title:'SDRA — Physiopathologie et ventilation',meta:{Auteur:'Dr Dupont',Date:'Janvier 2025',Format:'42 slides',Version:'v3.0'},
     toc:['Définitions Berlin 2012','Physiopathologie','Objectifs ventilatoires','Paramètres cibles','Décubitus ventral','Curarisation','Conclusion'],
     slides:[
