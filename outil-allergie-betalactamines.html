@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allergie Bêta-lactamines — RéaApp CH Robert Boulin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0b0f14;--surface:#121820;--card:#181f28;--border:#1e2a38;
+      --text:#e2eaf4;--muted:#5a7080;--soft:#2a3a4a;
+      --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+      --accent:#2dd4bf;--medical:#3b82f6;--urgent:#ef4444;
+      --warn:#eab308;--purple:#a78bfa;--success:#22c55e;--orange:#fb923c;
+    }
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .hidden{display:none!important}
+    a{color:inherit;text-decoration:none}
+
+    /* ── Header ── */
+    .tool-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:200}
+    .tool-header-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(167,139,250,.15),rgba(239,68,68,.1));border:1px solid rgba(167,139,250,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .tool-header-title{font-size:16px;font-weight:600;line-height:1.2}
+    .tool-header-sub{font-size:11px;color:var(--muted);font-family:var(--mono)}
+    .tool-header-badge{margin-left:auto;padding:4px 10px;border-radius:20px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);font-size:11px;color:var(--purple);font-family:var(--mono);white-space:nowrap}
+
+    /* ── Layout ── */
+    .tool-body{max-width:1100px;margin:0 auto;padding:24px 16px}
+
+    /* ── Card ── */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:18px}
+    .card-title{font-size:12px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .card-title::before{content:'';width:3px;height:12px;background:var(--purple);border-radius:2px;display:inline-block;flex-shrink:0}
+
+    /* ── Info box accueil ── */
+    .info-box{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:12px;padding:20px;margin-bottom:18px}
+    .info-box-title{font-size:13px;font-weight:600;color:var(--medical);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .info-sub{background:rgba(255,255,255,.04);border-radius:8px;padding:14px;margin-bottom:10px;font-size:13px;color:var(--text);line-height:1.8}
+    .info-sub:last-child{margin-bottom:0}
+    .info-sub strong{color:var(--text)}
+    .info-sub ul{margin-left:18px;color:var(--muted)}
+    .info-sub li strong{color:var(--urgent)}
+
+    /* ── Page title banner ── */
+    .page-banner{border-radius:12px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:14px;animation:fadeUp .3s ease}
+    .page-banner-icon{font-size:28px;flex-shrink:0}
+    .page-banner-title{font-size:20px;font-weight:700;line-height:1.2}
+    .page-banner-sub{font-size:12px;font-family:var(--mono);opacity:.8;margin-top:3px}
+    .page-banner.penicillin{background:linear-gradient(135deg,rgba(236,72,153,.12),rgba(219,39,119,.07));border:1px solid rgba(236,72,153,.25)}
+    .page-banner.cephalosporin{background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(79,70,229,.07));border:1px solid rgba(99,102,241,.25)}
+    .page-banner.results{background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(37,99,235,.07));border:1px solid rgba(59,130,246,.25)}
+
+    /* ── Severity grid ── */
+    .severity-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+    @media(max-width:800px){.severity-grid{grid-template-columns:1fr}}
+
+    .severity-card{border-radius:12px;border:2px solid;cursor:pointer;transition:all .2s;overflow:hidden;background:var(--surface)}
+    .severity-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+    .severity-card-header{padding:14px 16px;display:flex;align-items:center;gap:10px}
+    .severity-card-header h3{font-size:14px;font-weight:700;margin:0;color:#fff}
+    .severity-card-body{padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.7}
+    .severity-card-body strong{color:var(--text)}
+    .severity-card-body em{font-size:12px;color:var(--muted)}
+    .severity-card-body p{margin-bottom:6px}
+    .severity-card-body p:last-child{margin-bottom:0}
+
+    .sev-non-severe{border-color:rgba(34,197,94,.4)}
+    .sev-non-severe .severity-card-header{background:rgba(34,197,94,.15)}
+    .sev-non-severe .severity-card-header h3{color:var(--success)}
+    .sev-non-severe:hover{border-color:var(--success);box-shadow:0 8px 24px rgba(34,197,94,.2)}
+
+    .sev-severe{border-color:rgba(234,179,8,.4)}
+    .sev-severe .severity-card-header{background:rgba(234,179,8,.12)}
+    .sev-severe .severity-card-header h3{color:var(--warn)}
+    .sev-severe:hover{border-color:var(--warn);box-shadow:0 8px 24px rgba(234,179,8,.2)}
+
+    .sev-very-severe{border-color:rgba(239,68,68,.4)}
+    .sev-very-severe .severity-card-header{background:rgba(239,68,68,.12)}
+    .sev-very-severe .severity-card-header h3{color:var(--urgent)}
+    .sev-very-severe:hover{border-color:var(--urgent);box-shadow:0 8px 24px rgba(239,68,68,.2)}
+
+    /* ── Buttons ── */
+    .btn-primary{padding:14px 20px;background:var(--medical);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s;width:100%;display:block;text-align:center}
+    .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+    .btn-penicillin{background:linear-gradient(135deg,rgba(236,72,153,.7),rgba(219,39,119,.6));border:1px solid rgba(236,72,153,.4)}
+    .btn-cephalosporin{background:linear-gradient(135deg,rgba(99,102,241,.7),rgba(79,70,229,.6));border:1px solid rgba(99,102,241,.4)}
+    .btn-matrix{background:linear-gradient(135deg,rgba(167,139,250,.2),rgba(124,58,237,.15));border:1px solid rgba(167,139,250,.3);color:var(--purple)}
+    .btn-matrix:hover{background:linear-gradient(135deg,rgba(167,139,250,.3),rgba(124,58,237,.25))}
+
+    .back-btn{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;cursor:pointer;margin-bottom:18px;transition:all .15s;font-family:var(--font)}
+    .back-btn:hover{border-color:var(--soft);color:var(--text)}
+
+    /* ── Result boxes ── */
+    .result-box{padding:16px 18px;border-radius:10px;margin-bottom:14px;border-left:4px solid;animation:fadeUp .25s ease}
+    .result-green{background:rgba(34,197,94,.08);border-color:var(--success)}
+    .result-green h3{color:var(--success)}
+    .result-orange{background:rgba(234,179,8,.08);border-color:var(--warn)}
+    .result-orange h3{color:var(--warn)}
+    .result-red{background:rgba(239,68,68,.08);border-color:var(--urgent)}
+    .result-red h3{color:var(--urgent)}
+    .result-box h3{font-size:14px;font-weight:700;margin-bottom:10px}
+    .result-box ul{margin-left:18px;font-size:13px;color:var(--text);line-height:1.8}
+    .result-box p{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:6px}
+
+    .note{background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.2);border-radius:10px;padding:14px 16px;margin-top:16px;font-size:12px;color:var(--muted);line-height:1.7}
+    .note strong{color:var(--warn)}
+
+    .authors{text-align:center;color:var(--muted);font-size:12px;margin-top:32px;font-family:var(--mono);line-height:1.8}
+    .authors strong{color:var(--text)}
+
+    .divider{border:none;border-top:1px solid var(--border);margin:18px 0}
+
+    /* ── Modal chaînes latérales ── */
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;overflow-y:auto;padding:20px}
+    .modal.show{display:flex;align-items:flex-start;justify-content:center}
+    .modal-content{background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:1400px;width:100%;margin:30px auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+    .modal-header{background:var(--card);padding:18px 24px;border-bottom:1px solid var(--border);border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+    .modal-header h2{font-size:17px;font-weight:600;color:var(--text)}
+    .modal-header-sub{font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:2px}
+    .close-modal{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--urgent);font-size:18px;cursor:pointer;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+    .close-modal:hover{background:rgba(239,68,68,.25)}
+    .modal-body{padding:20px 24px 30px}
+
+    /* ── Chain table (preserved from original modern style) ── */
+    .chain-table{width:100%;border-collapse:separate;border-spacing:0;font-size:11px;min-width:1200px}
+    .chain-table thead th{background:var(--card);color:var(--muted);font-family:var(--mono);font-weight:500;font-size:10px;padding:5px 4px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);position:sticky;top:0;z-index:8}
+    .chain-table thead tr:first-child th{background:#0b0f14;color:var(--accent);font-size:11px;font-weight:600;border-bottom:2px solid var(--border)}
+    .chain-table th:first-child,.chain-table td:first-child{min-width:140px;background:var(--card);position:sticky;left:0;z-index:5;text-align:left;padding:8px 12px;font-size:12px;font-weight:500;color:var(--text);border-right:2px solid var(--border)}
+    .chain-table th:last-child,.chain-table td:last-child{border-right:none}
+    .chain-table td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:0;height:36px;text-align:center;vertical-align:middle;font-family:var(--mono);font-size:12px;font-weight:700;transition:filter .12s;cursor:default}
+    .chain-table td:hover:not(:first-child){filter:brightness(1.3)}
+    .chain-table .cell-black{background:#0b0f14;color:var(--muted)}
+    .chain-table .cell-red{background:rgba(155,89,182,.25);color:#c084fc}
+    .chain-table .cell-orange{background:rgba(255,51,0,.2);color:#ff6b3d}
+    .chain-table .cell-v{color:var(--soft)}
+    .chain-table tr:hover td:first-child{color:var(--accent)}
+
+    .chain-overflow{overflow-x:auto;border:1px solid var(--border);border-radius:10px;background:var(--card)}
+
+    .legend-box{background:rgba(45,212,191,.04);border:1px solid rgba(45,212,191,.12);border-radius:10px;padding:16px 18px;margin-top:18px}
+    .legend-box-title{font-size:11px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+    .legend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+    .legend-item{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+    .legend-color{width:28px;height:18px;border-radius:4px;flex-shrink:0;border:1px solid var(--border)}
+    .legend-color.cell-black{background:#0b0f14}
+    .legend-color.cell-red{background:rgba(155,89,182,.25)}
+    .legend-color.cell-orange{background:rgba(255,51,0,.2)}
+    .legend-color.cell-v{background:var(--surface)}
+
+    .howto{background:rgba(234,179,8,.06);border:1px solid rgba(234,179,8,.15);border-radius:8px;padding:12px 14px;margin-top:14px;font-size:12px;color:var(--muted);line-height:1.8}
+    .howto strong{color:var(--warn)}
+    .howto ol{margin-left:18px;color:var(--muted)}
+  
+    /* ── Original modal CSS (preserved exactly) ── */
+/* ========== STYLES TABLEAU MODERNE (MODAL) ========== */
+    #chain-table-modal {
+        --bg-modal: #0d1117;
+        --surface-modal: #161b22;
+        --surface2-modal: #1c2128;
+        --border-modal: #30363d;
+        --text-modal: #e6edf3;
+        --text-muted-modal: #7d8590;
+        --text-dim-modal: #484f58;
+        --red-modal: #9b59b6;
+        --red-bg-modal: #2d1b3d;
+        --orange-modal: #ff3300;
+        --orange-bg-modal: #3a0800;
+        --yellow-modal: #f0b800;
+        --yellow-bg-modal: #2e2500;
+        --green-modal: #27ae60;
+        --accent-modal: #58a6ff;
+    }
+    
+    #chain-table-modal .modal-header {
+        background: var(--surface-modal);
+        padding: 20px;
+        border-bottom: 2px solid var(--border-modal);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    #chain-table-modal .modal-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--text-modal);
+    }
+    
+    #chain-table-modal .modal-subtitle {
+        font-size: 13px;
+        color: var(--text-muted-modal);
+        font-style: italic;
+        margin-top: 4px;
+    }
+    
+    #chain-table-modal .close-btn {
+        background: #dc2626;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        transition: all 0.3s;
+    }
+    
+    #chain-table-modal .close-btn:hover {
+        background: #b91c1c;
+        transform: translateY(-2px);
+    }
+    
+    #chain-table-modal .legend-modal {
+        background: var(--surface-modal);
+        border: 1px solid var(--border-modal);
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 12px;
+    }
+    
+    #chain-table-modal .legend-item-modal {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: var(--text-muted-modal);
+    }
+    
+    #chain-table-modal .legend-swatch-modal {
+        width: 28px;
+        height: 18px;
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+    
+    #chain-table-modal .table-container {
+        overflow-x: auto;
+        margin: 0 20px 40px;
+        background: var(--surface-modal);
+        border: 1px solid var(--border-modal);
+        border-radius: 12px;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+    
+    #chain-table-modal table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        min-width: 1200px;
+    }
+    
+    #chain-table-modal th,
+    #chain-table-modal td {
+        border-right: 1px solid var(--border-modal);
+        border-bottom: 1px solid var(--border-modal);
+        padding: 0;
+        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    #chain-table-modal th:last-child,
+    #chain-table-modal td:last-child {
+        border-right: none;
+    }
+    
+    #chain-table-modal tr:last-child td {
+        border-bottom: none;
+    }
+    
+    #chain-table-modal .corner-cell {
+        width: 130px;
+        min-width: 130px;
+        background: var(--surface2-modal);
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        font-size: 9px;
+        color: var(--text-dim-modal);
+        font-family: 'DM Mono', monospace;
+        padding: 8px;
+    }
+    
+    #chain-table-modal .row-header {
+        background: var(--surface2-modal);
+        position: sticky;
+        left: 0;
+        z-index: 5;
+        padding: 8px 12px;
+        font-size: 11.5px;
+        font-weight: 500;
+        color: var(--text-modal);
+        white-space: nowrap;
+        min-width: 130px;
+        border-right: 2px solid var(--border-modal);
+    }
+    
+    #chain-table-modal .row-header::before {
+        content: attr(data-group);
+        display: block;
+        font-size: 8.5px;
+        font-family: 'DM Mono', monospace;
+        text-transform: uppercase;
+        color: var(--text-dim-modal);
+        margin-bottom: 2px;
+    }
+    
+    #chain-table-modal .col-header {
+        height: 120px;
+        width: 46px;
+        min-width: 46px;
+        background: var(--surface2-modal);
+        position: sticky;
+        top: 0;
+        z-index: 8;
+        border-bottom: 2px solid var(--border-modal);
+    }
+    
+    #chain-table-modal .col-header-text {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-modal);
+        padding: 8px 0;
+        height: 100%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+    }
+    
+    #chain-table-modal .cell-data {
+        width: 46px;
+        min-width: 46px;
+        height: 38px;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 11px;
+        font-family: 'DM Mono', monospace;
+        font-weight: 600;
+        cursor: default;
+        transition: filter 0.15s;
+        position: relative;
+    }
+    
+    #chain-table-modal .cell-data:hover {
+        filter: brightness(1.25);
+    }
+    
+    #chain-table-modal .cell-black { background: var(--bg-modal); }
+    #chain-table-modal .cell-red { background: var(--red-bg-modal); color: var(--red-modal); }
+    #chain-table-modal .cell-orange { background: var(--orange-bg-modal); color: var(--orange-modal); }
+    #chain-table-modal .cell-yellow { background: var(--yellow-bg-modal); color: var(--yellow-modal); }
+    #chain-table-modal .cell-green { background: transparent; color: var(--green-modal); }
+    #chain-table-modal .cell-empty { background: transparent; }
+    
+    #chain-table-modal .cell-data[data-tip]::after {
+        content: attr(data-tip);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1f2937;
+        color: #f9fafb;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 11px;
+        font-weight: 400;
+        padding: 5px 9px;
+        border-radius: 6px;
+        border: 1px solid var(--border-modal);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.18s;
+        z-index: 100;
+        white-space: nowrap;
+    }
+    
+    #chain-table-modal .cell-data:hover::after {
+        opacity: 1;
+    }
+    
+    #chain-table-modal .family-header {
+        background: var(--bg-modal);
+        font-family: 'DM Mono', monospace;
+        font-size: 9px;
+        text-transform: uppercase;
+        color: var(--text-dim-modal);
+        padding: 6px;
+        text-align: center;
+        border-bottom: 1px solid var(--border-modal);
+    }
+  </style>
+</head>
+<body>
+
+<header class="tool-header">
+  <div class="tool-header-icon">🏥</div>
+  <div>
+    <div class="tool-header-title">Allergie aux Bêta-lactamines</div>
+    <div class="tool-header-sub">CH Robert Boulin · Algorithme d'aide à la prescription</div>
+  </div>
+  <div class="tool-header-badge">Pénicillines · Céphalosporines</div>
+</header>
+
+<div class="tool-body">
+  <div class="container">
+
+    <!-- ════════════ PAGE ACCUEIL ════════════ -->
+    <div id="page-home">
+
+      <div class="info-box">
+        <div class="info-box-title">📊 Points clés à retenir</div>
+        <div class="info-sub">
+          <strong>L'allergie aux bêta-lactamines est RARE :</strong>
+          <ul>
+            <li>Pénicillines : 1,11 % à 1,45 %</li>
+            <li>Céphalosporines : 0,6 % à 1,08 %</li>
+            <li><strong>95 % des patients étiquetés « allergiques » ne le sont pas !</strong></li>
+          </ul>
+        </div>
+        <div class="info-sub">
+          <strong>⚠️ Conséquences d'une prescription de 2ème ligne :</strong>
+          <ul>
+            <li>↑ Morbidité-mortalité &nbsp;·&nbsp; ↑ Durée de séjour</li>
+            <li>↑ Risque de réadmission &nbsp;·&nbsp; ↑ Résistance bactérienne</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Antibiotique responsable de la réaction</div>
+        <button class="btn-primary btn-penicillin" style="margin-bottom:12px" onclick="selectAntibiotic('penicillin')">
+          💊 PÉNICILLINES
+        </button>
+        <button class="btn-primary btn-cephalosporin" onclick="selectAntibiotic('cephalosporin')">
+          💊 CÉPHALOSPORINES
+        </button>
+        <hr class="divider">
+        <button class="btn-primary btn-matrix" onclick="showChainTable()">
+          📊 Tableau des chaînes latérales — Réactions croisées
+        </button>
+        <p style="text-align:center;margin-top:8px;font-size:11px;color:var(--muted);font-family:var(--mono)">
+          Outil indispensable pour identifier les réactions croisées
+        </p>
+      </div>
+
+      <div class="authors">
+        <strong>Dr. M-C. CHOPIN · Dr. D. PELLETIER de CHAMBURE · Dr. F. DEZOTEUX</strong><br>
+        Maladies Infectieuses & Allergologie — CHU Lille · Adapté CH Robert Boulin
+      </div>
+    </div>
+
+    <!-- ════════════ PAGE PÉNICILLINES — SÉVÉRITÉ ════════════ -->
+    <div id="page-penicillin-severity" class="hidden">
+      <button class="back-btn" onclick="goHome()">← Retour à l'accueil</button>
+
+      <div class="page-banner penicillin">
+        <div class="page-banner-icon">⚠️</div>
+        <div>
+          <div class="page-banner-title">Suspicion d'allergie aux Pénicillines</div>
+          <div class="page-banner-sub">Sélectionnez le type de réaction pour obtenir les recommandations</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Évaluation de la sévérité</div>
+        <div class="severity-grid">
+
+          <div class="severity-card sev-non-severe" onclick="showPenicillinResult('non-severe')">
+            <div class="severity-card-header"><h3>✅ Réaction non sévère</h3></div>
+            <div class="severity-card-body">
+              <p><strong>Réaction immédiate :</strong></p>
+              <p>Atteinte cutanée isolée (urticaire et/ou angioedème)</p>
+              <p><strong>OU — Réaction retardée :</strong></p>
+              <p>Exanthème Maculo-Papuleux (EMP) isolé (&lt;50% de la surface, pas d'atteinte muqueuse, pas décollement/bulle, absence de signes systémiques*, durée &lt;7 jours)</p>
+              <p><em>*fièvre, éosinophilie &gt;0,5G/L, atteinte organique</em></p>
+            </div>
+          </div>
+
+          <div class="severity-card sev-severe" onclick="showPenicillinResult('severe')">
+            <div class="severity-card-header"><h3>⚠️ Réaction sévère</h3></div>
+            <div class="severity-card-body">
+              <p><strong>Réaction immédiate :</strong></p>
+              <p>Anaphylaxie Grade II</p>
+              <p><em>(Atteinte multiviscérale modérée : signes cutanéo-muqueux + hypotension + tachycardie + hyperréactivité bronchique)</em></p>
+            </div>
+          </div>
+
+          <div class="severity-card sev-very-severe" onclick="showPenicillinResult('very-severe')">
+            <div class="severity-card-header"><h3>🔴 Réaction très sévère</h3></div>
+            <div class="severity-card-body">
+              <p><strong>Réaction immédiate :</strong></p>
+              <p>Anaphylaxie Grade III et IV</p>
+              <p><em>(Grade III : collapsus CV, bronchospasme — Grade IV : arrêt circulatoire/respiratoire)</em></p>
+              <p><strong>OU — Réaction retardée :</strong></p>
+              <p>EMP sévère (&gt;50% surface, atteinte muqueuses, purpura, décollement/bulle, signes systémiques*)</p>
+              <p>EPF, DRESS, SJS/Lyell, PEAG</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ PAGE CÉPHALOSPORINES — SÉVÉRITÉ ════════════ -->
+    <div id="page-cephalosporin-severity" class="hidden">
+      <button class="back-btn" onclick="goHome()">← Retour à l'accueil</button>
+
+      <div class="page-banner cephalosporin">
+        <div class="page-banner-icon">⚠️</div>
+        <div>
+          <div class="page-banner-title">Suspicion d'allergie aux Céphalosporines</div>
+          <div class="page-banner-sub">Sélectionnez le type de réaction pour obtenir les recommandations</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Évaluation de la sévérité</div>
+        <div class="severity-grid">
+
+          <div class="severity-card sev-non-severe" onclick="showCephalosporinResult('non-severe')">
+            <div class="severity-card-header"><h3>✅ Réaction non sévère</h3></div>
+            <div class="severity-card-body">
+              <p><strong>Réaction immédiate :</strong></p>
+              <p>Atteinte cutanée isolée (urticaire et/ou angioedème)</p>
+              <p><strong>OU — Réaction retardée :</strong></p>
+              <p>Exanthème Maculo-Papuleux (EMP) isolé (&lt;50% de la surface, pas d'atteinte muqueuse, pas décollement/bulle, absence de signes systémiques*, durée &lt;7 jours)</p>
+              <p><em>*fièvre, éosinophilie &gt;0,5G/L, atteinte organique</em></p>
+            </div>
+          </div>
+
+          <div class="severity-card sev-severe" onclick="showCephalosporinResult('severe')">
+            <div class="severity-card-header"><h3>⚠️ Réaction sévère</h3></div>
+            <div class="severity-card-body">
+              <p><strong>Réaction immédiate :</strong></p>
+              <p>Anaphylaxie Grade II</p>
+              <p><em>(Atteinte multiviscérale modérée)</em></p>
+            </div>
+          </div>
+
+          <div class="severity-card sev-very-severe" onclick="showCephalosporinResult('very-severe')">
+            <div class="severity-card-header"><h3>🔴 Réaction très sévère</h3></div>
+            <div class="severity-card-body">
+              <p><strong>Réaction immédiate :</strong></p>
+              <p>Anaphylaxie Grade III et IV</p>
+              <p><strong>OU — Réaction retardée :</strong></p>
+              <p>EMP sévère (&gt;50% surface, atteinte muqueuses, purpura, décollement/bulle, signes systémiques*)</p>
+              <p>EPF, DRESS, SJS/Lyell, PEAG</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ PAGE RÉSULTATS ════════════ -->
+    <div id="page-results" class="hidden">
+      <button class="back-btn" onclick="goBack()">← Retour</button>
+
+      <div class="page-banner results">
+        <div class="page-banner-icon">📋</div>
+        <div>
+          <div class="page-banner-title">Aide au choix de la bêta-lactamine</div>
+          <div class="page-banner-sub" id="results-subtitle"></div>
+        </div>
+      </div>
+
+      <div id="results-content"></div>
+
+      <div style="text-align:center;margin-top:20px">
+        <button class="btn-primary" style="max-width:300px;margin:0 auto" onclick="goHome()">Nouvelle évaluation</button>
+      </div>
+
+      <div class="note">
+        <strong>⚠️ Disclaimer</strong> — Outil d'aide à la décision uniquement. Ne remplace pas le jugement clinique ni l'avis d'un allergologue. En cas de doute, consulter un spécialiste.
+      </div>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /tool-body -->
+
+<script>
+
+        let currentSeverity = null;
+        let currentAntibiotic = null;
+
+        function goHome() {
+            document.getElementById('page-home').classList.remove('hidden');
+            document.getElementById('page-penicillin-severity').classList.add('hidden');
+            document.getElementById('page-cephalosporin-severity').classList.add('hidden');
+            document.getElementById('page-results').classList.add('hidden');
+        }
+
+        function goBack() {
+            document.getElementById('page-home').classList.add('hidden');
+            if (currentAntibiotic === 'penicillin') {
+                document.getElementById('page-penicillin-severity').classList.remove('hidden');
+            } else {
+                document.getElementById('page-cephalosporin-severity').classList.remove('hidden');
+            }
+            document.getElementById('page-results').classList.add('hidden');
+        }
+
+        function selectAntibiotic(type) {
+            currentAntibiotic = type;
+            document.getElementById('page-home').classList.add('hidden');
+            if (type === 'penicillin') {
+                document.getElementById('page-penicillin-severity').classList.remove('hidden');
+            } else {
+                document.getElementById('page-cephalosporin-severity').classList.remove('hidden');
+            }
+        }
+
+        function showPenicillinResult(severity) {
+            currentSeverity = severity;
+            document.getElementById('page-penicillin-severity').classList.add('hidden');
+            document.getElementById('page-results').classList.remove('hidden');
+            
+            const subtitles = {
+                'non-severe': 'Réaction non sévère aux pénicillines',
+                'severe': 'Réaction sévère aux pénicillines',
+                'very-severe': 'Réaction très sévère aux pénicillines'
+            };
+            
+            document.getElementById('results-subtitle').textContent = subtitles[severity];
+            
+            let html = '';
+            
+            if (severity === 'non-severe') {
+                html = `
+                    <div class="result-box result-green">
+                        <h3>👍 JE PEUX PRESCRIRE</h3>
+                        <ul>
+                            <li><strong>Céphalosporines avec des chaînes latérales DIFFÉRENTES*</strong></li>
+                            <li><strong>Aztréonam</strong> (monobactame)</li>
+                            <li><strong>Carbapénèmes</strong> (Imipénème, Méropénème, Ertapénème)</li>
+                        </ul>
+                        <div style="background: #fef3c7; padding: 12px; border-radius: 6px; margin-top: 15px; border-left: 3px solid #f59e0b;">
+                            <strong style="color: #92400e;">* Se référer au tableau des chaînes latérales</strong>
+                            <p style="margin-top: 8px; font-size: 0.9rem; color: #78350f;">
+                                Les céphalosporines ayant des chaînes latérales R1 et R2 différentes de la pénicilline responsable présentent un risque de réaction croisée très faible.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="result-box result-red">
+                        <h3>👎 JE NE PRESCRIS PAS</h3>
+                        <ul>
+                            <li><strong>Pénicillines</strong> (toutes)</li>
+                            <li><strong>Céphalosporines avec des chaînes latérales SIMILAIRES*</strong></li>
+                        </ul>
+                    </div>
+                    
+                    ${getChainTableHTML()}
+                `;
+            } else if (severity === 'severe') {
+                html = `
+                    <div class="result-box result-orange">
+                        <h3>⚠️ JE PEUX PRESCRIRE avec PRUDENCE¹</h3>
+                        <ul>
+                            <li><strong>Céphalosporines avec des chaînes latérales DIFFÉRENTES*</strong></li>
+                            <li><strong>Aztréonam</strong> (monobactame)</li>
+                            <li><strong>Carbapénèmes</strong></li>
+                        </ul>
+                        <div style="background: #fef3c7; padding: 12px; border-radius: 6px; margin-top: 15px; border-left: 3px solid #f59e0b;">
+                            <strong style="color: #92400e;">¹ Avis allergologique recommandé avant prescription</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="result-box result-red">
+                        <h3>👎 JE NE PRESCRIS PAS</h3>
+                        <ul>
+                            <li><strong>Pénicillines</strong> (toutes)</li>
+                            <li><strong>Céphalosporines avec des chaînes latérales SIMILAIRES*</strong></li>
+                        </ul>
+                    </div>
+                    
+                    ${getChainTableHTML()}
+                `;
+            } else if (severity === 'very-severe') {
+                html = `
+                    <div class="result-box result-orange">
+                        <h3>⚠️ JE PEUX PRESCRIRE avec PRUDENCE¹</h3>
+                        <p style="margin-bottom: 12px;"><strong>En cas de réaction immédiate :</strong></p>
+                        <ul>
+                            <li><strong>Aztréonam</strong> (monobactame)</li>
+                            <li><strong>Carbapénèmes</strong></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="result-box result-red">
+                        <h3>👎 JE NE PRESCRIS PAS</h3>
+                        <p style="margin-bottom: 12px;"><strong>Dans les autres cas :</strong></p>
+                        <ul>
+                            <li><strong>Bêta-lactamines</strong> (toutes)</li>
+                        </ul>
+                        <div style="background: #fee2e2; padding: 12px; border-radius: 6px; margin-top: 15px; border-left: 3px solid #dc2626;">
+                            <p style="color: #991b1b; font-weight: bold; margin-bottom: 8px;">
+                                Privilégier une autre classe d'antibiotique
+                            </p>
+                            <p style="font-size: 0.9rem; color: #7f1d1d;">
+                                Si indication nécessaire d'une bêta-lactamine, demandez avis auprès d'un allergologue
+                            </p>
+                        </div>
+                    </div>
+                    
+                    ${getChainTableHTML()}
+                `;
+            }
+            
+            document.getElementById('results-content').innerHTML = html;
+        }
+
+        function showCephalosporinResult(severity) {
+            currentSeverity = severity;
+            document.getElementById('page-cephalosporin-severity').classList.add('hidden');
+            document.getElementById('page-results').classList.remove('hidden');
+            
+            const subtitles = {
+                'non-severe': 'Réaction non sévère aux céphalosporines',
+                'severe': 'Réaction sévère aux céphalosporines',
+                'very-severe': 'Réaction très sévère aux céphalosporines'
+            };
+            
+            document.getElementById('results-subtitle').textContent = subtitles[severity];
+            
+            let html = '';
+            
+            if (severity === 'non-severe') {
+                html = `
+                    <div class="result-box result-green">
+                        <h3>👍 JE PEUX PRESCRIRE</h3>
+                        <ul>
+                            <li><strong>Pénicillines avec des chaînes latérales DIFFÉRENTES*</strong></li>
+                            <li><strong>Aztréonam</strong> (sauf si allergie Ceftazidime ou Céfidérocol)</li>
+                            <li><strong>Carbapénèmes</strong></li>
+                        </ul>
+                        <div style="background: #fef3c7; padding: 12px; border-radius: 6px; margin-top: 15px; border-left: 3px solid #f59e0b;">
+                            <strong style="color: #92400e;">* Se référer au tableau des chaînes latérales</strong>
+                            <p style="margin-top: 8px; font-size: 0.9rem; color: #78350f;">
+                                ⚠️ <strong>ATTENTION :</strong> Aztréonam et Ceftazidime/Céfidérocol partagent la même chaîne latérale → risque de réaction croisée
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="result-box result-red">
+                        <h3>👎 JE NE PRESCRIS PAS</h3>
+                        <ul>
+                            <li><strong>Pénicillines avec des chaînes latérales SIMILAIRES*</strong></li>
+                            <li><strong>Céphalosporines</strong> (toutes)</li>
+                        </ul>
+                    </div>
+                    
+                    ${getChainTableHTML()}
+                `;
+            } else if (severity === 'severe') {
+                html = `
+                    <div class="result-box result-orange">
+                        <h3>⚠️ JE PEUX PRESCRIRE avec PRUDENCE¹</h3>
+                        <ul>
+                            <li><strong>Pénicillines avec des chaînes latérales DIFFÉRENTES*</strong></li>
+                            <li><strong>Aztréonam</strong> (sauf si allergie Ceftazidime ou Céfidérocol)</li>
+                            <li><strong>Carbapénèmes</strong></li>
+                        </ul>
+                        <div style="background: #fef3c7; padding: 12px; border-radius: 6px; margin-top: 15px; border-left: 3px solid #f59e0b;">
+                            <strong style="color: #92400e;">¹ Avis allergologique recommandé avant prescription</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="result-box result-red">
+                        <h3>👎 JE NE PRESCRIS PAS</h3>
+                        <ul>
+                            <li><strong>Pénicillines avec des chaînes latérales SIMILAIRES*</strong></li>
+                            <li><strong>Céphalosporines</strong> (toutes)</li>
+                        </ul>
+                    </div>
+                    
+                    ${getChainTableHTML()}
+                `;
+            } else if (severity === 'very-severe') {
+                html = `
+                    <div class="result-box result-orange">
+                        <h3>⚠️ JE PEUX PRESCRIRE avec PRUDENCE¹</h3>
+                        <p style="margin-bottom: 12px;"><strong>En cas de réaction immédiate :</strong></p>
+                        <ul>
+                            <li><strong>Aztréonam</strong> (sauf si allergie Ceftazidime ou Céfidérocol)</li>
+                            <li><strong>Carbapénèmes</strong></li>
+                        </ul>
+                        <div style="background: #fef3c7; padding: 12px; border-radius: 6px; margin-top: 15px; border-left: 3px solid #f59e0b;">
+                            <strong style="color: #92400e;">¹ Avis allergologique recommandé</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="result-box result-red">
+                        <h3>👎 JE NE PRESCRIS PAS</h3>
+                        <p style="margin-bottom: 12px;"><strong>Dans les autres cas :</strong></p>
+                        <ul>
+                            <li><strong>Bêta-lactamines</strong> (toutes)</li>
+                        </ul>
+                        <div style="background: #fee2e2; padding: 12px; border-radius: 6px; margin-top: 15px; border-left: 3px solid #dc2626;">
+                            <p style="color: #991b1b; font-weight: bold; margin-bottom: 8px;">
+                                Privilégier une autre classe d'antibiotique
+                            </p>
+                            <p style="font-size: 0.9rem; color: #7f1d1d;">
+                                Si indication nécessaire d'une bêta-lactamine, demandez un avis auprès d'un allergologue
+                            </p>
+                        </div>
+                    </div>
+                    
+                    ${getChainTableHTML()}
+                `;
+            }
+            
+            document.getElementById('results-content').innerHTML = html;
+        }
+        
+        function showChainTable() {
+            // Créer le modal
+            const modal = document.createElement('div');
+            modal.id = 'chain-table-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: #0d1117;
+                z-index: 10000;
+                overflow-y: auto;
+            `;
+            
+            // Créer le contenu HTML
+            modal.innerHTML = `
+                <div class="modal-header">
+                    <div>
+                        <div class="modal-title">Allergie croisée entre les bétalactamines</div>
+                        <div class="modal-subtitle">D'après R. Wijnakker et al., Microbiology and Infection, 2023</div>
+                    </div>
+                    <button class="close-btn" onclick="hideChainTable()">✕ Fermer</button>
+                </div>
+                
+                <div class="legend-modal">
+                    <div class="legend-item-modal">
+                        <div class="legend-swatch-modal" style="background: #9b59b6;"></div>
+                        Allergie possible via les PPL (déterminant majeur des pénicillines)
+                    </div>
+                    <div class="legend-item-modal">
+                        <div class="legend-swatch-modal" style="background: #ff3300;"></div>
+                        Risque d'allergie croisée via la chaîne R1
+                    </div>
+                    <div class="legend-item-modal">
+                        <div class="legend-swatch-modal" style="background: #f0b800;"></div>
+                        Risque d'allergie croisée via la chaîne R1 ou R2
+                    </div>
+                    <div class="legend-item-modal">
+                        <div class="legend-swatch-modal" style="background: #0d1117; border: 1px solid #333;"></div>
+                        Même molécule (diagonale)
+                    </div>
+                    <div class="legend-item-modal">
+                        <div class="legend-swatch-modal" style="background: transparent; border: 1px solid #1a6b3a; color: #27ae60; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 11px; font-weight: 600;">V</div>
+                        Pas de risque d'allergie croisée
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    ${getTableHTML()}
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function hideChainTable() {
+            const modal = document.getElementById('chain-table-modal');
+            if (modal) {
+                modal.remove();
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        function getTableHTML() {
+            // Données du tableau (21x21)
+            const antibiotics = [
+                {name: 'Amoxicilline', group: 'Pénicilline', data: ['■','●','●','●','●','⚠','V','V','V','⚠','⚠','V','V','V','V','V','V','V','V','V','V','V']},
+                {name: 'Pénicilline G', group: 'Pénicilline', data: ['●','■','●','●','●','⚠','V','V','V','⚠','⚠','V','V','V','V','V','V','V','V','V','V','V']},
+                {name: 'Pénicilline V', group: 'Pénicilline', data: ['●','●','■','●','●','⚠','V','V','V','⚠','⚠','V','V','V','V','V','V','V','V','V','V','V']},
+                {name: 'Flucloxacilline', group: 'Pénicilline', data: ['●','●','●','■','●','V','V','V','V','V','V','V','V','V','V','V','V','V','V','V','V','V']},
+                {name: 'Pipéracilline', group: 'Pénicilline', data: ['●','●','●','●','■','⚠','V','V','V','⚠','⚠','V','V','V','V','V','V','V','V','V','V','V']},
+                {name: 'Céfalexine', group: 'Céphalosporine 1G', data: ['⚠','⚠','⚠','V','⚠','■','V','V','V','🔴','⚠','V','V','V','V','V','V','V','V','V','V','V']},
+                {name: 'Céfazoline', group: 'Céphalosporine 1G', data: ['V','V','V','V','V','V','■','V','V','V','V','V','V','V','V','V','V','V','V','V','V','V']},
+                {name: 'Céfalotine', group: 'Céphalosporine 1G', data: ['V','V','V','V','V','V','V','■','⚠','V','V','V','⚠','V','V','V','V','V','V','V','V','V']},
+                {name: 'Céfuroxime', group: 'Céphalosporine 2G', data: ['V','V','V','V','V','V','V','⚠','■','V','V','⚠','⚠','⚠','⚠','⚠','⚠','⚠','V','V','V','⚠']},
+                {name: 'Céfaclor', group: 'Céphalosporine 2G', data: ['⚠','⚠','⚠','V','⚠','🔴','V','V','V','■','⚠','V','V','V','V','●','V','V','V','V','V','V']},
+                {name: 'Céfamandole', group: 'Céphalosporine 2G', data: ['⚠','⚠','⚠','V','⚠','⚠','V','V','V','⚠','■','V','V','V','V','●','V','V','V','V','V','V']},
+                {name: 'Ceftriaxone', group: 'Céphalosporine 3G', data: ['V','V','V','V','V','V','V','V','⚠','V','V','■','🔴','⚠','⚠','⚠','⚠','⚠','V','V','V','⚠']},
+                {name: 'Céfotaxime', group: 'Céphalosporine 3G', data: ['V','V','V','V','V','V','V','⚠','⚠','V','V','🔴','■','⚠','🔴','⚠','⚠','⚠','V','V','V','⚠']},
+                {name: 'Ceftazidime', group: 'Céphalosporine 3G', data: ['V','V','V','V','V','V','V','V','⚠','V','V','⚠','⚠','■','⚠','🔴','⚠','⚠','V','V','V','🔴']},
+                {name: 'Céfépime', group: 'Céphalosporine 4G', data: ['V','V','V','V','V','V','V','V','⚠','●','●','⚠','🔴','⚠','■','⚠','⚠','⚠','●','●','●','⚠']},
+                {name: 'Céfidérocol', group: 'Céphalosporine 5G', data: ['V','V','V','V','V','V','V','V','⚠','V','V','⚠','⚠','🔴','⚠','■','⚠','⚠','V','V','V','🔴']},
+                {name: 'Ceftaroline', group: 'Céphalosporine 5G', data: ['V','V','V','V','V','V','V','V','⚠','V','V','⚠','⚠','⚠','⚠','⚠','■','⚠','V','V','V','⚠']},
+                {name: 'Ceftolozane', group: 'Céphalosporine 5G', data: ['V','V','V','V','V','V','V','V','⚠','V','V','⚠','⚠','⚠','⚠','⚠','⚠','■','V','V','V','⚠']},
+                {name: 'Méropénème', group: 'Carbapénème', data: ['V','V','V','V','V','V','V','V','V','V','V','V','V','V','●','V','V','V','■','⚠','⚠','V']},
+                {name: 'Imipénème', group: 'Carbapénème', data: ['V','V','V','V','V','V','V','V','V','V','V','V','V','V','●','V','V','V','⚠','■','⚠','V']},
+                {name: 'Ertapénème', group: 'Carbapénème', data: ['V','V','V','V','V','V','V','V','V','V','V','V','V','V','●','V','V','V','⚠','⚠','■','V']},
+                {name: 'Aztréonam', group: 'Monobactam', data: ['V','V','V','V','V','V','V','V','⚠','V','V','⚠','⚠','🔴','⚠','🔴','⚠','⚠','V','V','V','■']}
+            ];
+            
+            const colNames = antibiotics.map(a => a.name);
+            
+            let html = '<table><thead><tr>';
+            html += '<th class="corner-cell">Ligne ↓ / Col →</th>';
+            colNames.forEach(name => {
+                html += `<th class="col-header"><div class="col-header-text">${name}</div></th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            antibiotics.forEach((antibiotic, rowIndex) => {
+                html += '<tr>';
+                html += `<td class="row-header" data-group="${antibiotic.group}">${antibiotic.name}</td>`;
+                antibiotic.data.forEach((cell, colIndex) => {
+                    let cellClass = 'cell-data';
+                    let cellContent = '';
+                    let tooltip = '';
+                    
+                    if (cell === '■') {
+                        cellClass += ' cell-black';
+                        tooltip = 'Même molécule';
+                    } else if (cell === '●') {
+                        cellClass += ' cell-red';
+                        cellContent = '●';
+                        tooltip = 'Allergie via PPL';
+                    } else if (cell === '🔴') {
+                        cellClass += ' cell-orange';
+                        cellContent = '●';
+                        tooltip = 'Risque via chaîne R1';
+                    } else if (cell === '⚠') {
+                        cellClass += ' cell-yellow';
+                        cellContent = '⚠';
+                        tooltip = 'Risque via R1 ou R2';
+                    } else if (cell === 'V') {
+                        cellClass += ' cell-green';
+                        cellContent = 'V';
+                        tooltip = 'Pas de risque croisé';
+                    } else {
+                        cellClass += ' cell-empty';
+                    }
+                    
+                    html += `<td class="${cellClass}" data-tip="${tooltip}">${cellContent}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            return html;
+        }
+        
+        // Fermer le modal en cliquant sur le fond
+        document.getElementById('chain-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideChainTable();
+            }
+        });
+    
+        function getChainTableHTML() {
+            return `
+                <div style="margin-top: 40px; padding: 25px; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px;">
+                    <h3 style="color: #1e293b; margin-bottom: 15px; font-size: 1.3rem;">📊 Tableau des chaînes latérales</h3>
+                    <p style="color: #64748b; margin-bottom: 20px; line-height: 1.6;">
+                        Utilisez ce tableau pour vérifier si l'antibiotique envisagé a des chaînes latérales 
+                        <strong>différentes</strong> de celui responsable de l'allergie.
+                    </p>
+                    
+                    <button onclick="showChainTable()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 8px; font-size: 1.05rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3); transition: all 0.3s;">
+                        📊 Consulter le tableau complet (21 antibiotiques)
+                    </button>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #fffbeb; border-radius: 6px; border-left: 4px solid #f59e0b;">
+                        <p style="font-size: 0.95rem; color: #78350f; margin-bottom: 10px; font-weight: 600;">💡 Comment l'utiliser :</p>
+                        <ol style="margin-left: 20px; color: #78350f; font-size: 0.9rem; line-height: 1.8; margin-bottom: 0;">
+                            <li>Trouvez l'antibiotique <strong>responsable</strong> de l'allergie (ligne)</li>
+                            <li>Cherchez l'antibiotique que vous souhaitez <strong>prescrire</strong> (colonne)</li>
+                            <li>Si <strong style="background: white; padding: 2px 6px; border-radius: 3px;">V</strong> (blanc) → Chaînes DIFFÉRENTES → Prescription possible</li>
+                            <li>Si <strong style="color: #dc2626;">coloré (■●⚠)</strong> → Chaînes SIMILAIRES → Ne pas prescrire</li>
+                        </ol>
+                    </div>
+                </div>
+            `;
+        }
+
+    
+</script>
+</body>
+</html>

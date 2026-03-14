@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antiviraux &mdash; R&eacute;aApp CH Robert Boulin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0b0f14;--surface:#121820;--card:#181f28;--border:#1e2a38;
+      --text:#e2eaf4;--muted:#5a7080;--soft:#2a3a4a;
+      --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+      --accent:#2dd4bf;--medical:#3b82f6;--urgent:#ef4444;
+      --warn:#eab308;--purple:#a78bfa;--success:#22c55e;--orange:#fb923c;
+    }
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .hidden{display:none!important;}
+
+    /* Header */
+    .tool-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+    .tool-header-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(45,212,191,.15),rgba(59,130,246,.1));border:1px solid rgba(45,212,191,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .tool-header-title{font-size:16px;font-weight:600;line-height:1.2}
+    .tool-header-sub{font-size:11px;color:var(--muted);font-family:var(--mono)}
+    .tool-header-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .tool-header-badge{padding:4px 10px;border-radius:20px;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.2);font-size:11px;color:var(--accent);font-family:var(--mono)}
+    .ds-badge{padding:3px 9px;border-radius:20px;font-size:10px;font-family:var(--mono);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+    .ds-badge.supabase{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--success)}
+    .ds-badge.fallback{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.2);color:var(--warn)}
+    .ds-badge.loading{background:rgba(90,112,128,.1);border:1px solid rgba(90,112,128,.2);color:var(--muted)}
+    .spinner{width:10px;height:10px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle}
+
+    /* Layout */
+    .tool-body{max-width:1140px;margin:0 auto;padding:20px 16px;display:grid;grid-template-columns:2fr 3fr;gap:18px;align-items:start}
+    @media(max-width:780px){.tool-body{grid-template-columns:1fr}}
+
+    /* Card */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px}
+    .result-block{animation:fadeUp .3s ease}
+    .card-title{font-size:12px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .card-title::before{content:'';width:3px;height:12px;background:var(--accent);border-radius:2px;display:inline-block;flex-shrink:0}
+
+    /* Mode tabs */
+    .mode-tabs{display:flex;gap:8px;margin-bottom:16px;background:var(--surface);border-radius:9px;padding:3px;border:1px solid var(--border)}
+    .mode-tab{flex:1;padding:9px 10px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center}
+    .mode-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+    .mode-tab:hover:not(.active){color:var(--text)}
+
+    /* Form */
+    .form-group{margin-bottom:13px}
+    label{display:block;font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
+    input[type=number],select{width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:border-color .15s;appearance:none}
+    input[type=number]:focus,select:focus{border-color:rgba(45,212,191,.5)}
+    input[type=number]::placeholder{color:var(--muted)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .section-divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+    .info-block{background:rgba(45,212,191,.05);border:1px solid rgba(45,212,191,.15);border-radius:9px;padding:11px 13px;margin-bottom:13px;font-size:12px;color:var(--muted)}
+    .info-block p:first-child{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:1px}
+
+    /* Buttons */
+    .btn-primary{width:100%;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#0b0f14;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s}
+    .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+    .btn-secondary{padding:11px 16px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:var(--font);font-size:14px;cursor:pointer;transition:all .15s}
+    .btn-secondary:hover{border-color:var(--soft);color:var(--text)}
+    .btn-row{display:flex;gap:10px;padding-top:6px}
+    .btn-row .btn-primary{flex:1}
+
+    /* Results */
+    #results:empty::after{content:'S\00e9lectionner un antiviral et renseigner la fonction r\00e9nale';display:flex;align-items:center;justify-content:center;min-height:300px;font-size:12px;font-family:var(--mono);color:var(--muted);text-align:center;white-space:pre-line}
+
+    /* Stade IRC */
+    .fr-badge{border-radius:10px;padding:14px 16px;margin-bottom:13px;border:1px solid}
+    .fr-badge.normal{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.2)}
+    .fr-badge.legere{background:rgba(45,212,191,.08);border-color:rgba(45,212,191,.2)}
+    .fr-badge.moderee{background:rgba(234,179,8,.08);border-color:rgba(234,179,8,.2)}
+    .fr-badge.severe{background:rgba(251,146,60,.08);border-color:rgba(251,146,60,.2)}
+    .fr-badge.terminale{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2)}
+    .fr-badge.eer{background:rgba(167,139,250,.08);border-color:rgba(167,139,250,.2)}
+    .fr-label{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+    .fr-value{font-size:26px;font-weight:700;line-height:1.15;margin:2px 0}
+    .fr-value.normal{color:var(--success)}.fr-value.legere{color:var(--accent)}.fr-value.moderee{color:var(--warn)}.fr-value.severe{color:var(--orange)}.fr-value.terminale{color:var(--urgent)}.fr-value.eer{color:var(--purple)}
+    .fr-sub{font-size:12px;color:var(--muted)}
+
+    /* Dose */
+    .dose-card{background:linear-gradient(135deg,rgba(45,212,191,.08),rgba(59,130,246,.05));border:1px solid rgba(45,212,191,.2);border-radius:10px;padding:14px;margin-bottom:11px}
+    .dose-molecule{font-size:19px;font-weight:700;margin-bottom:1px;color:var(--text)}
+    .dose-classe{font-size:11px;font-family:var(--mono);color:var(--accent)}
+    .dose-sous-titre{font-size:11px;font-family:var(--mono);color:var(--muted)}
+    .dose-indication{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.15);border-radius:7px;padding:7px 11px;margin:9px 0;font-size:12px;color:var(--medical);font-family:var(--mono)}
+    .dose-value{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px}
+    .dose-value-label{font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;text-transform:uppercase}
+    .dose-text{font-size:15px;font-weight:600;color:var(--text);line-height:1.5}
+
+    /* Précautions */
+    .prec-list{display:flex;flex-direction:column;gap:8px}
+    .prec-item{padding:9px 0 9px 13px;border-left:3px solid;margin-bottom:0}
+    .prec-item.prep{border-color:var(--medical)}.prec-item.admin{border-color:var(--success)}.prec-item.stab{border-color:var(--purple)}
+    .prec-item.incomp{border-color:var(--urgent);background:rgba(239,68,68,.04);padding:9px 10px;border-radius:0 7px 7px 0}
+    .prec-item.effi{border-color:var(--accent)}.prec-item.tol{border-color:var(--orange);background:rgba(251,146,60,.04);padding:9px 10px;border-radius:0 7px 7px 0}.prec-item.inter{border-color:var(--warn)}
+    .prec-title{font-size:10px;font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+    .prec-item.prep .prec-title{color:var(--medical)}.prec-item.admin .prec-title{color:var(--success)}.prec-item.stab .prec-title{color:var(--purple)}.prec-item.incomp .prec-title{color:var(--urgent)}.prec-item.effi .prec-title{color:var(--accent)}.prec-item.tol .prec-title{color:var(--orange)}.prec-item.inter .prec-title{color:var(--warn)}
+    .prec-text{font-size:13px;color:var(--text);line-height:1.5}
+
+    /* Disclaimer */
+    .disclaimer{background:rgba(234,179,8,.06);border:1px solid rgba(234,179,8,.15);border-radius:10px;padding:12px 14px;font-size:11px;color:var(--muted);line-height:1.8}
+    .disclaimer strong,.disclaimer-inner p.font-semibold{color:var(--warn);font-weight:600}
+    .disclaimer-inner{font-size:11px;color:var(--muted)}
+
+    /* Sev badge */
+    .sev-badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;font-family:var(--mono);white-space:nowrap}
+
+    option{background:var(--card);color:var(--text)}
+    optgroup{background:var(--surface);color:var(--muted)}
+
+    /* Note stades */
+    .stades-note{font-size:11px;font-family:var(--mono);color:var(--muted);padding:8px 4px;line-height:1.8}
+  </style>
+</head>
+<body>
+
+<header class="tool-header">
+  <div class="tool-header-icon">&#x1F9A0;</div>
+  <div>
+    <div class="tool-header-title">Antiviraux en R&eacute;animation</div>
+    <div class="tool-header-sub">CH Robert Boulin &middot; Adaptation posologique IRC / EER</div>
+  </div>
+  <div class="tool-header-right">
+    <div class="ds-badge loading" id="data-badge"><div class="spinner"></div><span>Chargement&hellip;</span></div>
+    <div class="tool-header-badge" id="mol-count-badge">5 mol&eacute;cules</div>
+  </div>
+</header>
+
+<div class="tool-body">
+  <!-- Colonne saisie -->
+  <div>
+    <div class="card">
+      <div class="card-title">Param&egrave;tres Patient</div>
+
+      <!-- Mode tabs -->
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="btn-calcul" onclick="switchMode('calcul')">&#x1F4D0; Calculer ClCr</button>
+        <button class="mode-tab" id="btn-direct" onclick="switchMode('direct')">&#x2328; Saisie directe</button>
+      </div>
+
+      <!-- Mode calcul -->
+      <div id="mode-calcul">
+        <div class="info-block">
+          <p>M&eacute;thode de r&eacute;f&eacute;rence</p>
+          <p>R&eacute;colte urinaire 24h mesur&eacute;e au laboratoire</p>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Volume urinaire (mL)</label>
+            <input type="number" id="volU" placeholder="1500" min="0" step="50">
+          </div>
+          <div class="form-group">
+            <label>Dur&eacute;e de recueil</label>
+            <select id="duree">
+              <option value="12">12 heures</option>
+              <option value="24" selected>24 heures</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Cr&eacute;atinine U (&mu;mol/L)</label>
+            <input type="number" id="creatU" placeholder="4420" min="0">
+          </div>
+          <div class="form-group">
+            <label>Cr&eacute;atinine P (&mu;mol/L)</label>
+            <input type="number" id="creatP" placeholder="110" min="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode direct -->
+      <div id="mode-direct" class="hidden">
+        <div class="info-block" style="background:rgba(34,197,94,.05);border-color:rgba(34,197,94,.15)">
+          <p style="color:var(--success)">Clairance mesur&eacute;e (laboratoire)</p>
+          <p>Valeur directe issue du bilan biologique</p>
+        </div>
+        <div class="form-group">
+          <label>Clairance mesur&eacute;e (mL/min)</label>
+          <input type="number" id="clcrDirect" placeholder="ex: 65" step="0.1" style="font-size:18px;font-weight:600">
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="form-group">
+        <label>&Eacute;puration Extra-R&eacute;nale (EER)</label>
+        <select id="dialyse">
+          <option value="non">Aucune</option>
+          <option value="hdi">HDI &mdash; H&eacute;modialyse Intermittente</option>
+          <option value="eerc">EERC &mdash; CVVH / CVVHDF</option>
+        </select>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="form-group">
+        <label>Antiviral</label>
+        <select id="atv">
+          <option value="">-- S&eacute;lectionner --</option>
+          <optgroup label="Anti-HSV/VZV">
+            <option value="aciclovir">Aciclovir</option>
+            <option value="valaciclovir">Valaciclovir</option>
+          </optgroup>
+          <optgroup label="Anti-CMV">
+            <option value="ganciclovir">Ganciclovir</option>
+            <option value="valganciclovir">Valganciclovir</option>
+            <option value="foscarnet">Foscarnet (Foscavir)</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div id="indication-container" class="form-group hidden">
+        <label>Indication clinique</label>
+        <select id="indication"></select>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" type="button" onclick="document.getElementById('form').dispatchEvent(new Event('submit'))">Calculer la posologie</button>
+        <button class="btn-secondary" type="button" onclick="reset()">&#8634;</button>
+      </div>
+      <form id="form" style="display:none"></form>
+    </div>
+    <div class="stades-note">
+      Stades IRC&nbsp;: normale &ge;70 &middot; l&eacute;g&egrave;re 50&ndash;69 &middot; mod&eacute;r&eacute;e 30&ndash;49 &middot; s&eacute;v&egrave;re 10&ndash;29 &middot; terminale &lt;10 mL/min
+    </div>
+  </div>
+
+  <!-- Colonne r&eacute;sultats -->
+  <div id="results"></div>
+</div>
+
+<script>
+
+  // ══════════════════════════════════════════════════════════════════
+  // SUPABASE CONFIG — Modifier posologies : Dashboard → antiviraux_indications
+  // ══════════════════════════════════════════════════════════════════
+  const SUPABASE_URL  = 'https://mvcidplmvqaokftoszex.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12Y2lkcGxtdnFhb2tmdG9zemV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzk4MTUsImV4cCI6MjA4ODk1NTgxNX0.MiQoOve99hax2yEDq8cVpnD3GoK19cp6nb1I5xDGDzY';
+
+  async function loadFromSupabase() {
+    try {
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+      const { data:mols, error:e1 } = await sb
+        .from('antiviraux_molecules').select('*').eq('actif',true).order('groupe').order('nom');
+      if (e1) throw e1;
+      const { data:inds, error:e2 } = await sb
+        .from('antiviraux_indications').select('*').eq('actif',true).order('ordre');
+      if (e2) throw e2;
+      if (!mols || mols.length === 0) throw new Error('Vide');
+
+      const indByMol = {};
+      inds.forEach(i => { if(!indByMol[i.molecule_id]) indByMol[i.molecule_id]=[]; indByMol[i.molecule_id].push(i); });
+
+      mols.forEach(mol => {
+        const indications = {};
+        (indByMol[mol.id]||[]).forEach(ind => {
+          indications[ind.slug] = {
+            label: ind.label,
+            pos: { n:ind.pos_normale||'NC', l:ind.pos_legere||'NC', m:ind.pos_moderee||'NC', s:ind.pos_severe||'NC', t:ind.pos_terminale||'NC' },
+            eerc: ind.pos_eerc||'NC'
+          };
+        });
+        DB[mol.slug] = { nom:mol.nom, classe:mol.classe, prep:mol.prep, admin:mol.admin, stab:mol.stab, incomp:mol.incomp, effi:mol.effi, tol:mol.tol, inter:mol.inter, indications };
+      });
+
+      // Rebuild select
+      const sel = document.getElementById('atv');
+      const cur = sel.value;
+      const groups = {};
+      mols.forEach(m => { if(!groups[m.groupe]) groups[m.groupe]=[]; groups[m.groupe].push(m); });
+      sel.innerHTML = '<option value="">-- Sélectionner --</option>';
+      Object.entries(groups).forEach(([g,list]) => {
+        const og = document.createElement('optgroup'); og.label = g;
+        list.forEach(m => { const o=document.createElement('option'); o.value=m.slug; o.textContent=m.nom; og.appendChild(o); });
+        sel.appendChild(og);
+      });
+      if (cur && DB[cur]) sel.value = cur;
+
+      const badge = document.getElementById('data-badge');
+      badge.className = 'ds-badge supabase';
+      badge.innerHTML = '<span>&#9679; Supabase</span>';
+      document.getElementById('mol-count-badge').textContent = mols.length + ' mol\u00e9cules';
+      console.log('Supabase OK:', mols.length, 'antiviraux');
+
+    } catch(err) {
+      console.warn('Supabase indispo ->', err.message||err);
+      const badge = document.getElementById('data-badge');
+      badge.className = 'ds-badge fallback';
+      badge.innerHTML = '<span>&#9889; Local</span>';
+    }
+  }
+
+
+    // Variable pour le mode actuel
+    let currentMode = 'calcul';
+
+    // Fonction pour changer de mode
+    function switchMode(mode) {
+        currentMode = mode;
+        const btnCalcul = document.getElementById('btn-calcul');
+        const btnDirect = document.getElementById('btn-direct');
+        const modeCalcul = document.getElementById('mode-calcul');
+        const modeDirect = document.getElementById('mode-direct');
+
+        if (mode === 'calcul') {
+            btnCalcul.classList.add('active');
+            btnDirect.classList.remove('active');
+            modeCalcul.classList.remove('hidden');
+            modeDirect.classList.add('hidden');
+        } else {
+            btnCalcul.classList.remove('active');
+            btnDirect.classList.add('active');
+            modeCalcul.classList.add('hidden');
+            modeDirect.classList.remove('hidden');
+        }
+    }
+
+    // Base de données antiviraux - Sources: Document adaptation antiviraux
+    const DB = {
+        'aciclovir': {
+            nom: 'Aciclovir', classe: 'Anti-HSV/VZV',
+            indications: {
+                'meningo-hsv': {
+                    label: 'Méningoencéphalite à HSV',
+                    pos: { 
+                        n:'10mg/kg/8h', 
+                        l:'10mg/kg/8h', 
+                        m:'10mg/kg/12h', 
+                        s:'10mg/kg/24h', 
+                        t:'5mg/kg/24h' 
+                    },
+                    eerc: '2,5 à 5 mg/kg toutes les 24h (administrer après la séance les jours de dialyse)'
+                },
+                'meningo-vzv': {
+                    label: 'Méningoencéphalite à VZV',
+                    pos: { 
+                        n:'15mg/kg/8h', 
+                        l:'15mg/kg/8h', 
+                        m:'15mg/kg/12h', 
+                        s:'15mg/kg/24h', 
+                        t:'7,5mg/kg/24h' 
+                    },
+                    eerc: '2,5 à 5 mg/kg toutes les 24h (administrer après la séance les jours de dialyse)'
+                },
+                'hsv-vzv-hors-meningo': {
+                    label: 'Infection HSV-VZV (hors méningoencéphalite)',
+                    pos: { 
+                        n:'5mg/kg/8h', 
+                        l:'5mg/kg/8h', 
+                        m:'5mg/kg/12h', 
+                        s:'5mg/kg/24h', 
+                        t:'2,5mg/kg/24h' 
+                    },
+                    eerc: '2,5 à 5 mg/kg toutes les 24h (administrer après la séance les jours de dialyse)'
+                },
+                'cutaneo-muqueuse': {
+                    label: 'Infection HSV-VZV cutanéo-muqueuse',
+                    pos: { 
+                        n:'800mg/j', 
+                        l:'800mg/j', 
+                        m:'600mg/j', 
+                        s:'400mg/j', 
+                        t:'200mg/j' 
+                    },
+                    eerc: '200 mg/24h (Herpès) ou 800 mg/24h (Zona) - Administrer après la séance les jours de dialyse'
+                }
+            },
+            prep: 'NaCl 0,9% uniquement. [C] max 5mg/mL (50mL/flacon).',
+            admin: 'Perf IV 90min. Hydratation correcte obligatoire.',
+            stab: 'Immédiate recommandée.',
+            incomp: 'Ne pas diluer dans G5%.',
+            effi: 'Cible taux résiduel : 0,4-0,8 µg/mL. HSV-1, HSV-2, VZV. Diffusion excellente LCS.',
+            tol: '⚠️⚠️ NÉPHROTOXICITÉ++ : surveillance créatinine quotidienne. HYDRATATION OBLIGATOIRE. Cristallurie. Troubles neurologiques si surdosage.',
+            inter: 'Médicaments néphrotoxiques : risque cumulatif. Probénécide : ↑aciclovir.'
+        },
+        'valaciclovir': {
+            nom: 'Valaciclovir', classe: 'Anti-HSV/VZV (prodrogue aciclovir)',
+            indications: {
+                'herpes-labial': {
+                    label: 'Herpès labial',
+                    pos: { 
+                        n:'2000mg/12h', 
+                        l:'1000mg/12h', 
+                        m:'500mg/12h', 
+                        s:'500mg/24h', 
+                        t:'500mg/24h' 
+                    },
+                    eerc: '500 mg/24h (Herpès) ou 500 mg x 2/jour (Zona) - Dose à prendre après la séance'
+                },
+                'prevention-hsv': {
+                    label: 'Prévention infection HSV',
+                    pos: { 
+                        n:'500mg/12h', 
+                        l:'500mg/12h', 
+                        m:'500mg/24h', 
+                        s:'500mg/24h', 
+                        t:'500mg/24h' 
+                    },
+                    eerc: '500 mg/24h - Dose à prendre après la séance'
+                }
+            },
+            prep: 'Comprimé 500mg.',
+            admin: 'Voie orale. Biodisponibilité 54% (meilleure que aciclovir oral).',
+            stab: 'N/A (forme orale).',
+            incomp: 'N/A (forme orale).',
+            effi: 'Prodrogue aciclovir. Biodisponibilité orale supérieure. Traitement épisodes aigus.',
+            tol: '⚠️ Néphrotoxicité (moins que aciclovir IV). Nausées. Céphalées.',
+            inter: 'Médicaments néphrotoxiques. Cimétidine, probénécide : ↑valaciclovir.'
+        },
+        'ganciclovir': {
+            nom: 'Ganciclovir', classe: 'Anti-CMV',
+            indications: {
+                'cmv': {
+                    label: 'Traitement anti-CMV',
+                    pos: { 
+                        n:'Induction : 5mg/kg/12h (2-3 sem) puis entretien 5mg/kg/24h', 
+                        l:'Induction : 2,5mg/kg/12h (2-3 sem) puis entretien 2,5mg/kg/24h', 
+                        m:'Induction : 2,5mg/kg/12h (2-3 sem) puis entretien 2,5mg/kg/24h', 
+                        s:'Induction : 1,25mg/kg/24h (2-3 sem) puis entretien 0,625mg/kg/24h', 
+                        t:'NC' 
+                    },
+                    eerc: '1,25 mg/kg après chaque séance (3x/semaine). Dose d\'entretien habituelle. Pour traitement d\'attaque : fréquence peut passer à 3x/semaine après séance'
+                }
+            },
+            prep: 'Dilué en pharmacie dans poche 250mL NaCl 0,9%.',
+            admin: 'Perf IV 60min. Ne jamais administrer en bolus ou IVD.',
+            stab: 'Préparation pharmaceutique.',
+            incomp: 'Ne pas mélanger avec d\'autres médicaments.',
+            effi: 'CMV (rétinite, colite, pneumonie). Traitement 2-3 semaines induction puis entretien. Dosage possible à Bichat.',
+            tol: '⚠️⚠️⚠️ MYÉLOTOXICITÉ MAJEURE++ : NFS 2-3×/sem. Neutropénie, thrombopénie (surtout IRC). Discuter G-CSF si pancytopénie. Néphrotoxicité. Troubles digestifs.',
+            inter: '⚠️⚠️ Zidovudine : myélotox additive (CI relative). Imipénem : convulsions. Probénécide : ↑ganciclovir. Mycophenolate : compétition élimination rénale.'
+        },
+        'valganciclovir': {
+            nom: 'Valganciclovir', classe: 'Anti-CMV (prodrogue ganciclovir)',
+            indications: {
+                'cmv-retinite': {
+                    label: 'Infection CMV (rétinite VIH stade SIDA)',
+                    pos: { 
+                        n:'900mg/12h', 
+                        l:'450mg/12h', 
+                        m:'450mg/24h', 
+                        s:'450mg/48h', 
+                        t:'200mg/48h' 
+                    },
+                    eerc: 'ND / Déconseillé - Souvent remplacé par le ganciclovir IV en dialyse pour une meilleure maîtrise des concentrations. Si utilisé : 450 mg 2 à 3 fois par semaine après séance'
+                },
+                'prophylaxie': {
+                    label: 'Prophylaxie CMV',
+                    pos: { 
+                        n:'900mg/24h', 
+                        l:'450mg/24h', 
+                        m:'450mg/48h', 
+                        s:'450mg 2×/sem', 
+                        t:'100mg 3×/sem' 
+                    },
+                    eerc: 'ND / Déconseillé - Souvent remplacé par le ganciclovir IV en dialyse pour une meilleure maîtrise des concentrations. Si utilisé : 450 mg 2 à 3 fois par semaine après séance'
+                }
+            },
+            prep: 'Comprimé 450mg ou solution buvable 50mg/mL.',
+            admin: 'Voie orale. PRENDRE AVEC ALIMENTS (↑biodisponibilité). Biodisponibilité 60%.',
+            stab: 'N/A (forme orale).',
+            incomp: 'N/A (forme orale).',
+            effi: 'Prodrogue ganciclovir. Traitement d\'attaque CMV. Prophylaxie post-greffe. Biodisponibilité orale excellente.',
+            tol: '⚠️⚠️⚠️ MYÉLOTOXICITÉ++ : NFS hebdo. Neutropénie, thrombopénie, anémie. Diarrhée, nausées. Néphrotoxicité.',
+            inter: '⚠️⚠️ Zidovudine : myélotox additive (CI relative). Didanosine : ↑toxicité. Probénécide : ↑valganciclovir. Mycophenolate.'
+        },
+        'foscarnet': {
+            nom: 'Foscarnet (Foscavir)', classe: 'Anti-CMV/HSV (pyrophosphate)',
+            indications: {
+                'cmv-greffe': {
+                    label: 'Anti-CMV (greffe CSH)',
+                    pos: { 
+                        n:'Induction 60mg/kg/12h puis entretien 90-120mg/kg/24h', 
+                        l:'Induction 45mg/kg/12h puis entretien 70-90mg/kg/24h', 
+                        m:'Induction 35mg/kg/12h puis entretien 50-65mg/kg/24h', 
+                        s:'Induction 15mg/kg/12h puis entretien 50-65mg/kg/48h', 
+                        t:'NC' 
+                    },
+                    eerc: 'Dose très réduite (ex: 40-60 mg/kg) - Très néphrotoxique et dialysable. Utilisation complexe en HDI, nécessite un suivi spécialisé strict'
+                },
+                'cmv-vih': {
+                    label: 'Anti-CMV (VIH)',
+                    pos: { 
+                        n:'Induction 60mg/kg/8h ou 90mg/kg/12h puis entretien 90-120mg/kg/24h', 
+                        l:'Induction 45mg/kg/8h ou 70mg/kg/12h puis entretien 70-90mg/kg/24h', 
+                        m:'Induction 50mg/kg/12h puis entretien 50-65mg/kg/24h', 
+                        s:'Induction 50mg/kg/24h puis entretien 50-65mg/kg/48h', 
+                        t:'NC' 
+                    },
+                    eerc: 'Dose très réduite (ex: 40-60 mg/kg) - Très néphrotoxique et dialysable. Utilisation complexe en HDI, nécessite un suivi spécialisé strict'
+                },
+                'hsv': {
+                    label: 'Traitement anti-HSV',
+                    pos: { 
+                        n:'40mg/kg/8h', 
+                        l:'30mg/kg/8h', 
+                        m:'25mg/kg/12h', 
+                        s:'35-40mg/kg/24h', 
+                        t:'NC' 
+                    },
+                    eerc: 'Dose très réduite (ex: 40-60 mg/kg) - Très néphrotoxique et dialysable. Utilisation complexe en HDI, nécessite un suivi spécialisé strict'
+                }
+            },
+            prep: 'Solution prête à l\'emploi 24mg/mL.',
+            admin: '⚠️⚠️ Perf 60-90min (attaque), 120min (entretien). HYDRATATION OBLIGATOIRE : 0,5-1L NaCl 0,9% ou G5% en Y. Voie centrale préférable.',
+            stab: 'Solution stable.',
+            incomp: 'Solutions contenant calcium/magnésium (précipitation). G30% et dérivés. Voie dédiée.',
+            effi: 'CMV résistant ganciclovir. HSV/VZV résistant aciclovir. Alternative si intolérance ganciclovir (moins myélotoxique). Durée traitement : 2-3 semaines induction.',
+            tol: '⚠️⚠️⚠️ NÉPHROTOXICITÉ MAJEURE (80%) : créatinine quotidienne, HYDRATATION++. TROUBLES ÉLECTROLYTIQUES SÉVÈRES : ↓Ca, ↓Mg, ↓K, ↓PO4 (ionogramme quotidien). Ulcérations génitales. Anémie.',
+            inter: 'Pentamidine IV : hypocalcémie sévère (↑risque). Aminosides, amphotéricine, ciclosporine : néphrotox additive. Anticonvulsivants : ↓efficacité foscarnet.'
+        }
+    };
+
+    // Gestion des indications selon l'antiviral sélectionné
+    document.getElementById('atv').addEventListener('change', function() {
+        const atv = this.value;
+        const indicationContainer = document.getElementById('indication-container');
+        const indicationSelect = document.getElementById('indication');
+        
+        if (atv && DB[atv]) {
+            const indications = DB[atv].indications;
+            indicationSelect.innerHTML = '<option value="">-- Sélectionner indication --</option>';
+            
+            for (const [key, value] of Object.entries(indications)) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = value.label;
+                indicationSelect.appendChild(option);
+            }
+            
+            indicationContainer.classList.remove('hidden');
+        } else {
+            indicationContainer.classList.add('hidden');
+        }
+    });
+
+    function calcul() {
+        // Mode saisie directe
+        if (currentMode === 'direct') {
+            const clcrDirect = parseFloat(document.getElementById('clcrDirect').value);
+            return clcrDirect || null;
+        }
+        
+        // Mode calcul
+        const v = parseFloat(document.getElementById('volU').value);
+        const cu = parseFloat(document.getElementById('creatU').value);
+        const cp = parseFloat(document.getElementById('creatP').value);
+        const d = parseFloat(document.getElementById('duree').value);
+        if (!v || !cu || !cp) return null;
+        return (cu * v) / (cp * d * 60);
+    }
+
+    function stade(clcr) {
+        if (clcr >= 70) return { n:'Normale (\u226570 mL/min)',             c:'n', css:'normal'    };
+        if (clcr >= 50) return { n:'IRC l\u00e9g\u00e8re (50-69 mL/min)', c:'l', css:'legere'    };
+        if (clcr >= 30) return { n:'IRC mod\u00e9r\u00e9e (30-49 mL/min)',c:'m', css:'moderee'   };
+        if (clcr >= 10) return { n:'IRC s\u00e9v\u00e8re (10-29 mL/min)', c:'s', css:'severe'    };
+        return             { n:'IRC terminale (<10 mL/min)',                 c:'t', css:'terminale' };
+    }
+
+    document.getElementById('form').onsubmit = function(e) {
+        e.preventDefault();
+        
+        const dialyse = document.getElementById('dialyse').value;
+        const atv = document.getElementById('atv').value;
+        
+        // Validation antiviral
+        if (!atv) { alert('Sélectionner antiviral'); return; }
+        if (!DB[atv]) { alert('Antiviral non disponible'); return; }
+        
+        const indication = document.getElementById('indication').value;
+        if (!indication) { alert('Sélectionner une indication'); return; }
+        
+        const d = DB[atv];
+        const indic = d.indications[indication];
+        
+        // LOGIQUE EER
+        if (dialyse === 'hdi' || dialyse === 'eerc') {
+            // Mode HDI ou EERC : clairance masquée, posologie EER uniquement
+            const eerLabel = dialyse === 'hdi' ? 'HDI (Hémodialyse Intermittente)' : 'EERC (Épuration Extra-Rénale Continue)';
+            
+            
+            
+            
+            
+            
+            document.getElementById('results').innerHTML = `
+                <div style="display:flex;flex-direction:column;gap:14px">
+                    <div class="card result-block">
+                        <h3 class="card-title">
+                            <span>Fonction Rénale</span>
+                            <span class="sev-badge" style="background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:var(--purple)">${eerLabel}</span>
+                        </h3>
+                        <div class="fr-badge eer">
+                            <div style="display:none">
+                                <span style="display:none">🔒</span>
+                            </div>
+                            <p class="fr-label">Clairance non pertinente</p>
+                            <p class="fr-sub">En ${eerLabel}, la posologie est déterminée par les modalités d'épuration et non par la clairance de la créatinine</p>
+                        </div>
+                    </div>
+
+                    <div class="card result-block">
+                        <h3 class="card-title">Posologie Recommandée</h3>
+                        <div class="dose-card">
+                            <p class="dose-classe">Antiviral</p>
+                            <p class="dose-molecule">${d.nom}</p>
+                            <p class="dose-sous-titre">${d.classe}</p>
+                        </div>
+                        <div class="dose-indication">
+                            <p class="dose-value-label">Indication</p>
+                            <p class="dose-text">${indic.label}</p>
+                        </div>
+                        <div class="dose-value" style="border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.05)">
+                            <p class="dose-value-label" style="color:var(--purple)">Posologie en ${eerLabel}</p>
+                            <p class="dose-text">${indic.eerc}</p>
+                        </div>
+                    </div>
+
+                    <div class="card result-block">
+                        <h3 class="card-title">
+                            <span>Précautions d'Emploi</span>
+                        </h3>
+                        <div class="prec-list">
+                            <div class="prec-item prep">
+                                <p class="prec-title">Préparation</p>
+                                <p class="prec-text">${d.prep}</p>
+                            </div>
+                            <div class="prec-item admin">
+                                <p class="prec-title">Administration</p>
+                                <p class="prec-text">${d.admin}</p>
+                            </div>
+                            <div class="prec-item stab">
+                                <p class="prec-title">Stabilité</p>
+                                <p class="prec-text">${d.stab}</p>
+                            </div>
+                            <div class="prec-item incomp">
+                                <p class="prec-title">Incompatibilités</p>
+                                <p class="prec-text">${d.incomp}</p>
+                            </div>
+                            <div class="prec-item effi">
+                                <p class="prec-title">Surveillance Efficacité</p>
+                                <p class="prec-text">${d.effi}</p>
+                            </div>
+                            <div class="prec-item tol">
+                                <p class="prec-title">Surveillance Tolérance</p>
+                                <p class="prec-text">${d.tol}</p>
+                            </div>
+                            <div class="prec-item inter">
+                                <p class="prec-title">Interactions</p>
+                                <p class="prec-text">${d.inter}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="disclaimer">
+                        <div class="disclaimer-inner">
+                            <p class="font-semibold mb-1">Avertissement</p>
+                            <p>Aide à la décision basée sur le document d'adaptation posologique antiviraux. Ne remplace pas le jugement clinique. Surveillance rapprochée de la fonction rénale et des toxicités spécifiques obligatoire.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        // Mode SANS EER : fonctionnement normal avec clairance
+        const clcr = calcul();
+        
+        if (!clcr) { 
+            if (currentMode === 'direct') {
+                alert('Veuillez saisir la clairance');
+            } else {
+                alert('Remplir tous les champs clairance');
+            }
+            return; 
+        }
+        
+        const st = stade(clcr);
+        const pos = indic.pos[st.c];
+        
+        // Ajout d'un badge indiquant le mode de calcul
+        const modeBadge = currentMode === 'direct' 
+            ? '<span class="ds-badge fallback">Saisie directe</span>'
+            : '<span class="ds-badge supabase">Calculée</span>';
+        
+        document.getElementById('results').innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:14px">
+                <div class="card result-block">
+                    <h3 class="card-title">
+                        <span>Fonction Rénale</span>
+                        ${modeBadge}
+                    </h3>
+                    <div class="stade-row">
+                        <div class="stade-left">
+                            <div class="fr-label">Clairance rénale mesurée</div>
+                            <div class="fr-value ${st.css}">${clcr.toFixed(1)} <span style="font-size:15px;font-weight:400">mL/min</span></div>
+                        </div>
+                        <div class="px-4 py-2 rounded-lg border-2 ${st.cl}">
+                            <p class="text-xs font-medium opacity-75">Classification</p>
+                            <div class="fr-sub">${st.n}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card result-block">
+                    <h3 class="card-title">Posologie Recommandée</h3>
+                    <div class="dose-card">
+                        <p class="dose-classe">Antiviral</p>
+                        <p class="dose-molecule">${d.nom}</p>
+                        <p class="dose-sous-titre">${d.classe}</p>
+                    </div>
+                    <div class="dose-indication">
+                        <p class="dose-value-label">Indication</p>
+                        <p class="dose-text">${indic.label}</p>
+                    </div>
+                    <div class="dose-value">
+                        <p class="dose-value-label" style="color:var(--success)">Posologie adaptée à l'IRC</p>
+                        <p class="dose-text">${pos}</p>
+                    </div>
+                    
+                    <!-- Rappel EER pour information -->
+                    <div class="info-block" style="margin-top:12px">
+                        <p class="form-label">ℹ️ En cas d'épuration extra-rénale (EER)</p>
+                        <div class="prec-text">
+                            <p class="mb-1"><span class="font-semibold">HDI ou EERC :</span> ${indic.eerc}</p>
+                            <p class="fr-sub">Si le patient passe en dialyse, sélectionner "HDI" ou "EERC" dans le formulaire</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card result-block">
+                    <h3 class="card-title">
+                        <span>Précautions d'Emploi</span>
+                    </h3>
+                    <div class="prec-list">
+                        <div class="prec-item prep">
+                            <p class="prec-title">Préparation</p>
+                            <p class="prec-text">${d.prep}</p>
+                        </div>
+                        <div class="prec-item admin">
+                            <p class="prec-title">Administration</p>
+                            <p class="prec-text">${d.admin}</p>
+                        </div>
+                        <div class="prec-item stab">
+                            <p class="prec-title">Stabilité</p>
+                            <p class="prec-text">${d.stab}</p>
+                        </div>
+                        <div class="prec-item incomp">
+                            <p class="prec-title">Incompatibilités</p>
+                            <p class="prec-text">${d.incomp}</p>
+                        </div>
+                        <div class="prec-item effi">
+                            <p class="prec-title">Surveillance Efficacité</p>
+                            <p class="prec-text">${d.effi}</p>
+                        </div>
+                        <div class="prec-item tol">
+                            <p class="prec-title">Surveillance Tolérance</p>
+                            <p class="prec-text">${d.tol}</p>
+                        </div>
+                        <div class="prec-item inter">
+                            <p class="prec-title">Interactions</p>
+                            <p class="prec-text">${d.inter}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    <div class="disclaimer-inner">
+                        <p class="font-semibold mb-1">Avertissement</p>
+                        <p>Aide à la décision basée sur le document d'adaptation posologique antiviraux. Ne remplace pas le jugement clinique. Surveillance rapprochée de la fonction rénale et des toxicités spécifiques obligatoire.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    function reset() {
+        document.getElementById('form').reset();
+        document.getElementById('indication-container').classList.add('hidden');
+        document.getElementById('results').innerHTML = '';
+        // Réinitialiser au mode calcul
+        switchMode('calcul');
+    }
+
+    // Exemple pré-rempli
+    window.onload = function() {
+        document.getElementById('volU').value = '1500';
+        document.getElementById('creatU').value = '4420';
+        document.getElementById('creatP').value = '110';
+    };
+    
+
+  // Init Supabase
+  loadFromSupabase();
+</script>
+</body>
+</html>

@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antifongiques &mdash; R&eacute;aApp CH Robert Boulin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0b0f14;--surface:#121820;--card:#181f28;--border:#1e2a38;
+      --text:#e2eaf4;--muted:#5a7080;--soft:#2a3a4a;
+      --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+      --accent:#2dd4bf;--medical:#3b82f6;--urgent:#ef4444;
+      --warn:#eab308;--purple:#a78bfa;--success:#22c55e;--orange:#fb923c;
+    }
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .hidden{display:none!important;}
+
+    /* Header */
+    .tool-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+    .tool-header-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(167,139,250,.15),rgba(124,58,237,.1));border:1px solid rgba(167,139,250,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .tool-header-title{font-size:16px;font-weight:600;line-height:1.2}
+    .tool-header-sub{font-size:11px;color:var(--muted);font-family:var(--mono)}
+    .tool-header-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .tool-header-badge{padding:4px 10px;border-radius:20px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);font-size:11px;color:var(--purple);font-family:var(--mono)}
+    .ds-badge{padding:3px 9px;border-radius:20px;font-size:10px;font-family:var(--mono);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+    .ds-badge.supabase{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--success)}
+    .ds-badge.fallback{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.2);color:var(--warn)}
+    .ds-badge.loading{background:rgba(90,112,128,.1);border:1px solid rgba(90,112,128,.2);color:var(--muted)}
+    .spinner{width:10px;height:10px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle}
+
+    /* Layout */
+    .tool-body{max-width:1140px;margin:0 auto;padding:20px 16px}
+
+    /* Tabs */
+    .tab-nav{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border)}
+    .tab-button{padding:11px 20px;border:none;background:transparent;color:var(--muted);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px}
+    .tab-button:hover:not(.active){color:var(--text);background:rgba(255,255,255,.02)}
+    .tab-button.active{color:var(--purple);border-bottom-color:var(--purple)}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+
+    /* Calculateur layout */
+    .calc-grid{display:grid;grid-template-columns:2fr 3fr;gap:18px;align-items:start}
+    @media(max-width:780px){.calc-grid{grid-template-columns:1fr}}
+
+    /* Card */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px}
+    .result-block{animation:fadeUp .3s ease}
+    .card-title{font-size:12px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .card-title::before{content:'';width:3px;height:12px;background:var(--purple);border-radius:2px;display:inline-block;flex-shrink:0}
+
+    /* Mode buttons */
+    .mode-tabs{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:9px;overflow:hidden}
+    .mode-btn{flex:1;padding:9px 10px;border:none;background:transparent;color:var(--muted);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+    .mode-btn.active{background:rgba(167,139,250,.15);color:var(--purple)}
+    .mode-btn:not(:last-child){border-right:1px solid var(--border)}
+
+    /* Form */
+    .form-group{margin-bottom:13px}
+    label{display:block;font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
+    input[type=number],select,.form-input{width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:border-color .15s;appearance:none}
+    input[type=number]:focus,select:focus,.form-input:focus{border-color:rgba(167,139,250,.5)}
+    input[type=number]::placeholder,.form-input::placeholder{color:var(--muted)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .section-divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+    .info-block{background:rgba(167,139,250,.05);border:1px solid rgba(167,139,250,.15);border-radius:9px;padding:11px 13px;margin-bottom:13px;font-size:12px;color:var(--muted)}
+    .info-block p:first-child{font-size:12px;font-weight:600;color:var(--purple);margin-bottom:1px}
+
+    /* Buttons */
+    .btn-primary{width:100%;padding:12px;background:var(--purple);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s}
+    .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+    .btn-secondary{padding:11px 16px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:var(--font);font-size:14px;cursor:pointer;transition:all .15s}
+    .btn-secondary:hover{border-color:var(--soft);color:var(--text)}
+    .btn-row{display:flex;gap:10px;padding-top:6px}
+    .btn-row .btn-primary{flex:1}
+
+    /* Stade IRC */
+    .fr-badge{border-radius:10px;padding:14px 16px;margin-bottom:13px;border:1px solid}
+    .fr-badge.normal{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.2)}
+    .fr-badge.legere{background:rgba(45,212,191,.08);border-color:rgba(45,212,191,.2)}
+    .fr-badge.moderee{background:rgba(234,179,8,.08);border-color:rgba(234,179,8,.2)}
+    .fr-badge.severe{background:rgba(251,146,60,.08);border-color:rgba(251,146,60,.2)}
+    .fr-badge.terminale{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2)}
+    .fr-badge.eer{background:rgba(167,139,250,.08);border-color:rgba(167,139,250,.2)}
+    .fr-badge-inline{display:inline-block;padding:4px 10px;border-radius:8px;border:1px solid var(--border)}
+    .fr-badge-inline.normal{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.2)}
+    .fr-badge-inline.legere{background:rgba(45,212,191,.08);border-color:rgba(45,212,191,.2)}
+    .fr-badge-inline.moderee{background:rgba(234,179,8,.08);border-color:rgba(234,179,8,.2)}
+    .fr-badge-inline.severe{background:rgba(251,146,60,.08);border-color:rgba(251,146,60,.2)}
+    .fr-badge-inline.terminale{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2)}
+    .fr-label{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+    .fr-value{font-size:26px;font-weight:700;line-height:1.15;margin:2px 0}
+    .fr-value.normal{color:var(--success)}.fr-value.legere{color:var(--accent)}.fr-value.moderee{color:var(--warn)}.fr-value.severe{color:var(--orange)}.fr-value.terminale{color:var(--urgent)}.fr-value.eer{color:var(--purple)}
+    .fr-sub{font-size:12px;color:var(--muted)}
+    .stade-row{display:flex;align-items:center;gap:12px;margin-top:6px}
+
+    /* Dose */
+    .dose-card{background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(124,58,237,.05));border:1px solid rgba(167,139,250,.2);border-radius:10px;padding:14px;margin-bottom:11px}
+    .dose-molecule{font-size:19px;font-weight:700;margin-bottom:1px;color:var(--text)}
+    .dose-classe{font-size:11px;font-family:var(--mono);color:var(--purple)}
+    .dose-sous-titre{font-size:11px;font-family:var(--mono);color:var(--muted)}
+    .dose-indication{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.15);border-radius:7px;padding:7px 11px;margin:9px 0;font-size:12px;color:var(--medical);font-family:var(--mono)}
+    .dose-value{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px}
+    .dose-value-label{font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;text-transform:uppercase}
+    .dose-text{font-size:15px;font-weight:600;color:var(--text);line-height:1.5}
+
+    /* Précautions */
+    .prec-list{display:flex;flex-direction:column;gap:8px}
+    .prec-item{padding:9px 0 9px 13px;border-left:3px solid}
+    .prec-item.prep{border-color:var(--medical)}.prec-item.admin{border-color:var(--success)}.prec-item.stab{border-color:var(--purple)}
+    .prec-item.incomp{border-color:var(--urgent);background:rgba(239,68,68,.04);padding:9px 10px;border-radius:0 7px 7px 0}
+    .prec-item.effi{border-color:var(--accent)}.prec-item.tol{border-color:var(--orange);background:rgba(251,146,60,.04);padding:9px 10px;border-radius:0 7px 7px 0}.prec-item.inter{border-color:var(--warn)}
+    .prec-title{font-size:10px;font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+    .prec-item.prep .prec-title{color:var(--medical)}.prec-item.admin .prec-title{color:var(--success)}.prec-item.stab .prec-title{color:var(--purple)}.prec-item.incomp .prec-title{color:var(--urgent)}.prec-item.effi .prec-title{color:var(--accent)}.prec-item.tol .prec-title{color:var(--orange)}.prec-item.inter .prec-title{color:var(--warn)}
+    .prec-text{font-size:13px;color:var(--text);line-height:1.5}
+
+    /* Disclaimer */
+    .disclaimer{background:rgba(234,179,8,.06);border:1px solid rgba(234,179,8,.15);border-radius:10px;padding:12px 14px;font-size:11px;color:var(--muted);line-height:1.8}
+    .disclaimer strong,.disclaimer-inner p:first-child{color:var(--warn);font-weight:600}
+    .disclaimer-inner{font-size:11px;color:var(--muted)}
+
+    /* Alertes */
+    .alerte-item{padding:10px 12px;border-left:4px solid;border-radius:0 7px 7px 0;margin-bottom:6px;font-size:12px}
+    .alerte-rouge{background:rgba(239,68,68,.08);border-color:var(--urgent);color:var(--text)}
+    .alerte-orange{background:rgba(251,146,60,.08);border-color:var(--orange);color:var(--text)}
+    .alerte-jaune{background:rgba(234,179,8,.08);border-color:var(--warn);color:var(--text)}
+    .alerte-vert{background:rgba(34,197,94,.08);border-color:var(--success);color:var(--text)}
+
+    /* Bon Usage section */
+    /* Accordion buttons — override Tailwind w-full flex justify-between */
+    .accordion-content ~ * button[onclick*="toggleAccordion"],
+    button[onclick*="toggleAccordion"],
+    .w-full.flex.items-center.justify-between {
+      width:100%!important;padding:16px 20px!important;display:flex!important;align-items:center!important;
+      justify-content:space-between!important;background:transparent!important;border:none!important;
+      color:var(--text)!important;cursor:pointer!important;font-family:var(--font)!important;
+      font-size:14px!important;font-weight:600!important;transition:background .15s!important;
+      text-align:left!important;
+    }
+    button[onclick*="toggleAccordion"]:hover{background:rgba(255,255,255,.03)!important}
+    /* SVG chevron — fix huge size */
+    button[onclick*="toggleAccordion"] svg,
+    svg.w-6.h-6 { width:20px!important;height:20px!important;flex-shrink:0!important }
+    /* Inner flex layout */
+    .flex.items-center.gap-3 { display:flex!important;align-items:center!important;gap:12px!important }
+    .text-left { text-align:left!important }
+    /* Card overflow */
+    #bon-usage-content > div { overflow:hidden }
+    /* p-6 padding on accordion content */
+    .accordion-content.px-6.pb-6 { padding:0 20px 20px!important }
+    .accordion-content{max-height:0;overflow:hidden;transition:max-height 0.3s ease}
+    .accordion-content.active{max-height:5000px}
+    .accordion-content table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px}
+    .accordion-content th{background:var(--surface);color:var(--muted);font-family:var(--mono);font-size:11px;padding:8px;text-align:left;border-bottom:1px solid var(--border)}
+    .accordion-content td{padding:8px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top}
+    .accordion-content tr:hover td{background:rgba(255,255,255,.02)}
+    .accordion-content h4{font-size:13px;font-weight:600;margin-bottom:8px}
+    .accordion-content ul{margin-left:16px;font-size:12px;color:var(--muted);line-height:1.8}
+    .accordion-content p{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:6px}
+    /* Preserve some color meaning in bon-usage tables */
+    .accordion-content .bg-blue-50{background:rgba(59,130,246,.07)!important;border-radius:6px;padding:10px;margin-bottom:8px}
+    .accordion-content .bg-yellow-50{background:rgba(234,179,8,.07)!important;border-radius:6px;padding:10px;margin-bottom:8px}
+    .accordion-content .bg-orange-50{background:rgba(251,146,60,.07)!important;border-radius:6px;padding:10px;margin-bottom:8px}
+    .accordion-content .bg-green-50{background:rgba(34,197,94,.07)!important;border-radius:6px;padding:10px;margin-bottom:8px}
+    .accordion-content .bg-red-50{background:rgba(239,68,68,.07)!important;border-radius:6px;padding:10px;margin-bottom:8px}
+    .accordion-content .border-blue-500{border-left:4px solid var(--medical)!important}
+    .accordion-content .border-yellow-500{border-left:4px solid var(--warn)!important}
+    .accordion-content .border-orange-500{border-left:4px solid var(--orange)!important}
+    .accordion-content .border-green-500{border-left:4px solid var(--success)!important}
+    .accordion-content .border-red-500{border-left:4px solid var(--urgent)!important}
+    .accordion-content .text-blue-800,.accordion-content .text-blue-900{color:var(--medical)!important}
+    .accordion-content .text-yellow-800,.accordion-content .text-yellow-900{color:var(--warn)!important}
+    .accordion-content .text-orange-800,.accordion-content .text-orange-900{color:var(--orange)!important}
+    .accordion-content .text-green-800,.accordion-content .text-green-900{color:var(--success)!important}
+    .accordion-content .text-red-800,.accordion-content .text-red-900{color:var(--urgent)!important}
+    .accordion-content .text-slate-600,.accordion-content .text-slate-700{color:var(--muted)!important}
+    .accordion-content .text-slate-900{color:var(--text)!important}
+    .accordion-content .bg-slate-100{background:var(--surface)!important}
+    .accordion-content .hover\:bg-slate-50:hover{background:rgba(255,255,255,.02)!important}
+    .accordion-content .divide-y>tr{border-bottom:1px solid var(--border)}
+    .accordion-content .overflow-x-auto{overflow-x:auto}
+    .accordion-content svg{color:var(--muted)}
+    .rotate-180{transform:rotate(180deg)}
+
+    /* Note stades */
+    .stades-note{font-size:11px;font-family:var(--mono);color:var(--muted);padding:8px 4px;line-height:1.8}
+
+    option{background:var(--card);color:var(--text)}
+    optgroup{background:var(--surface);color:var(--muted)}
+  </style>
+</head>
+<body>
+
+<header class="tool-header">
+  <div class="tool-header-icon">&#x1F344;</div>
+  <div>
+    <div class="tool-header-title">Antifongiques en R&eacute;animation</div>
+    <div class="tool-header-sub">CH Robert Boulin &middot; Calculateur posologique &amp; Bon Usage AP-HP</div>
+  </div>
+  <div class="tool-header-right">
+    <div class="ds-badge loading" id="data-badge"><div class="spinner"></div><span>Chargement&hellip;</span></div>
+    <div class="tool-header-badge" id="mol-count-badge">9 mol&eacute;cules</div>
+  </div>
+</header>
+
+<div class="tool-body">
+
+  <!-- Onglets -->
+  <div class="tab-nav">
+    <button onclick="switchTab('calculateur')" id="tab-calculateur" class="tab-button active">&#x1F48A; Calculateur de Doses</button>
+    <button onclick="switchTab('bon-usage')"   id="tab-bon-usage"   class="tab-button">&#x1F4DA; Bon Usage (AP-HP 2018)</button>
+  </div>
+
+  <!-- ═══ TAB CALCULATEUR ═══ -->
+  <div id="content-calculateur" class="tab-content active">
+    <div class="calc-grid">
+
+      <!-- Saisie -->
+      <div>
+        <div class="card">
+          <div class="card-title">Param&egrave;tres Patient</div>
+
+          <div class="mode-tabs">
+            <button type="button" id="btn-recolte"  onclick="setMode('recolte')"  class="mode-btn active">&#x1F4D0; Calculer ClCr</button>
+            <button type="button" id="btn-manuelle" onclick="setMode('manuelle')" class="mode-btn">&#x2328; Saisie directe</button>
+          </div>
+
+          <div id="mode-recolte">
+            <div class="info-block">
+              <p>M&eacute;thode de r&eacute;f&eacute;rence</p>
+              <p>R&eacute;colte urinaire 24h mesur&eacute;e au laboratoire</p>
+            </div>
+            <div class="form-grid">
+              <div class="form-group"><label>Volume urinaire (mL)</label><input type="number" id="volU" placeholder="1500" min="0" step="50"></div>
+              <div class="form-group"><label>Dur&eacute;e de recueil</label><select id="duree"><option value="12">12 heures</option><option value="24" selected>24 heures</option></select></div>
+              <div class="form-group"><label>Cr&eacute;atinine U (&mu;mol/L)</label><input type="number" id="creatU" placeholder="4420" min="0"></div>
+              <div class="form-group"><label>Cr&eacute;atinine P (&mu;mol/L)</label><input type="number" id="creatP" placeholder="110" min="0"></div>
+            </div>
+          </div>
+
+          <div id="mode-manuelle" style="display:none">
+            <div class="info-block" style="background:rgba(34,197,94,.05);border-color:rgba(34,197,94,.15)">
+              <p style="color:var(--success)">Clairance mesur&eacute;e (laboratoire)</p>
+              <p>Valeur directe issue du bilan biologique</p>
+            </div>
+            <div class="form-group">
+              <label>Clairance mesur&eacute;e (mL/min)</label>
+              <input type="number" id="clcrManuelle" placeholder="ex: 65" min="0" max="300" step="0.1" style="font-size:18px;font-weight:600">
+            </div>
+          </div>
+
+          <hr class="section-divider">
+
+          <div class="form-group">
+            <label>&Eacute;puration Extra-R&eacute;nale</label>
+            <select id="dialyse">
+              <option value="non">Aucune</option>
+              <option value="hdi">HDI &mdash; H&eacute;modialyse Intermittente</option>
+              <option value="eerc">EERC &mdash; CVVH / CVVHDF</option>
+            </select>
+          </div>
+
+          <hr class="section-divider">
+
+          <div class="form-group">
+            <label>Antifongique</label>
+            <select id="atf">
+              <option value="">-- S&eacute;lectionner --</option>
+              <optgroup label="Poly&egrave;nes">
+                <option value="amphotericine-b-liposomale">Ampho&eacute;ricine B liposomale</option>
+              </optgroup>
+              <optgroup label="Azol&eacute;s">
+                <option value="fluconazole">Fluconazole</option>
+                <option value="voriconazole">Voriconazole</option>
+                <option value="posaconazole">Posaconazole</option>
+                <option value="isavuconazole">Isavuconazole</option>
+              </optgroup>
+              <optgroup label="&Eacute;chinocandines">
+                <option value="caspofungine">Caspofungine</option>
+                <option value="micafungine">Micafungine</option>
+                <option value="anidulafungine">Anidulafungine</option>
+              </optgroup>
+              <optgroup label="Autres">
+                <option value="flucytosine">Flucytosine (5-FC)</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div id="indication-container" class="form-group hidden">
+            <label>Indication / S&eacute;v&eacute;rit&eacute;</label>
+            <select id="indication"></select>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-primary" type="button"
+              onclick="document.getElementById('form').dispatchEvent(new Event('submit'))">Calculer la posologie</button>
+            <button class="btn-secondary" type="button" onclick="resetForm()">&#8634;</button>
+          </div>
+          <form id="form" style="display:none"></form>
+        </div>
+        <div class="stades-note">
+          Stades IRC&nbsp;: normale &ge;70 &middot; l&eacute;g&egrave;re 50&ndash;69 &middot; mod&eacute;r&eacute;e 30&ndash;49 &middot; s&eacute;v&egrave;re 10&ndash;29 &middot; terminale &lt;10 mL/min
+        </div>
+      </div>
+
+      <!-- R&eacute;sultats -->
+      <div id="results"></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB BON USAGE ═══ -->
+  <div id="content-bon-usage" class="tab-content">
+
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <div class="flex items-start gap-4 mb-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <span class="text-2xl">📚</span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 mb-2">Recommandations sur le Bon Usage des Antifongiques</h2>
+                        <p class="text-slate-600">AP-HP - Version 1, Décembre 2018</p>
+                        <p class="text-sm text-slate-500 mt-1">Coordinateur : Dr. Fanny LANTERNIER (Necker) • COMAI AP-HP</p>
+                    </div>
+                </div>
+                <div class="bg-orange-50 border-l-4 border-orange-500 p-4 rounded">
+                    <p class="text-sm text-orange-900"><strong>⚠️ Avertissement :</strong> Ces recommandations contribuent au bon usage des antifongiques. Elles ne se substituent pas aux décisions cliniques. Les praticiens demeurent responsables de leurs prescriptions.</p>
+                </div>
+            </div>
+
+            <!-- Recherche rapide -->
+            <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
+                <input type="text" id="search-bon-usage" placeholder="🔍 Rechercher dans les recommandations..." 
+                    class="w-full px-4 py-2 border rounded-lg" onkeyup="searchBonUsage()">
+            </div>
+
+            <!-- Sections collapsibles -->
+            <div class="space-y-4" id="bon-usage-content">
+                
+                <!-- 1. ASPERGILLOSES INVASIVES -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <button onclick="toggleAccordion('aspergillose')" class="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🫁</span>
+                            <div class="text-left">
+                                <h3 class="font-bold text-lg">1. Aspergilloses Invasives Pulmonaires</h3>
+                                <p class="text-sm text-slate-600">Mesures associées, traitements 1ère et 2ème ligne, surveillance</p>
+                            </div>
+                        </div>
+                        <svg id="icon-aspergillose" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="content-aspergillose" class="accordion-content px-6 pb-6">
+                        
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                                <h4 class="font-bold text-blue-900 mb-2">Mesures associées</h4>
+                                <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                                    <li>Diminuer le traitement immunosuppresseur dans la mesure du possible</li>
+                                    <li>En cas de neutropénie : discuter G-CSF (CI si LAM3)</li>
+                                    <li>En cas d'hémoptysie : avis spécialisé chirurgie thoracique</li>
+                                    <li>Évaluer CMI Aspergillus fumigatus aux azolés</li>
+                                </ul>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-100">
+                                        <tr>
+                                            <th class="p-3 text-left font-semibold">Ligne</th>
+                                            <th class="p-3 text-left font-semibold">Traitement</th>
+                                            <th class="p-3 text-left font-semibold">Commentaires</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y">
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">1ère ligne<br><span class="text-xs text-slate-600">(sauf prophylaxie azolé ou résistance)</span></td>
+                                            <td class="p-3">
+                                                <strong>Voriconazole</strong><br>
+                                                <span class="text-xs">Adulte : IV 6 mg/kg×2/j J1 puis 4 mg/kg×2/j<br>
+                                                Relais PO : 4mg/kg×2/j à 1H des repas<br>
+                                                Enfant 2-14 ans <50kg : IV 9 mg/kg×2/j puis 8 mg/kg×2/j</span>
+                                            </td>
+                                            <td class="p-3 text-xs">🔴 Dosage résiduel J2-J5 et S1<br>Objectif : <strong>1-5 mg/L</strong></td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Alternative<br><span class="text-xs text-slate-600">(hématologie adulte)</span></td>
+                                            <td class="p-3">
+                                                <strong>Isavuconazole</strong><br>
+                                                <span class="text-xs">IV : 200 mg×3/j J1-J2 puis 200 mg/j<br>
+                                                Relais PO : 200mg/j</span>
+                                            </td>
+                                            <td class="p-3 text-xs">-</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50 bg-orange-50">
+                                            <td class="p-3 font-semibold">1ère ligne<br><span class="text-xs text-slate-600">(si prophylaxie azolé ou résistance)</span></td>
+                                            <td class="p-3">
+                                                <strong>Amphotéricine B liposomale</strong><br>
+                                                <span class="text-xs">IV : 3 mg/kg/24h</span>
+                                            </td>
+                                            <td class="p-3 text-xs">-</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Système nerveux central</td>
+                                            <td class="p-3"><strong>Voriconazole</strong></td>
+                                            <td class="p-3 text-xs">Excellente diffusion SNC</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Endophtalmie</td>
+                                            <td class="p-3">
+                                                <strong>Voriconazole IV/PO</strong><br>
+                                                ± Amphotéricine B désoxycholate intravitréen
+                                            </td>
+                                            <td class="p-3 text-xs">⚠️ Demander avis d'experts</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                                <h4 class="font-bold text-yellow-900 mb-2">⚠️ Points importants</h4>
+                                <ul class="text-sm text-yellow-800 space-y-1 list-disc list-inside">
+                                    <li>Les bithérapies n'ont pas de place sauf en situation de sauvetage (échinocandine + voriconazole)</li>
+                                    <li>Les échinocandines n'ont PAS de place en monothérapie</li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-purple-50 border-l-4 border-purple-500 p-4">
+                                <h4 class="font-bold text-purple-900 mb-2">Surveillance</h4>
+                                <ul class="text-sm text-purple-800 space-y-1 list-disc list-inside">
+                                    <li><strong>Scanner thoracique :</strong> pas avant 2 semaines (aggravation transitoire attendue 1ère semaine)</li>
+                                    <li><strong>Galactomannane sérique :</strong> 2×/semaine (β-D-glucane non nécessaire)</li>
+                                    <li><strong>Durée :</strong> 6-12 semaines minimum, selon réponse et immunodépression</li>
+                                    <li><strong>Prophylaxie secondaire :</strong> si rémission clinico-radiologique + immunodépression persistante</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 2. CANDIDOSES INVASIVES -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <button onclick="toggleAccordion('candidoses')" class="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🦠</span>
+                            <div class="text-left">
+                                <h3 class="font-bold text-lg">2. Candidoses Invasives (hors nouveau-né)</h3>
+                                <p class="text-sm text-slate-600">Candidémies, infections intra-abdominales, urinaires, hépato-spléniques, endocardites</p>
+                            </div>
+                        </div>
+                        <svg id="icon-candidoses" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="content-candidoses" class="accordion-content px-6 pb-6">
+                        
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                                <h4 class="font-bold text-blue-900 mb-2">Mesures associées (candidémies)</h4>
+                                <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                                    <li><strong>Ablation</strong> du cathéter ou de la chambre implantable</li>
+                                    <li><strong>ETT à J5-J7</strong>, ETO si ETT douteuse ou fièvre/candidémie persistante à 72h</li>
+                                    <li><strong>Doppler veineux</strong> si signe de thrombose ou candidémie persistante à 72h</li>
+                                    <li><strong>Fond d'œil</strong> systématique pour non neutropéniques dans les 8 jours</li>
+                                    <li><strong>Contrôle</strong> négativation hémocultures</li>
+                                    <li><strong>Traiter</strong> même si une seule hémoculture positive</li>
+                                </ul>
+                            </div>
+
+                            <h4 class="font-bold text-lg mt-6">Candidémies - Patient NON neutropénique</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-100">
+                                        <tr>
+                                            <th class="p-3 text-left font-semibold">Ligne</th>
+                                            <th class="p-3 text-left font-semibold">Traitement</th>
+                                            <th class="p-3 text-left font-semibold">Commentaires</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y">
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">1ère ligne</td>
+                                            <td class="p-3">
+                                                <strong>Échinocandine</strong><br>
+                                                <span class="text-xs">
+                                                • Caspofungine : 70mg puis 50mg/j (ou 70mg si >80kg)<br>
+                                                  Dose 150mg puis 1mg/kg/j si qSOFA≥2<br>
+                                                • Micafungine : 100mg/j (150mg/j si qSOFA≥2)
+                                                </span>
+                                            </td>
+                                            <td class="p-3 text-xs">
+                                                ⚠️ Tester sensibilité échinocandines si:<br>
+                                                • Traitement antérieur échinocandine<br>
+                                                • C. glabrata ou parapsilosis<br>
+                                                <br>
+                                                Si C. parapsilosis → switch fluconazole
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50 bg-green-50">
+                                            <td class="p-3 font-semibold">Alternative de choix</td>
+                                            <td class="p-3">
+                                                <strong>Fluconazole</strong><br>
+                                                <span class="text-xs">12 mg/kg J1 puis 6 mg/kg/j</span>
+                                            </td>
+                                            <td class="p-3 text-xs">
+                                                Si pas de choc ni antécédent azolés<br>
+                                                Tester sensibilité azolés
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Désescalade J3-J5</td>
+                                            <td class="p-3">
+                                                <strong>Fluconazole</strong><br>
+                                                <span class="text-xs">12 mg/kg J1 puis 6 mg/kg/j</span>
+                                            </td>
+                                            <td class="p-3 text-xs">
+                                                Si:<br>
+                                                • Stabilité clinique<br>
+                                                • Souche sensible (C. albicans, parapsilosis, tropicalis)<br>
+                                                • Négativation hémocultures<br>
+                                                • Ablation cathéter
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="bg-orange-50 border-l-4 border-orange-500 p-4 mt-4">
+                                <h4 class="font-bold text-orange-900 mb-2">⚠️ Candidémies à point de départ urinaire</h4>
+                                <p class="text-sm text-orange-800 mb-2">Échinocandines, L-AmB, azolés (sauf fluconazole) ne diffusent PAS dans les urines.</p>
+                                <ul class="text-sm text-orange-800 space-y-1 list-disc list-inside">
+                                    <li><strong>Fluconazole</strong> ou fluconazole forte dose (maintien 12mg/kg/j) si C. glabrata non R (CMI<32)</li>
+                                    <li><strong>Amphotéricine B désoxycholate</strong> si C. krusei ou C. glabrata R fluconazole</li>
+                                </ul>
+                            </div>
+
+                            <h4 class="font-bold text-lg mt-6">Infections urinaires</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-100">
+                                        <tr>
+                                            <th class="p-3 text-left font-semibold">Situation</th>
+                                            <th class="p-3 text-left font-semibold">Traitement</th>
+                                            <th class="p-3 text-left font-semibold">Durée</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y">
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3">Candidurie simple</td>
+                                            <td class="p-3 text-xs">PAS de traitement (sauf préop urologie ou matériel JJ)</td>
+                                            <td class="p-3 text-xs">-</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3">Pyélonéphrite aiguë</td>
+                                            <td class="p-3">
+                                                <strong>Fluconazole</strong> 12mg/kg J1 puis 6mg/kg/j<br>
+                                                <span class="text-xs">Alt: Ampho B désoxy 0,3-0,6 mg/kg/j si R fluconazole</span>
+                                            </td>
+                                            <td class="p-3 text-xs">7 jours<br>+ imagerie rénale systématique</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50 bg-red-50">
+                                            <td class="p-3">Fungus ball</td>
+                                            <td class="p-3">
+                                                <strong>Chirurgie ++++</strong><br>
+                                                + Fluconazole 12mg/kg J1 puis 6mg/kg/j
+                                            </td>
+                                            <td class="p-3 text-xs">⚠️ Avis spécialisé</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h4 class="font-bold text-lg mt-6">Endocardites à Candida</h4>
+                            <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                                <p class="text-sm text-red-900 mb-2"><strong>⚠️ Mesures associées :</strong> Chirurgie à discuter systématiquement</p>
+                                <div class="text-sm text-red-800">
+                                    <p class="font-semibold mb-1">Phase initiale (4-6 semaines) :</p>
+                                    <ul class="list-disc list-inside space-y-1 ml-2">
+                                        <li><strong>L-AmB</strong> 3-5 mg/kg/j ± flucytosine 25mg/kg×4/j</li>
+                                        <li>OU <strong>Échinocandine haute dose</strong> (caspofungine 150mg/j ou micafungine 150mg/j) ± flucytosine</li>
+                                    </ul>
+                                    <p class="font-semibold mt-3 mb-1">Prothèse mécanique :</p>
+                                    <ul class="list-disc list-inside ml-2">
+                                        <li>Discuter <strong>fluconazole</strong> 12mg/kg J1 puis 6-12mg/kg/j <strong>à vie</strong></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 3. CRYPTOCOCCOSES -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <button onclick="toggleAccordion('cryptococcose')" class="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🧠</span>
+                            <div class="text-left">
+                                <h3 class="font-bold text-lg">3. Cryptococcoses</h3>
+                                <p class="text-sm text-slate-600">Neuro-méningée, disséminée, terrains particuliers</p>
+                            </div>
+                        </div>
+                        <svg id="icon-cryptococcose" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="content-cryptococcose" class="accordion-content px-6 pb-6">
+                        
+                        <div class="space-y-4">
+                            <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                                <h4 class="font-bold text-red-900 mb-2">⚠️ Mesures associées CRITIQUES</h4>
+                                <ul class="text-sm text-red-800 space-y-2">
+                                    <li><strong>Mesure pression LCR</strong> à J0, J7, J14</li>
+                                    <li><strong>Si pression >25 cmH2O :</strong> PL thérapeutiques quotidiennes jusqu'à <20 cmH2O<br>
+                                        <span class="text-xs">→ Même avec FO et imagerie normale</span></li>
+                                    <li><strong>Si échec PL :</strong> shunt/dérivation chirurgicale</li>
+                                    <li><strong>❌ NE PAS</strong> associer : corticothérapie, acétazolamide, mannitol</li>
+                                    <li><strong>VIH :</strong> Débuter ARV au moins 5 semaines après antifongique</li>
+                                </ul>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-100">
+                                        <tr>
+                                            <th class="p-3 text-left font-semibold">Phase</th>
+                                            <th class="p-3 text-left font-semibold">Traitement</th>
+                                            <th class="p-3 text-left font-semibold">Durée / Commentaires</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y">
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Induction<br>1ère ligne</td>
+                                            <td class="p-3">
+                                                <strong>L-AmB</strong> 3 mg/kg/j IV<br>
+                                                + <strong>Flucytosine</strong> 25 mg/kg/6h IV ou PO
+                                            </td>
+                                            <td class="p-3 text-xs">
+                                                ≥1 semaine jusqu'à négativation LCR<br>
+                                                Puis fluconazole 1200mg/j 1 semaine<br>
+                                                <br>
+                                                🔴 Dosage flucytosine si IRC/cytopénie:<br>
+                                                Résiduel 40-60 mg/L (toxique >100)
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50 bg-yellow-50">
+                                            <td class="p-3 font-semibold">Induction<br>Alternative</td>
+                                            <td class="p-3">
+                                                <strong>Fluconazole</strong> 1200mg/j<br>
+                                                + <strong>Flucytosine</strong> 25 mg/kg/6h
+                                            </td>
+                                            <td class="p-3 text-xs">
+                                                ≥2 semaines jusqu'à négativation LCR
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Consolidation</td>
+                                            <td class="p-3">
+                                                <strong>Fluconazole</strong> PO<br>
+                                                Adulte: 800mg/j jusqu'à ARV puis 400mg/j
+                                            </td>
+                                            <td class="p-3 text-xs">8 semaines minimum</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Prophylaxie secondaire<br><span class="text-xs font-normal">(VIH)</span></td>
+                                            <td class="p-3">
+                                                <strong>Fluconazole</strong> 200mg/j PO
+                                            </td>
+                                            <td class="p-3 text-xs">
+                                                Arrêt après 12 mois minimum si:<br>
+                                                • Ag cryptocoque sang <512<br>
+                                                • CD4 >100/mm³<br>
+                                                • CV contrôlée
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                                <h4 class="font-bold text-blue-900 mb-2">Terrains particuliers</h4>
+                                <ul class="text-sm text-blue-800 space-y-2">
+                                    <li><strong>Ag cryptocoque + VIH (CD4<100) :</strong><br>
+                                        → Bilan extension (PL, hémocultures, radio thorax, urines)<br>
+                                        → Fluconazole 800mg J1 puis 400mg/j jusqu'à reconstitution immunitaire</li>
+                                    <li><strong>Infection pulmonaire non sévère :</strong><br>
+                                        → Fluconazole 800mg/j J1 puis 400mg/j ≥6 mois</li>
+                                    <li><strong>Cryptococcomes cérébraux :</strong><br>
+                                        → ⚠️ Avis d'experts obligatoire</li>
+                                </ul>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 4. INFECTIONS ÉMERGENTES -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <button onclick="toggleAccordion('emergentes')" class="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">⚠️</span>
+                            <div class="text-left">
+                                <h3 class="font-bold text-lg">4. Infections Fongiques Émergentes</h3>
+                                <p class="text-sm text-slate-600">Fusarioses, Scedosporioses, Mucormycoses, Histoplasmoses, Levures émergentes</p>
+                            </div>
+                        </div>
+                        <svg id="icon-emergentes" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="content-emergentes" class="accordion-content px-6 pb-6">
+                        
+                        <div class="space-y-6">
+                            
+                            <!-- MUCORMYCOSES -->
+                            <div class="border-l-4 border-red-600 pl-4">
+                                <h4 class="font-bold text-lg text-red-900 mb-3">🔴 MUCORMYCOSES (traitement prioritaire)</h4>
+                                
+                                <div class="bg-red-50 p-4 rounded mb-3">
+                                    <p class="font-bold text-red-900 mb-2">Mesures associées URGENTES :</p>
+                                    <ul class="text-sm text-red-800 space-y-1 list-disc list-inside">
+                                        <li>Contrôle facteurs favorisants (diabète ++)</li>
+                                        <li>Si neutropénie : G-CSF</li>
+                                        <li>Diminuer immunosuppresseurs</li>
+                                        <li><strong>Débridement chirurgical</strong> en association au traitement (rhinoorbitocérébral, cutané, pulmonaire)</li>
+                                    </ul>
+                                </div>
+
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-100">
+                                        <tr>
+                                            <th class="p-3 text-left font-semibold">Ligne</th>
+                                            <th class="p-3 text-left font-semibold">Traitement</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y">
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">1ère ligne</td>
+                                            <td class="p-3"><strong>L-AmB ≥5 mg/kg/j</strong></td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Relais / Intolérance</td>
+                                            <td class="p-3">
+                                                <strong>Isavuconazole</strong> 200mg×3/j J1-J2 puis 200mg/j (adulte)<br>
+                                                OU <strong>Posaconazole</strong> 300mg×2/j J1 puis 300mg/j<br>
+                                                <span class="text-xs text-slate-600">🔴 Dosage posaconazole : objectif >1,5 mg/L</span>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50 bg-yellow-50">
+                                            <td class="p-3 font-semibold">2ème ligne</td>
+                                            <td class="p-3">
+                                                <strong>Association :</strong><br>
+                                                • L-AmB ≥5 mg/kg/j + Posaconazole<br>
+                                                • L-AmB ≥5 mg/kg/j + Caspofungine 70mg puis 50-70mg/j
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- FUSARIOSES -->
+                            <div class="border-l-4 border-orange-600 pl-4">
+                                <h4 class="font-bold text-lg text-orange-900 mb-3">Fusarioses</h4>
+                                <div class="bg-orange-50 p-3 rounded mb-2 text-sm text-orange-800">
+                                    <strong>Mesures :</strong> Corriger neutropénie si possible, diminuer immunosuppression<br>
+                                    <strong>⚠️ Ne pas tenir compte des CMI</strong> pour le choix du traitement
+                                </div>
+                                <p class="text-sm mb-2"><strong>1ère ligne (traitement de choix) :</strong></p>
+                                <p class="text-sm ml-4 mb-2">• <strong>Voriconazole</strong> (doses standard)<br>
+                                   🔴 Dosage résiduel J2-J5 : <strong>objectif 3-5 mg/L</strong> (infections sévères)</p>
+                                <p class="text-sm mb-2"><strong>Alternative :</strong> L-AmB 3-5 mg/kg/j</p>
+                                <p class="text-sm text-slate-600">ℹ️ Association non supérieure à monothérapie voriconazole</p>
+                            </div>
+
+                            <!-- SCEDOSPORIOSES -->
+                            <div class="border-l-4 border-yellow-600 pl-4">
+                                <h4 class="font-bold text-lg text-yellow-900 mb-3">Scedosporioses</h4>
+                                <p class="text-sm mb-2"><strong>1ère ligne :</strong> <strong>Voriconazole</strong> (doses standard)<br>
+                                   🔴 Dosage résiduel : <strong>objectif 3-5 mg/L</strong></p>
+                                <p class="text-sm mb-2"><strong>Lomentospora (Scedosporium) prolificans :</strong><br>
+                                   → Association Voriconazole + Terbinafine</p>
+                                <p class="text-sm text-slate-600">⚠️ Débridement chirurgical si atteinte ostéoarticulaire/SNC</p>
+                            </div>
+
+                            <!-- HISTOPLASMOSES -->
+                            <div class="border-l-4 border-green-600 pl-4">
+                                <h4 class="font-bold text-lg text-green-900 mb-3">Histoplasmoses</h4>
+                                <table class="w-full text-sm">
+                                    <tbody class="divide-y">
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-2 font-semibold w-1/3">Pulmonaire aiguë / disséminée sévère</td>
+                                            <td class="p-2">
+                                                <strong>L-AmB</strong> 3 mg/kg/j 1-2 sem<br>
+                                                Relais <strong>Itraconazole</strong> 600mg/j J1-J3 puis 400mg/j × 12 sem<br>
+                                                <span class="text-xs text-slate-600">Si détresse respi : + méthylprednisolone 0,5-1 mg/kg/j 1-2 sem</span>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-2 font-semibold">SNC</td>
+                                            <td class="p-2">
+                                                <strong>L-AmB</strong> 5 mg/kg/j 4-6 sem<br>
+                                                Relais <strong>Itraconazole</strong> 600mg/j J1-J3 puis 400mg/j × 1 an
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-2 font-semibold">Nodule pulmonaire</td>
+                                            <td class="p-2">Abstention thérapeutique</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- LEVURES ÉMERGENTES -->
+                            <div class="border-l-4 border-purple-600 pl-4">
+                                <h4 class="font-bold text-lg text-purple-900 mb-3">Levures émergentes</h4>
+                                <p class="text-xs text-purple-800 mb-2">Mesures : Corriger neutropénie, diminuer immunosuppression, retrait cathéter<br>
+                                Fongémie : durée 2 semaines après 1ère hémoculture négative</p>
+                                <table class="w-full text-sm">
+                                    <tbody class="divide-y">
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-2 font-semibold">Rhodotorula</td>
+                                            <td class="p-2"><strong>L-AmB</strong> 3 mg/kg/j</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-2 font-semibold">Saprochaete clavata<br><span class="text-xs">(Geotrichum)</span></td>
+                                            <td class="p-2"><strong>Voriconazole</strong> (doses standard)<br>🔴 Objectif 3-5 mg/L</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-2 font-semibold">Trichosporon</td>
+                                            <td class="p-2"><strong>Voriconazole</strong> (doses standard)<br>🔴 Objectif 3-5 mg/L</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 5. PROPHYLAXIE HÉMATOLOGIE -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <button onclick="toggleAccordion('hemato')" class="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🩸</span>
+                            <div class="text-left">
+                                <h3 class="font-bold text-lg">5. Prophylaxie en Hématologie</h3>
+                                <p class="text-sm text-slate-600">LAM, allogreffe CSH, traitements empiriques</p>
+                            </div>
+                        </div>
+                        <svg id="icon-hemato" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="content-hemato" class="accordion-content px-6 pb-6">
+                        
+                        <div class="space-y-4">
+                            
+                            <h4 class="font-bold text-lg">Prophylaxie primaire - Induction LAM</h4>
+                            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                                <p class="font-semibold text-blue-900 mb-2">Mesures associées :</p>
+                                <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                                    <li>Éviter activités à risque (travaux, jardinage)</li>
+                                    <li>Chambre à filtration HEPA si neutropénie >7 jours</li>
+                                </ul>
+                            </div>
+
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="p-3 text-left font-semibold">Indication</th>
+                                        <th class="p-3 text-left font-semibold">Traitement</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y">
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3">Si incidence IFI champignons filamenteux élevée dans l'unité</td>
+                                        <td class="p-3">
+                                            <strong>Posaconazole</strong> 300mg×2/j J1 puis 300mg/j<br>
+                                            <span class="text-xs text-slate-600">Préférer comprimé vs suspension (meilleure absorption)<br>
+                                            🔴 Dosage J4-J5 : objectif >0,7 mg/L</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <h4 class="font-bold text-lg mt-6">Allogreffe CSH - Période neutropénie avant prise</h4>
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="p-3 text-left font-semibold">Ligne</th>
+                                        <th class="p-3 text-left font-semibold">Traitement</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y">
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3 font-semibold">1ère ligne</td>
+                                        <td class="p-3"><strong>Fluconazole</strong> 400mg/j IV ou PO</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50 bg-yellow-50">
+                                        <td class="p-3 font-semibold">Alternative<br><span class="text-xs font-normal">(si risque aspergillose élevé)</span></td>
+                                        <td class="p-3">
+                                            <strong>Voriconazole</strong> 200mg×2/j PO ou IV 6mg/kg×2/j J1 puis 4-6mg/kg×2/j<br>
+                                            <span class="text-xs text-slate-600">🔴 Dosage résiduel J5 : 1-5 mg/L</span><br>
+                                            <br>
+                                            OU <strong>Posaconazole</strong> 300mg×2/j J1 puis 300mg/j (comprimés)<br>
+                                            <span class="text-xs text-slate-600">🔴 Dosage J4-J5 : >0,7 mg/L</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <h4 class="font-bold text-lg mt-6">Réaction du greffon contre l'hôte (GVH)</h4>
+                            <div class="bg-orange-50 border-l-4 border-orange-500 p-4">
+                                <p class="text-sm text-orange-900">Si GVH nécessitant traitement systémique :</p>
+                                <p class="text-sm text-orange-800 mt-2"><strong>1ère ligne : Posaconazole</strong> 300mg×2/j J1 puis 300mg/j<br>
+                                <span class="text-xs">Alternatives : Fluconazole 400mg/j ou Voriconazole</span></p>
+                            </div>
+
+                            <h4 class="font-bold text-lg mt-6">Traitement empirique</h4>
+                            <div class="bg-purple-50 border-l-4 border-purple-500 p-4">
+                                <p class="text-sm text-purple-900 mb-2"><strong>⚠️ Important :</strong> Garder empirique le moins longtemps possible. Documentation obligatoire (imagerie → fibroscopie/LBA)</p>
+                                <ul class="text-sm text-purple-800 space-y-1 list-disc list-inside">
+                                    <li><strong>L-AmB</strong> 3 mg/kg/j</li>
+                                    <li><strong>Caspofungine</strong> 70mg puis 50mg/j (<80kg) ou 70mg/j (≥80kg)</li>
+                                </ul>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 6. STP (Suivi Thérapeutique Pharmacologique) -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <button onclick="toggleAccordion('stp')" class="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🔬</span>
+                            <div class="text-left">
+                                <h3 class="font-bold text-lg">6. Suivi Thérapeutique Pharmacologique (STP)</h3>
+                                <p class="text-sm text-slate-600">Indications, molécules, objectifs de concentration</p>
+                            </div>
+                        </div>
+                        <svg id="icon-stp" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="content-stp" class="accordion-content px-6 pb-6">
+                        
+                        <div class="space-y-4">
+                            
+                            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                                <h4 class="font-bold text-blue-900 mb-2">Situations cliniques nécessitant un STP</h4>
+                                <div class="grid md:grid-cols-2 gap-3 text-sm text-blue-800">
+                                    <div>
+                                        <p class="font-semibold">Populations à risque :</p>
+                                        <ul class="list-disc list-inside space-y-1 ml-2">
+                                            <li>Troubles gastro-intestinaux</li>
+                                            <li>Insuffisance hépatique</li>
+                                            <li>Patients obèses</li>
+                                            <li>Hémodialyse / Hémofiltration</li>
+                                            <li>Switch IV/oral</li>
+                                            <li>Réanimation, grands brûlés</li>
+                                            <li>Mucoviscidose, ECMO</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold">Autres situations :</p>
+                                        <ul class="list-disc list-inside space-y-1 ml-2">
+                                            <li>Interactions médicamenteuses (inducteurs CYP3A4)</li>
+                                            <li>Pathogènes à sensibilité diminuée</li>
+                                            <li>Infections sévères (SNC, disséminées)</li>
+                                            <li>Traitements prolongés</li>
+                                            <li>Échappement clinique</li>
+                                            <li>Toxicité (voriconazole)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h4 class="font-bold text-lg">Médicaments nécessitant un STP</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-100">
+                                        <tr>
+                                            <th class="p-3 text-left font-semibold">Molécule</th>
+                                            <th class="p-3 text-left font-semibold">Indication STP</th>
+                                            <th class="p-3 text-left font-semibold">Variabilité</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y">
+                                        <tr class="hover:bg-slate-50 bg-red-50">
+                                            <td class="p-3 font-semibold">Flucytosine</td>
+                                            <td class="p-3">🔴 <strong>OUI OBLIGATOIRE</strong></td>
+                                            <td class="p-3">+++</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50 bg-red-50">
+                                            <td class="p-3 font-semibold">Voriconazole</td>
+                                            <td class="p-3">🔴 <strong>OUI</strong> (prophylaxie + curatif)</td>
+                                            <td class="p-3">+++</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50 bg-red-50">
+                                            <td class="p-3 font-semibold">Posaconazole</td>
+                                            <td class="p-3">🔴 <strong>OUI</strong> (suspension buvable + curatif)</td>
+                                            <td class="p-3">+++</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50 bg-yellow-50">
+                                            <td class="p-3 font-semibold">Itraconazole</td>
+                                            <td class="p-3">⚠️ <strong>Recommandé</strong> (prophylaxie + curatif)</td>
+                                            <td class="p-3">+++</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Fluconazole</td>
+                                            <td class="p-3">Discutable si CVVH, SNC, CMI élevée</td>
+                                            <td class="p-3">+</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Isavuconazole</td>
+                                            <td class="p-3">Non recommandé (attente étude SECURE)</td>
+                                            <td class="p-3">++</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Ampho B / Échinocandines</td>
+                                            <td class="p-3"><strong>NON</strong></td>
+                                            <td class="p-3">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h4 class="font-bold text-lg mt-6">Objectifs de concentration (mg/L)</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-100">
+                                        <tr>
+                                            <th class="p-3 text-left font-semibold">Molécule</th>
+                                            <th class="p-3 text-left font-semibold">Cible Efficacité</th>
+                                            <th class="p-3 text-left font-semibold">Seuil Toxicité</th>
+                                            <th class="p-3 text-left font-semibold">1er prélèvement</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y">
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Voriconazole<br>Prophylaxie/Curatif</td>
+                                            <td class="p-3">
+                                                Résiduel :<br>
+                                                <strong>>1-2 mg/L</strong> (standard)<br>
+                                                <strong>>3-5 mg/L</strong> (infections sévères*)
+                                            </td>
+                                            <td class="p-3"><strong><5-6 mg/L</strong></td>
+                                            <td class="p-3">
+                                                J3-J5 puis répéter<br>
+                                                <span class="text-xs text-slate-600">*Dosage J3 valable uniquement si dose charge J1 faite</span>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Posaconazole<br>Prophylaxie</td>
+                                            <td class="p-3">Résiduel : <strong>>0,7 mg/L</strong></td>
+                                            <td class="p-3">Non établi</td>
+                                            <td class="p-3">
+                                                Suspension : J5-J7<br>
+                                                Comprimé : J3-J5
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Posaconazole<br>Curatif</td>
+                                            <td class="p-3">
+                                                Résiduel : <strong>>1,0 mg/L</strong> (aspergillose)<br>
+                                                <strong>>1,5 mg/L</strong> recommandé (mucormycose)
+                                            </td>
+                                            <td class="p-3">Non établi</td>
+                                            <td class="p-3">J3-J5 si dose charge</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="p-3 font-semibold">Itraconazole<br>Prophylaxie/Curatif</td>
+                                            <td class="p-3">
+                                                Résiduel :<br>
+                                                <strong>>0,5 mg/L</strong> (prophylaxie)<br>
+                                                <strong>>1,0 mg/L</strong> (curatif)
+                                            </td>
+                                            <td class="p-3"><strong><4,0 mg/L</strong></td>
+                                            <td class="p-3">J7-J15</td>
+                                        </tr>
+                                        <tr class="hover:bg-slate-50 bg-red-50">
+                                            <td class="p-3 font-semibold">Flucytosine</td>
+                                            <td class="p-3">
+                                                <strong>Pic (1h après):</strong> 40-80 mg/L<br>
+                                                <strong>Résiduel (avant):</strong> 30-40 mg/L
+                                            </td>
+                                            <td class="p-3"><strong>Cmax >100 mg/L</strong><br><span class="text-xs">Hématologique, GI, hépatique</span></td>
+                                            <td class="p-3">Dès J2-J3</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mt-4">
+                                <p class="text-sm text-yellow-900">
+                                    <strong>* Infections sévères / CMI élevées (>0,25 mg/L) :</strong><br>
+                                    Fusarioses, Scedosporioses → Objectif voriconazole : <strong>>3 mg/L</strong>
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        
+  </div>
+
+</div>
+
+<script>
+
+    // ═══════════════════════════════════════════════════════════════════
+    // SUPABASE CONFIG — Modifier posologies : Dashboard → antifongiques_indications
+    // ═══════════════════════════════════════════════════════════════════
+    const SUPABASE_URL  = 'https://mvcidplmvqaokftoszex.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12Y2lkcGxtdnFhb2tmdG9zemV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzk4MTUsImV4cCI6MjA4ODk1NTgxNX0.MiQoOve99hax2yEDq8cVpnD3GoK19cp6nb1I5xDGDzY';
+
+    async function loadFromSupabase() {
+        try {
+            const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+            const { data:mols, error:e1 } = await sb
+                .from('antifongiques_molecules').select('*').eq('actif',true).order('groupe').order('nom');
+            if (e1) throw e1;
+            const { data:inds, error:e2 } = await sb
+                .from('antifongiques_indications').select('*').eq('actif',true).order('ordre');
+            if (e2) throw e2;
+            if (!mols || mols.length === 0) throw new Error('Vide');
+
+            const indByMol = {};
+            inds.forEach(i => { if(!indByMol[i.molecule_id]) indByMol[i.molecule_id]=[]; indByMol[i.molecule_id].push(i); });
+
+            mols.forEach(mol => {
+                const indications = {};
+                (indByMol[mol.id]||[]).forEach(ind => {
+                    indications[ind.slug] = {
+                        label: ind.label,
+                        pos: { n:ind.pos_normale||'NC', l:ind.pos_legere||'NC', m:ind.pos_moderee||'NC', s:ind.pos_severe||'NC', t:ind.pos_terminale||'NC' },
+                        eerc: ind.pos_eerc||'NC'
+                    };
+                });
+                DB[mol.slug] = { nom:mol.nom, classe:mol.classe, poids_dependant:mol.poids_dependant||false,
+                    prep:mol.prep, admin:mol.admin, stab:mol.stab, incomp:mol.incomp,
+                    effi:mol.effi, tol:mol.tol, inter:mol.inter, indications };
+            });
+
+            // Rebuild select
+            const sel = document.getElementById('atf');
+            const cur = sel.value;
+            const groups = {};
+            mols.forEach(m => { if(!groups[m.groupe]) groups[m.groupe]=[]; groups[m.groupe].push(m); });
+            sel.innerHTML = '<option value="">-- Sélectionner --</option>';
+            Object.entries(groups).forEach(([g,list]) => {
+                const og = document.createElement('optgroup'); og.label = g;
+                list.forEach(m => { const o=document.createElement('option'); o.value=m.slug; o.textContent=m.nom; og.appendChild(o); });
+                sel.appendChild(og);
+            });
+            if (cur && DB[cur]) sel.value = cur;
+
+            const badge = document.getElementById('data-badge');
+            badge.className = 'ds-badge supabase';
+            badge.innerHTML = '<span>&#9679; Supabase</span>';
+            document.getElementById('mol-count-badge').textContent = mols.length + ' molécules';
+            console.log('Supabase OK:', mols.length, 'antifongiques');
+
+        } catch(err) {
+            console.warn('Supabase indispo ->', err.message||err);
+            const badge = document.getElementById('data-badge');
+            badge.className = 'ds-badge fallback';
+            badge.innerHTML = '<span>&#9889; Local</span>';
+        }
+    }
+
+    // ==================
+    // SYSTÈME D'ONGLETS
+    // ==================
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+        document.getElementById('content-' + tab).classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    // ==================
+    // ACCORDÉONS BON USAGE
+    // ==================
+    function toggleAccordion(sectionId) {
+        const content = document.getElementById(`content-${sectionId}`);
+        const icon = document.getElementById(`icon-${sectionId}`);
+        
+        content.classList.toggle('active');
+        icon.classList.toggle('rotate-180');
+    }
+
+    // ==================
+    // RECHERCHE BON USAGE
+    // ==================
+    function searchBonUsage() {
+        const searchTerm = document.getElementById('search-bon-usage').value.toLowerCase();
+        const sections = document.querySelectorAll('#bon-usage-content > div');
+        
+        sections.forEach(section => {
+            const text = section.textContent.toLowerCase();
+            if (text.includes(searchTerm) || searchTerm === '') {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        });
+    }
+
+    // ==========================================
+    // BASE DE DONNÉES ANTIFONGIQUES (inchangée)
+    // ==========================================
+    const DB = {
+        'fluconazole': {
+            nom: 'Fluconazole', classe: 'Azolé triazolé',
+            indications: {
+                'candidose-systemique': {
+                    label: 'Candidose systémique / Candidose urinaire (pyélo ou fungus ball)',
+                    pos: { 
+                        n:'12 mg/kg à J1 puis 6 mg/kg/24h (≈800mg puis 400mg/24h)', 
+                        l:'12 mg/kg à J1 puis 6 mg/kg/24h (≈800mg puis 400mg/24h)', 
+                        m:'12 mg/kg à J1 puis 6 mg/kg/24h (≈400mg puis 200mg/24h)', 
+                        s:'12 mg/kg à J1 puis 6 mg/kg/24h (≈400mg puis 200mg/24h)', 
+                        t:'12 mg/kg à J1 puis 6 mg/kg/48h (≈400mg puis 400mg/48h)' 
+                    },
+                    eerc: '⚠️ Très dialysable — Dose de charge 800 mg J1, puis 200 à 400 mg après chaque séance HDI/EERC (la dose dépend de l\'indication : candidémie vs cryptococcose). STP discutable si CVVH, atteinte SNC ou CMI élevée.'
+                },
+                'candidose-oropharyngee': {
+                    label: 'Candidose oropharyngée - oesophagienne',
+                    pos: { 
+                        n:'6 mg/kg à J1 puis 3 mg/kg/24h (≈400mg puis 200mg/24h)', 
+                        l:'6 mg/kg à J1 puis 3 mg/kg/24h (≈400mg puis 200mg/24h)', 
+                        m:'6 mg/kg à J1 puis 3 mg/kg/24h (≈200mg puis 100mg/24h)', 
+                        s:'6 mg/kg à J1 puis 3 mg/kg/24h (≈200mg puis 100mg/24h)', 
+                        t:'6 mg/kg à J1 puis 3 mg/kg/48h (≈200mg puis 100mg/48h)' 
+                    },
+                    eerc: '⚠️ Très dialysable — Dose de charge 800 mg J1, puis 200 mg après chaque séance HDI/EERC (adapter selon indication et tolérance).'
+                },
+                'cryptococcose': {
+                    label: 'Cryptococcose',
+                    pos: { 
+                        n:'6 mg/kg à J1 puis 6-12 mg/kg/j × 6 sem puis 6 mg/kg/24h (≈400-800mg/j)', 
+                        l:'6 mg/kg à J1 puis 6-12 mg/kg/j × 6 sem puis 6 mg/kg/24h (≈400-800mg/j)', 
+                        m:'6 mg/kg à J1 puis 3-6 mg/kg/j × 6 sem puis 3 mg/kg/48h (≈200-400mg/j)', 
+                        s:'6 mg/kg à J1 puis 3-6 mg/kg/j × 6 sem puis 3 mg/kg/48h (≈200-400mg/j)', 
+                        t:'6 mg/kg à J1 puis 3-6 mg/kg/j × 6 sem puis 3 mg/kg/48h (≈200-400mg/j)' 
+                    },
+                    eerc: '⚠️ Très dialysable — Dose de charge 800 mg J1, puis 400 mg après chaque séance HDI/EERC × 6 sem puis 200–400 mg/séance (entretien). STP discutable si atteinte SNC.'
+                },
+                'prevention': {
+                    label: 'Candidose - Prévention',
+                    pos: { 
+                        n:'6 mg/kg/24h (≈400mg/24h)', 
+                        l:'6 mg/kg/24h (≈400mg/24h)', 
+                        m:'3 mg/kg/24h (≈200mg/24h)', 
+                        s:'3 mg/kg/24h (≈200mg/24h)', 
+                        t:'3 mg/kg/24h (≈200mg/24h)' 
+                    },
+                    eerc: '⚠️ Très dialysable — 200 à 400 mg après chaque séance HDI/EERC (adapter selon indication).'
+                }
+            },
+            prep: 'Solution prête à l\'emploi (200mg/100mL ou 400mg/200mL).',
+            admin: 'Perf IV. Débit max 10mL/min.',
+            stab: 'Stable 24h T°. Protéger lumière.',
+            incomp: 'Solutions alcalines. Ceftriaxone. Diazépam.',
+            effi: 'Candidoses systémiques (C. albicans), cryptococcose. Biodisponibilité orale 90%. Excellente diffusion (LCS, urines).',
+            tol: 'Hépatotoxicité : transaminases hebdo si >14j. QT (rare). Nausées.',
+            inter: '⚠️ CYP2C9/3A4 : ↑tacrolimus, ciclosporine, rifabutine, phénytoïne, warfarine.'
+        },
+        'voriconazole': {
+            nom: 'Voriconazole', classe: 'Azolé triazolé large spectre',
+            indications: {
+                'standard': {
+                    label: 'Traitement standard (aspergillose, candidose fluconazole-R)',
+                    pos: { 
+                        n:'Dose de charge 6mg/kg/12h×2 puis 4mg/kg/12h', 
+                        l:'Dose de charge 6mg/kg/12h×2 puis 4mg/kg/12h', 
+                        m:'Dose de charge 6mg/kg/12h×2 puis 4mg/kg/12h', 
+                        s:'Dose de charge 6mg/kg/12h×2 puis 4mg/kg/12h', 
+                        t:'Dose de charge 6mg/kg/12h×2 puis 4mg/kg/12h' 
+                    },
+                    eerc: '⚠️ Voriconazole IV CONTRE-INDIQUÉ en HDI/EERC (accumulation excipient SBECD néphrotoxique). Utiliser voie orale dès que possible : 200 mg × 2/j PO sans ajustement. Excellente biodisponibilité orale (96%). 🔴 STP obligatoire.'
+                }
+            },
+            prep: 'Reconstitution EPPI puis NaCl 0,9% uniquement. [C] 0,5-5mg/mL.',
+            admin: '⚠️ Perf 1-3h (max 3mg/kg/h). 🔴 DOSAGES OBLIGATOIRES J3-J5 puis hebdo.',
+            stab: 'Reconstituée : immédiate (utiliser dans l\'heure). Diluée : 24h frigo.',
+            incomp: '⚠️⚠️ VOIE DÉDIÉE OBLIGATOIRE. Incompatible : NaCl >0,9%, G5%, produits sanguins, nutrition parentérale.',
+            effi: '🔴 DOSAGES OBLIGATOIRES J3-J5 : Objectifs résiduels 1-5mg/L (infections standard), 3-5mg/L (infections sévères : fusarioses, scedosporioses, CMI élevées). Aspergillose invasive, candidoses fluconazole-R, fusarioses, scedosporioses.',
+            tol: '⚠️ Hépatotoxicité fréquente : transaminases 2×/sem pendant 1 mois puis hebdo. Troubles visuels fréquents (30-50%) : photophobie, vision floue (réversibles). Photosensibilisation EXTRÊME : protection solaire stricte (crème SPF50+, vêtements couvrants). Hallucinations possibles. Neuropathie périphérique si traitement prolongé. Surveillance cutanée si >6 mois (carcinomes).',
+            inter: '⚠️⚠️⚠️ CI ABSOLUES : rifampicine, carbamazépine, phénobarbital, ritonavir HD, efavirenz HD, terfénadine, astémizole, cisapride, pimozide, quinidine, ergot de seigle. Substrat et inhibiteur puissant CYP2C9/2C19/3A4 : nombreuses interactions (tacrolimus ×2-3, ciclosporine, sirolimus, statines, BZD, warfarine, phénytoïne).'
+        },
+        'posaconazole': {
+            nom: 'Posaconazole', classe: 'Azolé triazolé large spectre',
+            indications: {
+                'standard': {
+                    label: 'Infection sévère (aspergillose, mucormycose)',
+                    pos: { 
+                        n:'Dose de charge 300mg/12h J1 puis 300mg/24h', 
+                        l:'Dose de charge 300mg/12h J1 puis 300mg/24h', 
+                        m:'Dose de charge 300mg/12h J1 puis 300mg/24h', 
+                        s:'Dose de charge 300mg/12h J1 puis 300mg/24h', 
+                        t:'Dose de charge 300mg/12h J1 puis 300mg/24h' 
+                    },
+                    eerc: 'Pas d\'ajustement — Très forte liaison protéique, non dialysable. Dose de charge 300mg/12h J1 puis 300mg/24h inchangée en HDI/EERC. 🔴 STP obligatoire (résiduel >1 mg/L aspergillose, >1,5 mg/L mucormycose).'
+                }
+            },
+            prep: 'Amener flacon à T°C ambiante. Transférer 16,7mL dans poche 250mL NaCl 0,9% ou G5%.',
+            admin: 'Perf 90min ligne centrale préférée (périphérique possible 1 fois si urgence). 🔴 DOSAGES J5-J7 puis hebdo.',
+            stab: 'Solution prête : stable. Diluée : utilisation immédiate recommandée.',
+            incomp: 'Voie dédiée recommandée. Incompatible : Ringer lactate, G5% + Ringer lactate, bicarbonate 4,2%.',
+            effi: '🔴 DOSAGES OBLIGATOIRES : résiduel >0,7mg/L (prophylaxie), >1mg/L (traitement aspergillose), >1,5mg/L recommandé (mucormycoses, infections sévères). Spectre élargi incluant mucorales. Alternative voriconazole si intolérance/résistance.',
+            tol: 'Hépatotoxicité : transaminases mensuelles (surveillance prolongée si >3 mois). Allongement QT possible (ECG si facteurs de risque). Hypokaliémie possible. Moins de photosensibilisation que voriconazole.',
+            inter: '⚠️⚠️ CI ABSOLUES : alcaloïdes ergot de seigle, rifampicine, efavirenz, ritonavir. Inhibiteur puissant CYP3A4 et P-gP : tacrolimus (÷3 dose), ciclosporine (÷2), sirolimus, midazolam, statines. Interactions majeures fréquentes.'
+        },
+        'isavuconazole': {
+            nom: 'Isavuconazole', classe: 'Azolé triazolé large spectre',
+            indications: {
+                'standard': {
+                    label: 'Infection sévère (aspergillose, mucormycose)',
+                    pos: { 
+                        n:'Dose de charge 200mg/8h×6 puis 200mg/24h', 
+                        l:'Dose de charge 200mg/8h×6 puis 200mg/24h', 
+                        m:'Dose de charge 200mg/8h×6 puis 200mg/24h', 
+                        s:'Dose de charge 200mg/8h×6 puis 200mg/24h', 
+                        t:'Dose de charge 200mg/8h×6 puis 200mg/24h' 
+                    },
+                    eerc: 'Pas d\'ajustement — Pas de dose supplémentaire après séance HDI/EERC. Dose de charge 200mg/8h × 6 doses sur 48h puis 200mg/24h inchangée. Élimination hépatique prédominante.'
+                }
+            },
+            prep: 'Reconstitution EPPI 5mL puis poche ≥250mL NaCl/G5%.',
+            admin: 'Perf ≥60min + filtre 0,2-1,2µm. Dose de charge : 6 doses/48h.',
+            stab: 'Reconstituée : 1h. Diluée : 24h frigo ou 6h T°.',
+            incomp: 'Voie dédiée.',
+            effi: 'Aspergillose, mucormycose. Spectre mucorales. Alternative voriconazole.',
+            tol: 'Hépatotoxicité : transaminases mensuelles. QT court (rare). Pas photosensibilisation.',
+            inter: '⚠️ CI : kétoconazole, rifampicine, carbamazépine, phénobarbital. CYP3A4 : ↑tacrolimus (÷2).'
+        },
+        'amphotericine-b-liposomale': {
+            nom: 'Amphotéricine B liposomale', classe: 'Polyène lipidique',
+            indications: {
+                'infection-severe': {
+                    label: 'Infection sévère (candidose, aspergillose, cryptococcose)',
+                    pos: { 
+                        n:'3-5mg/kg/24h', 
+                        l:'3mg/kg/24h', 
+                        m:'3mg/kg/24h', 
+                        s:'3mg/kg/24h', 
+                        t:'3mg/kg/24h' 
+                    },
+                    eerc: 'Pas d\'ajustement — Non dialysable (forte liaison protéique). 3 mg/kg/24h inchangé en HDI/EERC. ⚠️ Surveiller étroitement la kaliémie (risque d\'hypokaliémie majoré en dialyse).'
+                },
+                'mucormycose': {
+                    label: 'Mucormycose',
+                    pos: { 
+                        n:'≥5mg/kg/24h (dose optimale)', 
+                        l:'≥5mg/kg/24h', 
+                        m:'≥5mg/kg/24h', 
+                        s:'≥5mg/kg/24h', 
+                        t:'≥5mg/kg/24h' 
+                    },
+                    eerc: 'Pas d\'ajustement — Non dialysable. ≥5 mg/kg/24h inchangé en HDI/EERC. ⚠️ Surveiller étroitement la kaliémie (risque d\'hypokaliémie majoré en dialyse).'
+                }
+            },
+            prep: 'Reconstitution EPPI 12mL puis G5% UNIQUEMENT. [C] 0,2-2mg/mL. ⚠️⚠️ JAMAIS NaCl (agrégation liposomes). Utiliser filtre 5µm fourni.',
+            admin: 'Perf 30-60min (si dose ≤3mg/kg). Perf 2-4h si dose >3mg/kg. ⚠️ PRÉMÉDICATION recommandée si antécédent de réaction : paracétamol 1g + antiH1 30min avant.',
+            stab: 'Reconstituée : 24h frigo (2-8°C). Diluée : 24h frigo ou 6h T° ambiante.',
+            incomp: '⚠️⚠️ NaCl strictement contre-indiqué (agrégation liposomes). VOIE DÉDIÉE obligatoire. Ne pas mélanger avec autres médicaments.',
+            effi: 'Large spectre (Candida, Aspergillus, Cryptococcus, mucorales). Excellente pénétration tissulaire (poumon, SNC, rein). Traitement de référence mucormycoses.',
+            tol: '⚠️ Réaction perfusion (10-30%) : fièvre, frissons, hypotension → PRÉMÉDICATION si antécédent. Néphrotoxicité (15-25%) : créatinine quotidienne, maintenir hydratation. Troubles électrolytiques : ↓K, ↓Mg → ionogramme ×3/sem (correction systématique si K<3,5 ou Mg<0,5). Anémie possible.',
+            inter: '⚠️ Néphrotoxicité additive : aminosides, ciclosporine, tacrolimus (surveillance rénale ++). Diurétiques : ↑risque hypokaliémie. Corticoïdes : ↑hypokaliémie.'
+        },
+        'flucytosine': {
+            nom: 'Flucytosine (5-FC)', classe: 'Antimétabolite pyrimidique',
+            indications: {
+                'infection-severe': {
+                    label: 'Infection sévère (toujours en association)',
+                    pos: { 
+                        n:'25 mg/kg/6h (100 mg/kg/j)', 
+                        l:'25 mg/kg/6h (100 mg/kg/j)', 
+                        m:'25 mg/kg/12h (50 mg/kg/j)', 
+                        s:'25 mg/kg/24h', 
+                        t:'25 mg/kg/48h' 
+                    },
+                    eerc: '⚠️⚠️ Molécule critique — Très dialysable. 25 mg/kg après chaque séance HDI/EERC. 🔴 DOSAGES PLASMATIQUES OBLIGATOIRES (risque de toxicité hématologique sévère si accumulation). Pic 1h après : 40–80 mg/L. Résiduel avant : 30–40 mg/L. Toxique >100 mg/L.'
+                }
+            },
+            prep: 'Solution prête 10mg/mL (2,5g/250mL). Compatible G5%, NaCl, lactate.',
+            admin: 'Perf 20-40min. ⚠️⚠️ TOUJOURS EN ASSOCIATION. 🔴 DOSAGES OBLIGATOIRES.',
+            stab: 'Immédiate recommandée.',
+            incomp: '⚠️ Séparer amphotéricine B (administrer séparément).',
+            effi: '🔴 DOSAGES OBLIGATOIRES : pic 40-80mg/L (1h après fin perf), résiduel 30-40mg/L (avant injection), toxique >100mg/L. ⚠️⚠️ JAMAIS EN MONOTHÉRAPIE (résistance rapide). Cryptococcose neuro (+ ampho B) : 14j minimum. Candidoses + ampho B.',
+            tol: '⚠️⚠️ TOXICITÉ DOSE-DÉPENDANTE (liée aux concentrations). Hématologique : NFS 2×/sem (leucopénie, thrombopénie). Digestive (nausées, diarrhées). Hépatotoxicité : transaminases hebdo.',
+            inter: 'Amphotéricine B : synergie+++ (recommandée). Cytosine arabinoside : antagonisme (CI). Zidovudine : hématotox additive. Dosage à adapter si insuffisance rénale.'
+        },
+        'caspofungine': {
+            nom: 'Caspofungine', classe: 'Échinocandine',
+            indications: {
+                'poids-normal': {
+                    label: 'Poids <80kg (après bolus 70mg J1)',
+                    pos: { 
+                        n:'Dose de charge 70mg J1 puis 50mg/24h', 
+                        l:'Dose de charge 70mg J1 puis 50mg/24h', 
+                        m:'Dose de charge 70mg J1 puis 50mg/24h', 
+                        s:'Dose de charge 70mg J1 puis 50mg/24h', 
+                        t:'Dose de charge 70mg J1 puis 50mg/24h' 
+                    },
+                    eerc: 'Pas d\'ajustement — Non dialysable (haut poids moléculaire, forte liaison protéique). Dose de charge 70mg J1 puis 50mg/24h inchangée en HDI/EERC. Molécule de choix chez le patient instable en dialyse (aucun calcul complexe).'
+                },
+                'poids-eleve': {
+                    label: 'Poids >80kg',
+                    pos: { 
+                        n:'Dose de charge 70mg J1 puis 70mg/24h', 
+                        l:'Dose de charge 70mg J1 puis 70mg/24h', 
+                        m:'Dose de charge 70mg J1 puis 70mg/24h', 
+                        s:'Dose de charge 70mg J1 puis 70mg/24h', 
+                        t:'Dose de charge 70mg J1 puis 70mg/24h' 
+                    },
+                    eerc: 'Pas d\'ajustement — Non dialysable. Dose de charge 70mg J1 puis 70mg/24h inchangée en HDI/EERC.'
+                },
+                'endocardite': {
+                    label: 'Endocardite à Candida',
+                    pos: { 
+                        n:'Dose de charge 70mg J1 puis 150mg/24h', 
+                        l:'Dose de charge 70mg J1 puis 150mg/24h', 
+                        m:'Dose de charge 70mg J1 puis 150mg/24h', 
+                        s:'Dose de charge 70mg J1 puis 150mg/24h', 
+                        t:'Dose de charge 70mg J1 puis 150mg/24h' 
+                    },
+                    eerc: 'Pas d\'ajustement — Non dialysable. Dose de charge 70mg J1 puis 150mg/24h inchangée en HDI/EERC.'
+                },
+                'infections-severes': {
+                    label: 'Infections sévères (qSOFA ≥2)',
+                    pos: { 
+                        n:'Dose de charge 140mg J1 puis 100-150mg/24h selon poids', 
+                        l:'Dose de charge 140mg J1 puis 100-150mg/24h selon poids', 
+                        m:'Dose de charge 140mg J1 puis 100-150mg/24h selon poids', 
+                        s:'Dose de charge 140mg J1 puis 100-150mg/24h selon poids', 
+                        t:'Dose de charge 140mg J1 puis 100-150mg/24h selon poids' 
+                    },
+                    eerc: 'Pas d\'ajustement — Non dialysable. Dose de charge 140mg J1 puis 100–150mg/24h inchangée en HDI/EERC.'
+                }
+            },
+            prep: 'Reconstitution 10,5mL EPPI. Diluer 250mL NaCl 0,9% uniquement.',
+            admin: 'Perf 60min. ⚠️ Insuf hépatique modérée : 35mg/j.',
+            stab: 'Reconstituée : 24h 2-8°C. Diluée : 24h ≤25°C ou 48h 2-8°C.',
+            incomp: 'NaCl 0,9% préféré. Ne pas mélanger avec d\'autres produits.',
+            effi: 'Candidoses invasives, aspergillose (échec/intolérance azolés). ⚠️ Pas de diffusion LCS/urines. Traitement minimum 14j après négativation hémocultures.',
+            tol: 'Très bien toléré. Hépatotoxicité rare : transaminases hebdo si traitement >14j.',
+            inter: '⚠️ Rifampicine, carbamazépine, phénytoïne, dexaméthasone : ↓caspofungine (passer à 70mg/j). Ciclosporine : hépatotox (CI). Tacrolimus : ↓25% (surveiller).'
+        },
+        'micafungine': {
+            nom: 'Micafungine', classe: 'Échinocandine',
+            indications: {
+                'candidose-invasive': {
+                    label: 'Candidose invasive (traitement curatif)',
+                    pos: { 
+                        n:'100mg/24h (standard) ou 150mg/24h (infections sévères)', 
+                        l:'100mg/24h (standard) ou 150mg/24h (infections sévères)', 
+                        m:'100mg/24h (standard) ou 150mg/24h (infections sévères)', 
+                        s:'100mg/24h (standard) ou 150mg/24h (infections sévères)', 
+                        t:'100mg/24h (standard) ou 150mg/24h (infections sévères)' 
+                    },
+                    eerc: 'Pas d\'ajustement — Non dialysable. 100mg/24h (standard) ou 150mg/24h (infections sévères) inchangé en HDI/EERC. Molécule de choix chez le patient instable en dialyse.'
+                },
+                'aspergillose': {
+                    label: 'Aspergillose (échec/intolérance azolés)',
+                    pos: { 
+                        n:'100-150mg/24h', 
+                        l:'100-150mg/24h', 
+                        m:'100-150mg/24h', 
+                        s:'100-150mg/24h', 
+                        t:'100-150mg/24h' 
+                    },
+                    eerc: 'Pas d\'ajustement — Non dialysable. 100–150mg/24h inchangé en HDI/EERC.'
+                },
+                'prophylaxie': {
+                    label: 'Prophylaxie (neutropénie, allogreffe)',
+                    pos: { 
+                        n:'50mg/24h', 
+                        l:'50mg/24h', 
+                        m:'50mg/24h', 
+                        s:'50mg/24h', 
+                        t:'50mg/24h' 
+                    },
+                    eerc: 'Pas d\'ajustement — Non dialysable. 50mg/24h inchangé en HDI/EERC.'
+                }
+            },
+            prep: 'Reconstitution NaCl 0,9% uniquement. [C] 0,5-1,5mg/mL.',
+            admin: 'Perf 60min. ⚠️ Pas de dose de charge nécessaire (contrairement aux autres échinocandines).',
+            stab: 'Reconstituée : 24h T°. Diluée : 24h T°, protéger lumière.',
+            incomp: '⚠️ Ne pas reconstituer avec G5%. Après dilution dans NaCl, ajout de G5% possible.',
+            effi: 'Candidoses invasives, aspergillose (échec/intolérance azolés). ⚠️ Pas de diffusion LCS/urines. Traitement minimum 14j après négativation hémocultures.',
+            tol: 'Très bien toléré. Hépatotoxicité rare : transaminases hebdo si traitement >14j. Pas d\'adaptation posologique en IRC ou insuffisance hépatique.',
+            inter: 'Peu d\'interactions (métabolisme non-CYP). ↑sirolimus (surveillance +). Pas d\'interaction significative tacrolimus/ciclosporine.'
+        },
+        'anidulafungine': {
+            nom: 'Anidulafungine', classe: 'Échinocandine',
+            indications: {
+                'standard': {
+                    label: 'Traitement standard',
+                    pos: { 
+                        n:'Dose de charge 200mg J1 puis 100mg/24h', 
+                        l:'Dose de charge 200mg J1 puis 100mg/24h', 
+                        m:'Dose de charge 200mg J1 puis 100mg/24h', 
+                        s:'Dose de charge 200mg J1 puis 100mg/24h', 
+                        t:'Dose de charge 200mg J1 puis 100mg/24h' 
+                    },
+                    eerc: 'Pas d\'ajustement — Non dialysable. Dose de charge 200mg J1 puis 100mg/24h inchangée en HDI/EERC. Avantage : aucune adaptation IRC, hépatique ou dialyse requise.'
+                }
+            },
+            prep: 'Reconstitution EPPI puis NaCl/G5%. [C] max 0,77mg/mL.',
+            admin: 'Perf ≥90min. Débit max 1,1mg/min. Dose de charge 200mg J1 OBLIGATOIRE.',
+            stab: 'Reconstituée : 24h T°. Diluée : 48h frigo ou 24h T°.',
+            incomp: 'Compatible G5% et NaCl. Ne pas mélanger.',
+            effi: 'Candidoses invasives, candidémies. Fongicide Candida. Avantage : AUCUNE adaptation IRC/hépatique/dialyse.',
+            tol: 'Très bien toléré. Histaminolibération si perf rapide : ralentir débit.',
+            inter: '⚠️ AUCUNE interaction significative. Pas métabolisme CYP.'
+        }
+    };
+
+    // Gestion des indications selon l'antifongique
+    document.getElementById('atf').addEventListener('change', function() {
+        const atf = this.value;
+        const indicationContainer = document.getElementById('indication-container');
+        const indicationSelect = document.getElementById('indication');
+        
+        if (atf && DB[atf]) {
+            const indications = DB[atf].indications;
+            indicationSelect.innerHTML = '<option value="">-- Sélectionner indication --</option>';
+            
+            for (const [key, value] of Object.entries(indications)) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = value.label;
+                indicationSelect.appendChild(option);
+            }
+            
+            indicationContainer.classList.remove('hidden');
+        } else {
+            indicationContainer.classList.add('hidden');
+        }
+    });
+
+    let currentMode = 'recolte';
+
+    function setMode(mode) {
+        currentMode = mode;
+        document.getElementById('mode-recolte').style.display = mode === 'recolte' ? 'block' : 'none';
+        document.getElementById('mode-manuelle').style.display = mode === 'manuelle' ? 'block' : 'none';
+        if (mode === 'recolte') {
+            document.getElementById('btn-recolte').classList.add('active');
+            document.getElementById('btn-manuelle').classList.remove('active');
+        } else {
+            document.getElementById('btn-recolte').classList.remove('active');
+            document.getElementById('btn-manuelle').classList.add('active');
+        }
+    }
+
+    function calcul() {
+        if (currentMode === 'manuelle') {
+            const val = parseFloat(document.getElementById('clcrManuelle').value);
+            if (!val || val <= 0) return null;
+            return val;
+        }
+        const v = parseFloat(document.getElementById('volU').value);
+        const cu = parseFloat(document.getElementById('creatU').value);
+        const cp = parseFloat(document.getElementById('creatP').value);
+        const d = parseFloat(document.getElementById('duree').value);
+        if (!v || !cu || !cp) return null;
+        return (cu * v) / (cp * d * 60);
+    }
+
+    function stade(clcr) {
+        if (clcr >= 70) return { n:'Normale (\u226570 mL/min)',             c:'n', css:'normal'    };
+        if (clcr >= 50) return { n:'IRC l\u00e9g\u00e8re (50-69 mL/min)', c:'l', css:'legere'    };
+        if (clcr >= 30) return { n:'IRC mod\u00e9r\u00e9e (30-49 mL/min)',c:'m', css:'moderee'   };
+        if (clcr >= 10) return { n:'IRC s\u00e9v\u00e8re (10-29 mL/min)', c:'s', css:'severe'    };
+        return             { n:'IRC terminale (<10 mL/min)',                 c:'t', css:'terminale' };
+    }
+
+    document.getElementById('form').onsubmit = function(e) {
+        e.preventDefault();
+        const dialyse = document.getElementById('dialyse').value;
+        const isEER = dialyse === 'hdi' || dialyse === 'eerc';
+
+        // Clairance requise seulement si pas d'EER
+        const clcr = calcul();
+        if (!isEER && !clcr) { 
+            alert(currentMode === 'manuelle' 
+                ? 'Saisir la clairance mesurée (mL/min)' 
+                : 'Remplir tous les champs clairance (volume, créatinine U et P)'); 
+            return; 
+        }
+        
+        const atf = document.getElementById('atf').value;
+        if (!atf) { alert('Sélectionner antifongique'); return; }
+        if (!DB[atf]) { alert('Antifongique non disponible'); return; }
+        
+        const indication = document.getElementById('indication').value;
+        if (!indication) { alert('Sélectionner une indication'); return; }
+        
+        const d = DB[atf];
+        const indic = d.indications[indication];
+
+        // Calcul posologie selon mode EER
+        let st = null, pos = '', posologieHTML = '';
+
+        if (dialyse === 'hdi') {
+            posologieHTML = `
+                <div class="dose-value" style="border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.05);margin-bottom:8px">
+                    <p class="dose-value-label" style="color:var(--purple)">⚙️ Hémodialyse Intermittente (HDI)</p>
+                    <p class="dose-text">${indic.eerc}</p>
+                    <p class="fr-sub" style="margin-top:4px">Posologie spécifique HDI — clairance rénale non applicable</p>
+                </div>`;
+        } else if (dialyse === 'eerc') {
+            posologieHTML = `
+                <div class="dose-value" style="border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.05);margin-bottom:8px">
+                    <p class="dose-value-label" style="color:var(--success)">⚙️ Épuration Extra-Rénale Continue (CVVH/CVVHDF)</p>
+                    <p class="dose-text">${indic.eerc}</p>
+                    <p class="fr-sub" style="margin-top:4px">Posologie spécifique EERC — clairance rénale non applicable</p>
+                </div>`;
+        } else {
+            st = stade(clcr);
+            pos = indic.pos[st.c];
+            posologieHTML = `
+                <div class="dose-value">
+                    <p class="dose-value-label" style="color:var(--success)">Posologie adaptée à la fonction rénale</p>
+                    <p class="dose-text">${pos}</p>
+                </div>
+                <div class="info-block">
+                    <p class="dose-value-label" style="color:var(--purple)">Si épuration extra-rénale (EER)</p>
+                    <p class="prec-text">${indic.eerc}</p>
+                </div>`;
+        }
+
+        // Bloc Fonction Rénale — masqué si EER
+        const fonctionRenaleHTML = isEER ? `
+            <div class="card result-block">
+                <h3 class="card-title">
+                    <span>🔒 Fonction Rénale</span>
+                </h3>
+                <p class="fr-sub">Clairance non utilisée — posologie déterminée par le mode d'épuration extra-rénale (${dialyse === 'hdi' ? 'HDI' : 'EERC'}).</p>
+            </div>` : `
+            <div class="card result-block">
+                <h3 class="card-title"><span>Fonction Rénale</span></h3>
+                <div class="stade-row">
+                    <div class="stade-left">
+                        <p class="prec-text">
+                            ${currentMode === 'manuelle' 
+                                ? '✏️ Clairance saisie manuellement (laboratoire)' 
+                                : '🧪 Clairance calculée (récolte urinaire)'}
+                        </p>
+                        <p class="fr-value moderee">${clcr ? clcr.toFixed(1) : '--'} <span class="text-lg">mL/min</span></p>
+                    </div>
+                    <div class="px-4 py-2 rounded-lg border-2 ${st ? st.cl : ''}">
+                        <div class="fr-label">Classification</div>
+                        <p class="text-lg font-bold">${st ? st.n : ''}</p>
+                    </div>
+                </div>
+            </div>`;
+
+        // Alertes intelligentes selon l'antifongique
+        let alertes = [];
+        
+        if (atf === 'voriconazole') {
+            alertes.push({
+                type: 'danger',
+                icon: '🔴',
+                titre: 'DOSAGES OBLIGATOIRES',
+                message: 'Dosage résiduel à J3-J5 puis hebdomadaire. Objectif : 1-5 mg/L (standard) ou 3-5 mg/L (infections sévères)'
+            });
+            alertes.push({
+                type: 'warning',
+                icon: '⚠️',
+                titre: 'PHOTOSENSIBILISATION EXTRÊME',
+                message: 'Protection solaire stricte obligatoire : crème SPF50+, vêtements couvrants, éviter exposition solaire'
+            });
+            alertes.push({
+                type: 'warning',
+                icon: '⚠️',
+                titre: 'Surveillance hépatique',
+                message: 'Transaminases 2×/semaine pendant 1 mois puis hebdomadaire'
+            });
+        }
+        
+        if (atf === 'flucytosine') {
+            alertes.push({
+                type: 'danger',
+                icon: '⚠️⚠️',
+                titre: 'JAMAIS EN MONOTHÉRAPIE',
+                message: 'Toujours associer à amphotéricine B ou azolé (risque de résistance rapide)'
+            });
+            alertes.push({
+                type: 'danger',
+                icon: '🔴',
+                titre: 'DOSAGES OBLIGATOIRES',
+                message: 'Pic 1h après fin perf : 40-80 mg/L | Résiduel avant injection : 30-40 mg/L | Toxique >100 mg/L'
+            });
+            alertes.push({
+                type: 'warning',
+                icon: '⚠️',
+                titre: 'Surveillance hématologique',
+                message: 'NFS 2×/semaine (risque leucopénie, thrombopénie dose-dépendant)'
+            });
+        }
+        
+        if (atf === 'posaconazole') {
+            alertes.push({
+                type: 'info',
+                icon: '🔴',
+                titre: 'Dosages recommandés',
+                message: 'Résiduel à J5-J7 : >0,7 mg/L (prophylaxie), >1 mg/L (aspergillose), >1,5 mg/L (mucormycose)'
+            });
+        }
+        
+        if (atf === 'isavuconazole') {
+            alertes.push({
+                type: 'info',
+                icon: 'ℹ️',
+                titre: 'Dose de charge particulière',
+                message: 'Administrer 6 doses de 200mg sur 48h (toutes les 8h) puis entretien 200mg/24h'
+            });
+        }
+        
+        if (atf === 'amphotericine-b-liposomale') {
+            alertes.push({
+                type: 'warning',
+                icon: '⚠️',
+                titre: 'Prémédication recommandée',
+                message: 'Si antécédent de réaction : paracétamol 1g + antiH1 30 min avant perfusion'
+            });
+            alertes.push({
+                type: 'warning',
+                icon: '⚠️',
+                titre: 'Surveillance électrolytique intensive',
+                message: 'Ionogramme 3×/semaine : correction systématique si K<3,5 ou Mg<0,5 mmol/L'
+            });
+            alertes.push({
+                type: 'danger',
+                icon: '⚠️⚠️',
+                titre: 'NaCl STRICTEMENT CONTRE-INDIQUÉ',
+                message: 'Reconstitution et dilution uniquement avec G5% (agrégation liposomes avec NaCl)'
+            });
+        }
+        
+        if (atf.includes('caspofungine') || atf.includes('micafungine') || atf.includes('anidulafungine')) {
+            alertes.push({
+                type: 'info',
+                icon: 'ℹ️',
+                titre: 'Échinocandine',
+                message: 'Pas de diffusion LCS ni urinaire. Pas d\'adaptation IRC. Excellente tolérance.'
+            });
+        }
+        
+        let alertesHTML = '';
+        if (alertes.length > 0) {
+            alertesHTML = '<div class="card result-block">';
+            alertesHTML += '<h3 class="card-title"><span>⚠️ Alertes & Points Critiques</span></h3>';
+            alertes.forEach(alerte => {
+                const alerteClass = { 'rouge':'alerte-rouge', 'orange':'alerte-orange', 'jaune':'alerte-jaune', 'vert':'alerte-vert' };
+                alertesHTML += `
+                    <div class="alerte-item ${alerteClass[alerte.type]}">
+                        <p class="font-bold text-sm mb-1">${alerte.icon} ${alerte.titre}</p>
+                        <p class="text-sm">${alerte.message}</p>
+                    </div>
+                `;
+            });
+            alertesHTML += '</div>';
+        }
+        
+        document.getElementById('results').innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:14px">
+                ${alertesHTML}
+                
+                ${fonctionRenaleHTML}
+
+                <div class="card result-block">
+                    <h3 class="card-title">Posologie Recommandée</h3>
+                    <div class="dose-card">
+                        <p class="dose-classe">Antifongique</p>
+                        <p class="dose-molecule">${d.nom}</p>
+                        <p class="dose-sous-titre">${d.classe}</p>
+                    </div>
+                    <div class="dose-indication">
+                        <p class="dose-value-label">Indication / Sévérité</p>
+                        <p class="dose-text">${indic.label}</p>
+                    </div>
+                    ${posologieHTML}
+                </div>
+
+                <div class="card result-block">
+                    <h3 class="card-title">
+                        <span>Précautions d'Emploi</span>
+                    </h3>
+                    <div class="prec-list">
+                        <div class="prec-item prep">
+                            <p class="prec-title">Préparation</p>
+                            <p class="prec-text">${d.prep}</p>
+                        </div>
+                        <div class="prec-item admin">
+                            <p class="prec-title">Administration</p>
+                            <p class="prec-text">${d.admin}</p>
+                        </div>
+                        <div class="prec-item stab">
+                            <p class="prec-title">Stabilité</p>
+                            <p class="prec-text">${d.stab}</p>
+                        </div>
+                        <div class="prec-item incomp">
+                            <p class="prec-title">Incompatibilités</p>
+                            <p class="prec-text">${d.incomp}</p>
+                        </div>
+                        <div class="prec-item effi">
+                            <p class="prec-title">Surveillance Efficacité</p>
+                            <p class="prec-text">${d.effi}</p>
+                        </div>
+                        <div class="prec-item tol">
+                            <p class="prec-title">Surveillance Tolérance</p>
+                            <p class="prec-text">${d.tol}</p>
+                        </div>
+                        <div class="prec-item inter">
+                            <p class="prec-title">Interactions</p>
+                            <p class="prec-text">${d.inter}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    <div class="disclaimer-inner">
+                        <p class="font-semibold mb-1">⚠️ Avertissement</p>
+                        <p>Aide à la décision basée sur recommandations officielles validées. Ne remplace pas le jugement clinique ni l'avis d'un expert. Dosages plasmatiques fortement recommandés pour voriconazole, posaconazole et flucytosine. Adaptation posologique selon évolution clinique et biologique.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    function resetForm() {
+        document.getElementById('form').reset();
+        document.getElementById('indication-container').classList.add('hidden');
+        document.getElementById('results').innerHTML = '';
+        document.getElementById('clcrManuelle').value = '';
+        setMode('recolte');
+    }
+
+    // Exemple pré-rempli
+    window.onload = function() {
+        document.getElementById('volU').value = '1500';
+        document.getElementById('creatU').value = '4420';
+        document.getElementById('creatP').value = '110';
+    };
+    
+
+    // Init Supabase
+    loadFromSupabase();
+</script>
+</body>
+</html>

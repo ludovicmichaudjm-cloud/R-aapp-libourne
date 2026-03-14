@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IEUU — RéaApp CH Robert Boulin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0b0f14;--surface:#121820;--card:#181f28;--border:#1e2a38;
+      --text:#e2eaf4;--muted:#5a7080;--soft:#2a3a4a;
+      --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+      --accent:#2dd4bf;--medical:#3b82f6;--urgent:#ef4444;
+      --warn:#eab308;--purple:#a78bfa;--success:#22c55e;--orange:#fb923c;
+    }
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .hidden{display:none!important}
+
+    /* Header */
+    .tool-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+    .tool-header-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(167,139,250,.1));border:1px solid rgba(59,130,246,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .tool-header-title{font-size:16px;font-weight:600;line-height:1.2}
+    .tool-header-sub{font-size:11px;color:var(--muted);font-family:var(--mono)}
+    .tool-header-badge{margin-left:auto;padding:4px 10px;border-radius:20px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);font-size:11px;color:var(--medical);font-family:var(--mono)}
+
+    /* Layout */
+    .tool-body{max-width:680px;margin:0 auto;padding:24px 16px}
+
+    /* Card */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px}
+    .card-title{font-size:12px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .card-title::before{content:'';width:3px;height:12px;background:var(--medical);border-radius:2px;display:inline-block;flex-shrink:0}
+
+    /* Formule info */
+    .formula-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:10px;padding:14px 16px;margin-bottom:20px}
+    .formula-box-title{font-size:11px;font-family:var(--mono);color:var(--medical);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+    .formula{font-family:var(--mono);font-size:14px;color:var(--text);font-weight:500;margin-bottom:6px}
+    .formula-desc{font-size:12px;color:var(--muted);line-height:1.7}
+
+    /* Form */
+    .form-group{margin-bottom:16px}
+    .form-label{display:block;font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+    .input-row{display:flex;gap:8px;align-items:stretch}
+    .form-input{flex:1;padding:10px 13px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:15px;font-family:var(--font);outline:none;transition:border-color .15s;appearance:none}
+    .form-input:focus{border-color:rgba(59,130,246,.5)}
+    .form-input::placeholder{color:var(--muted)}
+    .form-input.error{border-color:rgba(239,68,68,.5)}
+    .unit-select{padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--muted);font-size:13px;font-family:var(--mono);outline:none;cursor:pointer;transition:border-color .15s;appearance:none;flex-shrink:0}
+    .unit-select:focus{border-color:rgba(59,130,246,.5)}
+    .unit-badge{padding:10px 13px;background:var(--surface);border:1px solid var(--border);border-radius:9px;font-size:12px;font-family:var(--mono);color:var(--muted);flex-shrink:0;display:flex;align-items:center}
+    .form-error{font-size:11px;color:var(--urgent);margin-top:4px;font-family:var(--mono)}
+
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:500px){.form-grid{grid-template-columns:1fr}}
+
+    /* Btn */
+    .btn-primary{width:100%;padding:13px;background:var(--medical);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s;margin-top:4px}
+    .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+    .btn-row{display:flex;gap:10px;margin-top:6px}
+    .btn-row .btn-primary{flex:1}
+    .btn-secondary{padding:12px 16px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:var(--font);font-size:14px;cursor:pointer;transition:all .15s}
+    .btn-secondary:hover{border-color:var(--soft);color:var(--text)}
+
+    /* Résultat */
+    .result-block{animation:fadeUp .35s ease}
+
+    .result-main{
+      background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(167,139,250,.08));
+      border:1px solid rgba(59,130,246,.25);
+      border-radius:12px;padding:20px 22px;margin-bottom:14px;
+      display:flex;align-items:center;gap:20px;
+    }
+    .result-number{font-size:52px;font-weight:700;line-height:1;color:var(--medical);font-family:var(--mono)}
+    .result-number.favorable{color:var(--success)}
+    .result-number.defavorable{color:var(--orange)}
+    .result-unit-label{font-size:13px;font-family:var(--mono);color:var(--muted);margin-top:4px}
+    .result-title{font-size:12px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+
+    .interp-card{border-radius:12px;padding:18px 20px;border:1px solid}
+    .interp-card.favorable{background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.2)}
+    .interp-card.defavorable{background:rgba(251,146,60,.07);border-color:rgba(251,146,60,.2)}
+    .interp-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .interp-icon{font-size:20px}
+    .interp-verdict{font-size:15px;font-weight:700}
+    .interp-card.favorable .interp-verdict{color:var(--success)}
+    .interp-card.defavorable .interp-verdict{color:var(--orange)}
+    .interp-text{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px}
+    .interp-threshold{
+      display:inline-flex;align-items:center;gap:8px;
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:7px;padding:7px 12px;
+      font-size:12px;font-family:var(--mono);color:var(--text)
+    }
+    .interp-threshold span{color:var(--medical)}
+
+    /* Référence */
+    .ref-box{background:rgba(45,212,191,.04);border:1px solid rgba(45,212,191,.12);border-radius:10px;padding:14px 16px}
+    .ref-box-title{font-size:11px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+    .ref-text{font-size:12px;color:var(--muted);line-height:1.7}
+    .ref-text em{color:var(--text)}
+    .ref-link{color:var(--accent);text-decoration:none;font-family:var(--mono);font-size:11px}
+    .ref-link:hover{text-decoration:underline}
+
+    .section-divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+
+    option{background:var(--card);color:var(--text)}
+  </style>
+</head>
+<body>
+
+<header class="tool-header">
+  <div class="tool-header-icon">🧪</div>
+  <div>
+    <div class="tool-header-title">Calculateur IEUU</div>
+    <div class="tool-header-sub">Index d'Excrétion de l'Urée Urinaire · Sevrage EER</div>
+  </div>
+  <div class="tool-header-badge">Seuil &gt; 1,35</div>
+</header>
+
+<div class="tool-body">
+
+  <!-- Saisie -->
+  <div class="card">
+    <div class="card-title">Paramètres de calcul</div>
+
+    <div class="formula-box">
+      <div class="formula-box-title">Formule</div>
+      <div class="formula">IEUU = (Urée U [mmol/L] × Diurèse [L]) ÷ Poids [kg]</div>
+      <div class="formula-desc">
+        Résultat en mmol/kg/24h · Seuil prédictif de sevrage EER réussi : <strong style="color:var(--medical)">&gt; 1,35 mmol/kg/24h</strong><br>
+        💡 Conversion automatique si urée saisie en g/L (÷ 0,06 → mmol/L)
+      </div>
+    </div>
+
+    <!-- Urée urinaire -->
+    <div class="form-group">
+      <label class="form-label">Urée urinaire</label>
+      <div class="input-row">
+        <input type="number" id="ureeU" class="form-input" placeholder="ex : 250" step="0.1" min="0">
+        <select id="uniteUree" class="unit-select">
+          <option value="mmol">mmol/L</option>
+          <option value="gL">g/L</option>
+        </select>
+      </div>
+      <div class="form-error hidden" id="err-uree">Valeur requise</div>
+    </div>
+
+    <div class="form-grid">
+      <!-- Diurèse -->
+      <div class="form-group">
+        <label class="form-label">Diurèse 24h</label>
+        <div class="input-row">
+          <input type="number" id="diurese" class="form-input" placeholder="ex : 1500" step="10" min="0">
+          <div class="unit-badge">mL</div>
+        </div>
+        <div class="form-error hidden" id="err-diurese">Valeur requise</div>
+      </div>
+
+      <!-- Poids -->
+      <div class="form-group">
+        <label class="form-label">Poids corporel</label>
+        <div class="input-row">
+          <input type="number" id="poids" class="form-input" placeholder="ex : 70" step="0.5" min="0">
+          <div class="unit-badge">kg</div>
+        </div>
+        <div class="form-error hidden" id="err-poids">Valeur requise</div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" onclick="calculer()">Calculer l'IEUU</button>
+      <button class="btn-secondary" onclick="reset()" title="Réinitialiser">↺</button>
+    </div>
+  </div>
+
+  <!-- Résultats -->
+  <div id="result-block" class="hidden">
+
+    <!-- Valeur numérique -->
+    <div class="card result-block">
+      <div class="card-title">Résultat</div>
+      <div class="result-main">
+        <div>
+          <div class="result-title">IEUU calculé</div>
+          <div class="result-number" id="result-number">—</div>
+          <div class="result-unit-label">mmol/kg/24h</div>
+        </div>
+        <div style="flex:1;padding-left:8px" id="result-vs-seuil"></div>
+      </div>
+
+      <!-- Interprétation -->
+      <div class="interp-card" id="interp-card">
+        <div class="interp-header">
+          <div class="interp-icon" id="interp-icon"></div>
+          <div class="interp-verdict" id="interp-verdict"></div>
+        </div>
+        <div class="interp-text" id="interp-text"></div>
+        <div class="interp-threshold">
+          Seuil prédictif : <span>&gt; 1,35 mmol/kg/24h</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Détail du calcul -->
+    <div class="card result-block">
+      <div class="card-title">Détail du calcul</div>
+      <div id="calc-detail" style="font-size:13px;font-family:var(--mono);color:var(--muted);line-height:2"></div>
+    </div>
+
+  </div>
+
+  <!-- Référence -->
+  <div class="card">
+    <div class="card-title">Référence scientifique</div>
+    <div class="ref-box">
+      <div class="ref-box-title">📚 Publication</div>
+      <div class="ref-text">
+        Aniort J, Ait Hssain A, Pereira B, et al. Daily urinary urea excretion to guide intermittent
+        hemodialysis weaning in critically ill patients. <em>Critical Care</em>. 2016;20(1):43.
+        <br><br>
+        <a href="http://medicalcul.free.fr/idx_excretion_uree.html" class="ref-link" target="_blank" rel="noopener">
+          medicalcul.free.fr →
+        </a>
+      </div>
+    </div>
+    <hr class="section-divider">
+    <div style="font-size:11px;color:var(--muted);line-height:1.8">
+      <strong style="color:var(--warn)">⚠️ Avertissement</strong> — Outil d'aide à la décision uniquement.
+      Le sevrage de l'EER doit être décidé sur l'ensemble du tableau clinique et biologique.
+      Ne remplace pas le jugement du néphrologue/réanimateur.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SEUIL = 1.35;
+
+function calculer() {
+  // Récupération valeurs
+  const ureeRaw  = parseFloat(document.getElementById('ureeU').value);
+  const unite    = document.getElementById('uniteUree').value;
+  const diureseMl= parseFloat(document.getElementById('diurese').value);
+  const poids    = parseFloat(document.getElementById('poids').value);
+
+  // Validation
+  let ok = true;
+  const champs = [
+    ['ureeU',   'err-uree',    ureeRaw],
+    ['diurese', 'err-diurese', diureseMl],
+    ['poids',   'err-poids',   poids],
+  ];
+  champs.forEach(([id, eid, val]) => {
+    const input = document.getElementById(id);
+    const err   = document.getElementById(eid);
+    if (isNaN(val) || val <= 0) {
+      input.classList.add('error');
+      err.classList.remove('hidden');
+      ok = false;
+    } else {
+      input.classList.remove('error');
+      err.classList.add('hidden');
+    }
+  });
+  if (!ok) return;
+
+  // Conversion urée → mmol/L
+  let ureeMMol = ureeRaw;
+  if (unite === 'gL') ureeMMol = ureeRaw / 0.06;
+
+  // Calcul
+  const diureseL = diureseMl / 1000;
+  const ieuu     = (ureeMMol * diureseL) / poids;
+  const favorable= ieuu > SEUIL;
+
+  // Affichage valeur
+  const numEl = document.getElementById('result-number');
+  numEl.textContent = ieuu.toFixed(2);
+  numEl.className   = 'result-number ' + (favorable ? 'favorable' : 'defavorable');
+
+  // vs seuil
+  const diff = ieuu - SEUIL;
+  document.getElementById('result-vs-seuil').innerHTML =
+    '<div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:4px">vs seuil 1,35</div>' +
+    '<div style="font-size:20px;font-weight:700;color:' + (favorable ? 'var(--success)' : 'var(--orange)') + '">' +
+    (diff >= 0 ? '+' : '') + diff.toFixed(2) + '</div>';
+
+  // Interprétation
+  const card = document.getElementById('interp-card');
+  card.className = 'interp-card ' + (favorable ? 'favorable' : 'defavorable');
+  document.getElementById('interp-icon').textContent  = favorable ? '✅' : '⚠️';
+  document.getElementById('interp-verdict').textContent = favorable
+    ? 'Résultat favorable au sevrage'
+    : 'Sevrage probablement prématuré';
+  document.getElementById('interp-text').innerHTML = favorable
+    ? "L'IEUU de <strong style='color:var(--text)'>" + ieuu.toFixed(2) + " mmol/kg/24h</strong> est supérieur au seuil de 1,35 mmol/kg/24h. Ce résultat est prédictif du succès du sevrage de l'épuration extra-rénale intermittente en réanimation."
+    : "L'IEUU de <strong style='color:var(--text)'>" + ieuu.toFixed(2) + " mmol/kg/24h</strong> est inférieur ou égal au seuil de 1,35 mmol/kg/24h. Le sevrage de l'EER pourrait être prématuré. Une réévaluation clinique et biologique à 24h est recommandée.";
+
+  // Détail calcul
+  const ureeLabel = unite === 'gL'
+    ? ureeRaw + ' g/L → ' + ureeMMol.toFixed(1) + ' mmol/L'
+    : ureeRaw + ' mmol/L';
+  document.getElementById('calc-detail').innerHTML =
+    'Urée U      : ' + ureeLabel + '<br>' +
+    'Diurèse     : ' + diureseMl + ' mL → ' + diureseL.toFixed(3) + ' L<br>' +
+    'Poids       : ' + poids + ' kg<br>' +
+    '─────────────────────────────<br>' +
+    'IEUU = (' + ureeMMol.toFixed(1) + ' × ' + diureseL.toFixed(3) + ') ÷ ' + poids + '<br>' +
+    '     = ' + (ureeMMol * diureseL).toFixed(3) + ' ÷ ' + poids + '<br>' +
+    '     = <strong style="color:var(--text)">' + ieuu.toFixed(2) + ' mmol/kg/24h</strong>';
+
+  // Afficher
+  const rb = document.getElementById('result-block');
+  rb.classList.remove('hidden');
+  rb.style.animation = 'none';
+  requestAnimationFrame(() => { rb.style.animation = 'fadeUp .3s ease'; });
+  rb.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function reset() {
+  ['ureeU','diurese','poids'].forEach(id => {
+    document.getElementById(id).value = '';
+    document.getElementById(id).classList.remove('error');
+  });
+  ['err-uree','err-diurese','err-poids'].forEach(id =>
+    document.getElementById(id).classList.add('hidden')
+  );
+  document.getElementById('uniteUree').value = 'mmol';
+  document.getElementById('result-block').classList.add('hidden');
+}
+
+// Validation en temps réel
+['ureeU','diurese','poids'].forEach((id, i) => {
+  const errIds = ['err-uree','err-diurese','err-poids'];
+  document.getElementById(id).addEventListener('input', function() {
+    this.classList.remove('error');
+    document.getElementById(errIds[i]).classList.add('hidden');
+  });
+  document.getElementById(id).addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') calculer();
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incompatibilit&eacute;s IV &amp; Guide VVC &mdash; R&eacute;aApp CH Robert Boulin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Karla:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+
+        @import url('https://fonts.googleapis.com/css2?family=Karla:wght@400;600;700&family=Spectral:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Karla', -apple-system, system-ui, sans-serif;
+            background: #f5f7fa;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0a4a6e 0%, #073854 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(10, 74, 110, 0.12);
+        }
+        
+        .header h1 {
+            font-family: 'Spectral', serif;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 2px solid #e1e8ed;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: none;
+            font-family: 'Karla', sans-serif;
+            font-weight: 600;
+            color: #5a5a5a;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            color: #0a4a6e;
+            border-bottom-color: #e63946;
+        }
+        
+        .tab:hover {
+            color: #0a4a6e;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid #e1e8ed;
+        }
+        
+        .card h3 {
+            font-family: 'Spectral', serif;
+            margin-bottom: 0.5rem;
+            font-size: 1.125rem;
+        }
+        
+        .card ul {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+        }
+        
+        .card li {
+            padding: 0.25rem 0;
+        }
+        
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .filter-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-family: 'Karla', sans-serif;
+            font-size: 0.875rem;
+        }
+        
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #0a4a6e;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-family: 'Karla', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #0a4a6e;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #073854;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        thead {
+            background: #073854;
+            color: white;
+        }
+        
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        
+        tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        tbody tr:hover {
+            background: #f0f4f8;
+        }
+        
+        .severity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .severity-majeure {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .severity-mineure {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+        
+        .info-box {
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+        }
+        
+        .info-box.blue {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .info-box.green {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .info-box.orange {
+            background: linear-gradient(135deg, rgba(244, 162, 97, 0.1), rgba(244, 162, 97, 0.05));
+            border-left: 4px solid #f4a261;
+        }
+        
+        .info-box.purple {
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.05), rgba(156, 39, 176, 0.02));
+            border-left: 4px solid #9c27b0;
+        }
+        
+        .info-box.red {
+            background: #ffebee;
+            border: 2px solid #ef5350;
+        }
+        
+        .info-box.yellow {
+            background: #fff3e0;
+            border: 2px solid #ffa726;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 0.875rem;
+            }
+            
+            th, td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    
+
+    /* ═══ RéaApp overrides — dark mode complet ═══ */
+    :root {
+      --bg:#0b0f14;--surface:#121820;--card:#181f28;--border:#1e2a38;
+      --text:#e2eaf4;--muted:#5a7080;--soft:#2a3a4a;
+      --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+      --accent:#2dd4bf;--medical:#3b82f6;--urgent:#ef4444;
+      --warn:#eab308;--purple:#a78bfa;--success:#22c55e;--orange:#fb923c;
+    }
+
+    /* Base */
+    html,body{background:var(--bg)!important;color:var(--text)!important;font-family:var(--font)!important}
+
+    /* Header sticky RéaApp */
+    .tool-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:200}
+    .tool-header-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(239,68,68,.15),rgba(251,146,60,.1));border:1px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .tool-header-title{font-size:16px;font-weight:600;line-height:1.2}
+    .tool-header-sub{font-size:11px;color:var(--muted);font-family:var(--mono)}
+    .tool-header-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .tool-header-badge{padding:4px 10px;border-radius:20px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);font-size:11px;color:var(--urgent);font-family:var(--mono)}
+    .ds-badge{padding:3px 9px;border-radius:20px;font-size:10px;font-family:var(--mono);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+    .ds-badge.supabase{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--success)}
+    .ds-badge.fallback{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.2);color:var(--warn)}
+    .ds-badge.loading{background:rgba(90,112,128,.1);border:1px solid rgba(90,112,128,.2);color:var(--muted)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{width:10px;height:10px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle}
+
+    /* Container */
+    .container{max-width:1400px;margin:0 auto;padding:1.5rem}
+
+    /* Tabs */
+    .tabs{background:var(--surface)!important;border-bottom:2px solid var(--border)!important;margin-bottom:1.5rem}
+    .tab{color:var(--muted)!important;font-family:var(--font)!important;border-bottom:3px solid transparent}
+    .tab:hover{color:var(--text)!important;background:rgba(255,255,255,.03)!important}
+    .tab.active{color:var(--accent)!important;border-bottom-color:var(--accent)!important}
+
+    /* Cards — neutraliser tous les fonds clairs */
+    .card,
+    .filter-section,
+    [style*="background: white"],
+    [style*="background:white"],
+    [style*="background: #f9fafb"],
+    [style*="background: #f0f4f8"],
+    [style*="background: #f5f7fa"] {
+      background:var(--card)!important;
+      border:1px solid var(--border)!important;
+      color:var(--text)!important;
+    }
+
+    /* Info boxes — remplacer tous les fonds colorés clairs */
+    .info-box,
+    .info-box.blue,
+    .info-box.green,
+    .info-box.orange,
+    .info-box.purple,
+    .info-box.red,
+    .info-box.yellow,
+    [style*="background: #e3f2fd"],
+    [style*="background: #e8f5e9"],
+    [style*="background: #ffebee"],
+    [style*="background: #fff3e0"],
+    [style*="background: linear-gradient(135deg, #e3f2fd"],
+    [style*="background: linear-gradient(135deg, #e8f5e9"],
+    [style*="background: rgba(255,255,255,0.7)"],
+    [style*="background: rgba(255,255,255,0.9)"] {
+      background:var(--card)!important;
+      color:var(--text)!important;
+    }
+    /* Conserver les bordures colorées des info-box */
+    .info-box.blue{border-left:4px solid var(--medical)!important}
+    .info-box.green{border-left:4px solid var(--success)!important}
+    .info-box.orange{border-left:4px solid var(--orange)!important}
+    .info-box.red{border:2px solid var(--urgent)!important}
+    .info-box.yellow{border:2px solid var(--warn)!important}
+    .info-box.purple{border-left:4px solid var(--purple)!important}
+
+    /* Textes dans les info-box */
+    .info-box h3,.info-box h4,.info-box strong,.info-box b{color:var(--text)!important}
+    .info-box p,.info-box li,.info-box span{color:var(--muted)!important}
+    .info-box.red h3,.info-box.red strong{color:var(--urgent)!important}
+    .info-box.blue h3,.info-box.blue strong{color:var(--medical)!important}
+    .info-box.green h3,.info-box.green strong{color:var(--success)!important}
+    .info-box.orange h3,.info-box.orange strong{color:var(--orange)!important}
+    .info-box.yellow h3,.info-box.yellow strong{color:var(--warn)!important}
+
+    /* Tout texte générique */
+    h1,h2,h3,h4,h5,h6{color:var(--text)!important}
+    p,li,span,label,td,th{color:var(--text)!important}
+    .text-muted,small,[style*="color: #666"],[style*="color:#666"],[style*="color: #999"]{color:var(--muted)!important}
+    [style*="color: #"]{color:var(--text)!important}
+
+    /* Formulaire */
+    input,select,textarea{background:var(--surface)!important;border:1px solid var(--border)!important;color:var(--text)!important;font-family:var(--font)!important;border-radius:8px!important;padding:9px 12px!important;appearance:none!important}
+    input::placeholder{color:var(--muted)!important}
+    input:focus,select:focus{border-color:rgba(239,68,68,.5)!important;outline:none!important}
+    option{background:var(--card)!important;color:var(--text)!important}
+
+    /* Table */
+    table{background:var(--card)!important;border-radius:12px!important;overflow:hidden}
+    thead,thead tr{background:var(--surface)!important}
+    thead th{color:var(--muted)!important;font-family:var(--mono)!important;font-size:11px!important;text-transform:uppercase!important;letter-spacing:.05em!important;border-bottom:1px solid var(--border)!important;padding:12px!important}
+    tbody tr:hover td{background:rgba(255,255,255,.025)!important}
+    td{border-bottom:1px solid var(--border)!important;color:var(--text)!important;padding:12px!important}
+    [style*="font-weight: 600"]{color:var(--text)!important}
+
+    /* Severity badges */
+    .severity-badge{border-radius:20px!important;padding:4px 10px!important;font-size:11px!important;font-weight:700!important;font-family:var(--mono)!important}
+    .severity-majeure{background:rgba(239,68,68,.12)!important;color:var(--urgent)!important;border:1px solid rgba(239,68,68,.25)!important}
+    .severity-mineure{background:rgba(234,179,8,.12)!important;color:var(--warn)!important;border:1px solid rgba(234,179,8,.25)!important}
+
+    /* Filter section */
+    .filter-section{padding:1.5rem!important;border-radius:12px!important;margin-bottom:1.5rem!important}
+    .filter-group label{color:var(--muted)!important;font-family:var(--mono)!important;font-size:11px!important;text-transform:uppercase!important;letter-spacing:.05em!important}
+
+    /* No results */
+    #noResults,[style*="text-align: center"][style*="color"]{color:var(--muted)!important}
+
+    /* Scrollbar */
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:var(--bg)}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+    /* Links */
+    a{color:var(--accent)!important}
+    hr{border-color:var(--border)!important}
+
+  </style>
+</head>
+<body>
+
+<header class="tool-header">
+  <div class="tool-header-icon">&#x26A0;&#xFE0F;</div>
+  <div>
+    <div class="tool-header-title">Incompatibilit&eacute;s IV &amp; Guide VVC</div>
+    <div class="tool-header-sub">CH Robert Boulin &middot; Voie Veineuse Centrale</div>
+  </div>
+  <div class="tool-header-right">
+    <div class="ds-badge loading" id="data-badge"><div class="spinner"></div><span>Chargement&hellip;</span></div>
+    <div class="tool-header-badge" id="count-badge">207 incompatibilit&eacute;s</div>
+  </div>
+</header>
+
+<div class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="guide">📋 Guide VVC 3 Lumières</button>
+            <button class="tab" data-tab="prevention">🦠 Prévention Infections</button>
+            <button class="tab" data-tab="incompatibilities">⚠️ Incompatibilités IV</button>
+            <button class="tab" data-tab="references">📚 Références</button>
+        </div>
+        
+        <!-- Guide Tab -->
+        <div class="tab-content active" data-content="guide">
+            <div class="info-box blue">
+                <h3 style="margin-bottom: 0.5rem;">ℹ️ Recommandations SFAR/SRLF 2019-2024</h3>
+                <p>Le cathéter veineux central à 3 lumières est le dispositif standard en réanimation. Chaque lumière a des indications spécifiques pour optimiser la sécurité et prévenir les incompatibilités.</p>
+            </div>
+            
+            <div class="card-grid">
+                <div class="card" style="background: #e3f2fd; border-color: #2196f3;">
+                    <h3>🔵 Voie Distale</h3>
+                    <p style="font-size: 0.875rem; color: #666; font-style: italic; margin-bottom: 1rem;">La plus proche de l'oreillette droite</p>
+                    <h4 style="font-size: 0.875rem; margin-bottom: 0.5rem;">Médicaments recommandés:</h4>
+                    <ul>
+                        <li>✓ Nutrition parentérale</li>
+                        <li>✓ Remplissage vasculaire massif</li>
+                        <li>✓ Produits sanguins</li>
+                        <li>✓ Solutions hypertoniques</li>
+                        <li>✓ Antibiotiques (si compatible)</li>
+                        <li>✓ Anticoagulants</li>
+                    </ul>
+                    <div style="background: rgba(255,255,255,0.7); padding: 0.75rem; border-radius: 8px; margin-top: 1rem; font-size: 0.875rem;">
+                        <strong>⚠️ Note:</strong> Débit maximal, éviter les médicaments vasoactifs
+                    </div>
+                </div>
+                
+                <div class="card" style="background: #e8f5e9; border-color: #4caf50;">
+                    <h3>🟢 Voie Médiane</h3>
+                    <p style="font-size: 0.875rem; color: #666; font-style: italic; margin-bottom: 1rem;">Position intermédiaire</p>
+                    <h4 style="font-size: 0.875rem; margin-bottom: 0.5rem;">Médicaments recommandés:</h4>
+                    <ul>
+                        <li>✓ Midazolam</li>
+                        <li>✓ Sufentanil</li>
+                        <li>✓ Propofol</li>
+                        <li>✓ Insuline</li>
+                        <li>✓ Antibiotiques</li>
+                        <li>✓ Antalgiques</li>
+                        <li>✓ Inhibiteurs pompe à protons</li>
+                        <li>✓ Électrolytes (si dilués)</li>
+                        <li>✓ Diurétiques</li>
+                    </ul>
+                    <div style="background: rgba(255,255,255,0.7); padding: 0.75rem; border-radius: 8px; margin-top: 1rem; font-size: 0.875rem;">
+                        <strong>⚠️ Note:</strong> Sédatifs et insuline, usage polyvalent, éviter les incompatibilités
+                    </div>
+                </div>
+                
+                <div class="card" style="background: #ffebee; border-color: #f44336;">
+                    <h3>🔴 Voie Proximale</h3>
+                    <p style="font-size: 0.875rem; color: #666; font-style: italic; margin-bottom: 1rem;">La plus proche de la peau</p>
+                    <h4 style="font-size: 0.875rem; margin-bottom: 0.5rem;">Médicaments recommandés:</h4>
+                    <ul>
+                        <li>✓ Noradrénaline</li>
+                        <li>✓ Adrénaline</li>
+                        <li>✓ Dobutamine</li>
+                        <li>✓ Dopamine</li>
+                        <li>✓ Mesure PVC</li>
+                    </ul>
+                    <div style="background: rgba(255,255,255,0.7); padding: 0.75rem; border-radius: 8px; margin-top: 1rem; font-size: 0.875rem;">
+                        <strong>⚠️ Note:</strong> RÉSERVÉE aux catécholamines (amines vasoactives)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-box red" style="margin-top: 2rem;">
+                <h3 style="color: #c62828; margin-bottom: 1rem;">⚠️ DANGER MORTEL</h3>
+                <p style="font-size: 1.1rem; font-weight: 700; line-height: 1.8;">
+                    <strong style="color: #c62828;">JAMAIS de CEFTRIAXONE + CALCIUM</strong>
+                </p>
+                <p style="margin-top: 0.75rem; line-height: 1.6;">
+                    Risque de précipitation létale dans le système vasculaire. Cette association est strictement contre-indiquée sur toutes les voies, même avec rinçage entre les deux produits.
+                </p>
+                <div style="background: rgba(255,255,255,0.9); padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                    <strong>Produits concernés :</strong>
+                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem; line-height: 1.8;">
+                        <li>• Calcium gluconate</li>
+                        <li>• Calcium chlorure</li>
+                        <li>• Nutrition parentérale contenant du calcium</li>
+                        <li>• Solutés de remplissage avec calcium (Ringer-lactate)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Prevention Tab -->
+        <div class="tab-content" data-content="prevention">
+            <div class="info-box blue">
+                <h3 style="margin-bottom: 0.5rem;">🦠 Prévention des infections liées au KT</h3>
+                <p>Protocole recommandé pour la pose et l'entretien des cathéters veineux centraux</p>
+            </div>
+            
+            <div class="card" style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <h3 style="font-family: 'Spectral', serif; font-size: 1.5rem; margin-bottom: 2rem; color: #0a4a6e;">Comment on fait ?</h3>
+                
+                <div style="background: #e3f2fd; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h4 style="color: #0a4a6e; margin-bottom: 1rem; font-weight: 700;">À la pose :</h4>
+                    <ul style="line-height: 2; margin-left: 1.5rem;">
+                        <li><strong>1 infirmier·ère et 1 médecin</strong></li>
+                        <li><strong>Calot et masque pour tous</strong></li>
+                        <li><strong>Asepsie strict :</strong>
+                            <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                                <li>✓ 1 temps Chlorhexidine 2% ⇒ réalisé par l'infirmière</li>
+                                <li>✓ 1 temps réalisé par le médecin qui pose la VVC avec pince + compresse <strong>AVANT</strong> la pose du champ stérile</li>
+                            </ul>
+                        </li>
+                        <li><strong>Lavage chirurgical des mains</strong> pour celui qui pose</li>
+                        <li><strong>Monter les lignes de façon stériles</strong></li>
+                        <li><strong>Rinçage PULSÉ</strong> (les voies au NACL 0,9%, seringue de 10ml/voies)</li>
+                        <li><strong>Pansement occlusif</strong></li>
+                    </ul>
+                </div>
+                
+                <div class="card-grid" style="margin-top: 2rem;">
+                    <div class="card" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #2196f3;">
+                        <h3 style="color: #0a4a6e; margin-bottom: 1rem;">🔄 CHANGEMENT LIGNES</h3>
+                        <div style="background: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: #2196f3;">Lignes principales:</h4>
+                            <p style="font-weight: 600; margin-bottom: 0.5rem;">Toutes les 96h (de façon systématique)</p>
+                            <ul style="line-height: 1.8; margin-left: 1.5rem;">
+                                <li>• <strong>Après transfusion PSL:</strong> changement immédiat</li>
+                                <li>• <strong>Après nutrition parentérale:</strong> changement immédiat</li>
+                                <li>• <strong>Produit cytotoxique:</strong> ligne dédiée +++</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: white; padding: 1rem; border-radius: 8px;">
+                            <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: #2196f3;">🔄 TUBULURE :</h4>
+                            <ul style="line-height: 1.8; margin-left: 1.5rem;">
+                                <li>• <strong>Tubulures standards:</strong> toutes les 24h</li>
+                                <li>• <strong>PROPOFOL (émulsion lipidique):</strong> 6h MAXIMUM</li>
+                                <li>• <strong>Noter heure début sur étiquette</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 2px solid #4caf50;">
+                        <h3 style="color: #0a4a6e; margin-bottom: 1rem;">🩹 PANSEMENT</h3>
+                        <div style="background: white; padding: 1rem; border-radius: 8px;">
+                            <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: #4caf50;">Fréquence:</h4>
+                            <p style="font-weight: 600; margin-bottom: 1rem;">Tous les 7 jours minimum</p>
+                            
+                            <ul style="line-height: 1.8; margin-left: 1.5rem;">
+                                <li>• <strong>Si souillé/humide/décollé:</strong> changement immédiat</li>
+                                <li>• <strong>Transparents stériles semi-perméables</strong> uniquement</li>
+                                <li>• <strong>Désinfection cutanée Chlorhexidine 2%</strong> avant pose</li>
+                                <li>• <strong>Date de pose notée</strong> sur pansement</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Incompatibilities Tab -->
+        <div class="tab-content" data-content="incompatibilities">
+            <div class="info-box purple">
+                <h3 style="margin-bottom: 0.5rem;">Tableau des incompatibilités médicamenteuses</h3>
+                <p>Base de données avec plus de 200 incompatibilités. Basée sur Stabilis, CHUV, HUG et publications internationales.</p>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label>🔍 Recherche libre</label>
+                        <input type="text" id="searchInput" placeholder="Rechercher un médicament...">
+                    </div>
+                    <div class="filter-group">
+                        <label>Médicament 1</label>
+                        <select id="drug1Select">
+                            <option value="">Tous les médicaments</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Médicament 2</label>
+                        <select id="drug2Select">
+                            <option value="">Tous les médicaments</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="resetBtn" class="btn btn-primary" style="margin-top: 1rem; display: none;">
+                    🔄 Réinitialiser les filtres
+                </button>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table id="incompatibilityTable">
+                    <thead>
+                        <tr>
+                            <th>Médicament 1</th>
+                            <th>Médicament 2</th>
+                            <th>Sévérité</th>
+                            <th>Effet observé</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card-grid" style="margin-top: 2rem;">
+                <div class="info-box red" style="margin: 0;">
+                    <div style="display: flex; align-items: start; gap: 0.75rem;">
+                        <span style="font-size: 1.5rem;">❌</span>
+                        <div style="font-size: 0.875rem;">
+                            <strong style="display: block; margin-bottom: 0.5rem;">Incompatibilité MAJEURE:</strong>
+                            <p>Ne JAMAIS administrer sur la même voie. Risque d'inefficacité thérapeutique, occlusion du cathéter ou réaction toxique.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="info-box yellow" style="margin: 0;">
+                    <div style="display: flex; align-items: start; gap: 0.75rem;">
+                        <span style="font-size: 1.5rem;">⚠️</span>
+                        <div style="font-size: 0.875rem;">
+                            <strong style="display: block; margin-bottom: 0.5rem;">Incompatibilité MINEURE:</strong>
+                            <p>Éviter l'administration simultanée si possible. Si nécessaire, rincer abondamment entre les deux médicaments (≥10 mL).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- References Tab -->
+        <div class="tab-content" data-content="references">
+            <div class="card">
+                <h3 style="font-family: 'Spectral', serif; font-size: 1.5rem; margin-bottom: 2rem;">Références et ressources</h3>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="color: #2196f3; margin-bottom: 1rem;">✓ Recommandations françaises</h4>
+                    <ul style="line-height: 1.8; margin-left: 1.5rem;">
+                        <li>SFAR/SRLF (2019) - Prévention des infections liées aux cathéters</li>
+                        <li>SFAR (2014) - Cathétérisme veineux central sous échoguidage (GRADE 1+)</li>
+                        <li>GIHP/SFAR (2024) - Thromboprophylaxie péri-opératoire</li>
+                    </ul>
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="color: #4caf50; margin-bottom: 1rem;">✓ Recommandations européennes et internationales</h4>
+                    <ul style="line-height: 1.8; margin-left: 1.5rem;">
+                        <li>CDC Guidelines (2011) - Prevention of Intravascular Catheter-Related Infections</li>
+                        <li>ESA (2018) - European guidelines on perioperative VTE prophylaxis</li>
+                        <li>NICE (2002) - Ultrasound guidance for central venous catheterization</li>
+                    </ul>
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="color: #9c27b0; margin-bottom: 1rem;">✓ Bases de données d'incompatibilités</h4>
+                    <ul style="line-height: 1.8; margin-left: 1.5rem;">
+                        <li><strong>Stabilis 4.0</strong> - Base de données francophone de référence (www.stabilis.org)</li>
+                        <li><strong>HUG Genève</strong> - Guide d'administration des médicaments injectables</li>
+                        <li><strong>CHUV Lausanne</strong> - Tableau des incompatibilités IV</li>
+                        <li><strong>Micromedex</strong> - Base de données internationale</li>
+                        <li><strong>King Guide</strong> - Injectable drug compatibility</li>
+                    </ul>
+                </div>
+                
+                <div class="info-box blue">
+                    <h4 style="font-weight: 700; margin-bottom: 1rem;">⚠️ Avertissement important</h4>
+                    <p style="line-height: 1.6;">
+                        Cet outil est fourni à titre éducatif. Les données d'incompatibilités présentées sont basées sur la littérature mais ne sont pas exhaustives.
+                    </p>
+                    <p style="line-height: 1.6; margin-top: 0.75rem; font-weight: 600;">
+                        Toujours consulter les RCP des médicaments et les bases de données actualisées (Stabilis, Micromedex) avant toute administration simultanée de médicaments IV.
+                    </p>
+                </div>
+                
+                <div class="info-box green">
+                    <h4 style="font-weight: 700; margin-bottom: 1rem;">💡 Bonnes pratiques cliniques</h4>
+                    <ul style="line-height: 1.8;">
+                        <li>• En cas de doute sur une compatibilité: utiliser des voies séparées</li>
+                        <li>• Documenter systématiquement les voies utilisées dans le dossier patient</li>
+                        <li>• Former régulièrement l'équipe aux incompatibilités majeures</li>
+                        <li>• Mettre en place des codes couleur sur les lignes de perfusion</li>
+                        <li>• Privilégier l'administration séquentielle avec rinçage quand possible</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 2rem; text-align: center; color: #5a5a5a; font-size: 0.875rem;">
+            <p>Dernière mise à jour: Février 2025 | Basé sur recommandations SFAR/SRLF/CDC/ESA/HUG</p>
+        </div>
+    </div>
+
+<script>
+
+        // ═══════════════════════════════════════════════════════════════════
+        // SUPABASE CONFIG — Modifier les données : Dashboard → incompatibilites_iv
+        // ═══════════════════════════════════════════════════════════════════
+        const SUPABASE_URL  = 'https://mvcidplmvqaokftoszex.supabase.co';
+        const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12Y2lkcGxtdnFhb2tmdG9zemV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzk4MTUsImV4cCI6MjA4ODk1NTgxNX0.MiQoOve99hax2yEDq8cVpnD3GoK19cp6nb1I5xDGDzY';
+
+        async function loadFromSupabase() {
+            try {
+                const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+                const { data, error } = await sb
+                    .from('incompatibilites_iv')
+                    .select('drug1,drug2,severity,effect')
+                    .eq('actif', true)
+                    .order('drug1').order('drug2');
+                if (error) throw error;
+                if (!data || data.length === 0) throw new Error('Vide');
+
+                // Replace the incompatibilities array
+                incompatibilities.length = 0;
+                data.forEach(d => incompatibilities.push({
+                    drug1: d.drug1, drug2: d.drug2,
+                    severity: d.severity, effect: d.effect
+                }));
+
+                // Rebuild drug selects
+                rebuildDrugSelects();
+
+                const badge = document.getElementById('data-badge');
+                if (badge) {
+                    badge.className = 'ds-badge supabase';
+                    badge.innerHTML = '<span>&#9679; Supabase</span>';
+                }
+                document.getElementById('count-badge').textContent = data.length + ' incompatibilit\u00e9s';
+                filterIncompatibilities();
+                console.log('Supabase OK:', data.length, 'incompatibilit\u00e9s');
+
+            } catch(err) {
+                console.warn('Supabase indispo ->', err.message||err);
+                const badge = document.getElementById('data-badge');
+                if (badge) {
+                    badge.className = 'ds-badge fallback';
+                    badge.innerHTML = '<span>&#9889; Local</span>';
+                }
+                rebuildDrugSelects();
+                filterIncompatibilities();
+            }
+        }
+
+        function rebuildDrugSelects() {
+            const drugs = [...new Set([
+                ...incompatibilities.map(i => i.drug1),
+                ...incompatibilities.map(i => i.drug2)
+            ])].sort((a,b) => a.localeCompare(b,'fr'));
+
+            ['drug1Select','drug2Select'].forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const cur = sel.value;
+                sel.innerHTML = '<option value="">Tous les m\u00e9dicaments</option>';
+                drugs.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d; opt.textContent = d;
+                    sel.appendChild(opt);
+                });
+                if (cur) sel.value = cur;
+            });
+        }
+
+
+        const incompatibilities = [
+            { drug1: 'Actilyse', drug2: 'Dobutamine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Actilyse', drug2: 'Dopamine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Actilyse', drug2: 'Héparine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Actilyse', drug2: 'Nitroglycérine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Adrénaline', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Inactivation' },
+            { drug1: 'Adrénaline', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Adrénaline', drug2: 'Insuline', severity: 'mineure', effect: 'Dégradation possible' },
+            { drug1: 'Adrénaline', drug2: 'Phénytoïne', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Adrénaline', drug2: 'Thiopental', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Amiodarone', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Amiodarone', drug2: 'Héparine', severity: 'majeure', effect: 'Turbidité/Précipitation' },
+            { drug1: 'Amiodarone', drug2: 'Insuline', severity: 'mineure', effect: 'Adsorption' },
+            { drug1: 'Amiodarone', drug2: 'Digoxine', severity: 'mineure', effect: 'Interaction pharmacologique' },
+            { drug1: 'Calcium (Gluconate)', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Calcium (Gluconate)', drug2: 'Ceftriaxone', severity: 'majeure', effect: 'PRÉCIPITATION LÉTALE' },
+            { drug1: 'Calcium (Gluconate)', drug2: 'Phosphate', severity: 'majeure', effect: 'Précipitation létale possible' },
+            { drug1: 'Calcium (Gluconate)', drug2: 'Pantoprazole', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Calcium (Gluconate)', drug2: 'Magnésium', severity: 'mineure', effect: 'Compétition' },
+            { drug1: 'Calcium (Gluconate)', drug2: 'Thiopental', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Cleviprex', drug2: 'Propofol', severity: 'mineure', effect: 'Émulsion lipidique - surveillance' },
+            { drug1: 'Diazépam', drug2: 'Diltiazem', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Diazépam', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Diazépam', drug2: 'Héparine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Diazépam', drug2: 'Pantoprazole', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Diazépam', drug2: 'Potassium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Digoxine', drug2: 'Furosémide', severity: 'mineure', effect: 'Interaction possible' },
+            { drug1: 'Digoxine', drug2: 'Propofol', severity: 'mineure', effect: 'Adsorption' },
+            { drug1: 'Diltiazem', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Diltiazem', drug2: 'Héparine', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Diltiazem', drug2: 'Thiopental', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Dobutamine', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Dobutamine', drug2: 'Héparine', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Dobutamine', drug2: 'Insuline', severity: 'mineure', effect: 'Adsorption possible' },
+            { drug1: 'Dobutamine', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Inactivation' },
+            { drug1: 'Dobutamine', drug2: 'Phénytoïne', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Dopamine', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Inactivation' },
+            { drug1: 'Dopamine', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Dopamine', drug2: 'Insuline', severity: 'mineure', effect: 'Adsorption' },
+            { drug1: 'Dopamine', drug2: 'Phénytoïne', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Dopamine', drug2: 'Thiopental', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Fentanyl', drug2: 'Pantoprazole', severity: 'mineure', effect: 'Dégradation possible' },
+            { drug1: 'Fentanyl', drug2: 'Phénytoïne', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Fentanyl', drug2: 'Thiopental', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Furosémide', drug2: 'Midazolam', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Furosémide', drug2: 'Ciprofloxacine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Furosémide', drug2: 'Gentamicine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Furosémide', drug2: 'Levofloxacine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Furosémide', drug2: 'Milrinone', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Furosémide', drug2: 'Morphine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Furosémide', drug2: 'Nicardipine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Furosémide', drug2: 'Vérapamil', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Furosémide', drug2: 'Phosphate de potassium', severity: 'majeure', effect: 'Précipitation immédiate' },
+            { drug1: 'Héparine', drug2: 'Vancomycine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Héparine', drug2: 'Gentamicine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Héparine', drug2: 'Tobramycine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Héparine', drug2: 'Ciprofloxacine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Héparine', drug2: 'Levofloxacine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Héparine', drug2: 'Phénytoïne', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Héparine', drug2: 'Érythromycine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Insuline', drug2: 'Dopamine', severity: 'mineure', effect: 'Adsorption' },
+            { drug1: 'Insuline', drug2: 'Dobutamine', severity: 'mineure', effect: 'Adsorption' },
+            { drug1: 'Insuline', drug2: 'Pantoprazole', severity: 'mineure', effect: 'Dégradation possible' },
+            { drug1: 'Labétalol', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Labétalol', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Labétalol', drug2: 'Héparine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Labétalol', drug2: 'Thiopental', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Magnésium', drug2: 'Calcium', severity: 'mineure', effect: 'Compétition' },
+            { drug1: 'Magnésium', drug2: 'Ciprofloxacine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Magnésium', drug2: 'Levofloxacine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Magnésium', drug2: 'Pantoprazole', severity: 'mineure', effect: 'Turbidité possible' },
+            { drug1: 'Midazolam', drug2: 'Pantoprazole', severity: 'mineure', effect: 'Dégradation possible' },
+            { drug1: 'Midazolam', drug2: 'Thiopental', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Midazolam', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Milrinone', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Milrinone', drug2: 'Procaïnamide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Morphine', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Morphine', drug2: 'Phénytoïne', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Morphine', drug2: 'Thiopental', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Morphine', drug2: 'Pantoprazole', severity: 'mineure', effect: 'Turbidité possible' },
+            { drug1: 'Nicardipine', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Nicardipine', drug2: 'Héparine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Nicardipine', drug2: 'Thiopental', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Nicardipine', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Noradrénaline', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Inactivation' },
+            { drug1: 'Noradrénaline', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Noradrénaline', drug2: 'Insuline', severity: 'mineure', effect: 'Adsorption' },
+            { drug1: 'Noradrénaline', drug2: 'Thiopental', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Pantoprazole', drug2: 'Calcium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Pantoprazole', drug2: 'Zinc', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Pantoprazole', drug2: 'Midazolam', severity: 'mineure', effect: 'Dégradation possible' },
+            { drug1: 'Pantoprazole', drug2: 'Furosémide', severity: 'mineure', effect: 'Turbidité possible' },
+            { drug1: 'Phénytoïne', drug2: 'Diltiazem', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Phénytoïne', drug2: 'Dopamine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Phénytoïne', drug2: 'Dobutamine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Phénytoïne', drug2: 'Morphine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Phénytoïne', drug2: 'Potassium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Phénytoïne', drug2: 'Glucose 5%', severity: 'majeure', effect: 'Précipitation (pH dépendant)' },
+            { drug1: 'Potassium (KCl)', drug2: 'Amphotéricine B', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Potassium (KCl)', drug2: 'Diazépam', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Phosphate de potassium', drug2: 'Calcium', severity: 'majeure', effect: 'Précipitation létale' },
+            { drug1: 'Phosphate de potassium', drug2: 'Magnésium', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Propofol', drug2: 'Atracurium', severity: 'majeure', effect: 'Déstabilisation émulsion' },
+            { drug1: 'Propofol', drug2: 'Vécuronium', severity: 'majeure', effect: 'Déstabilisation émulsion' },
+            { drug1: 'Propofol', drug2: 'Rocuronium', severity: 'majeure', effect: 'Déstabilisation émulsion' },
+            { drug1: 'Propofol', drug2: 'Midazolam', severity: 'mineure', effect: 'Possible déstabilisation' },
+            { drug1: 'Propofol', drug2: 'Phénytoïne', severity: 'majeure', effect: 'Déstabilisation émulsion' },
+            { drug1: 'Rémifentanil', drug2: 'Thiopental', severity: 'mineure', effect: 'Turbidité possible' },
+            { drug1: 'Sufentanil', drug2: 'Thiopental', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Sufentanil', drug2: 'Phénytoïne', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Sufentanil', drug2: 'Pantoprazole', severity: 'mineure', effect: 'Dégradation possible' },
+            { drug1: 'Thiopental', drug2: 'Succinylcholine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Thiopental', drug2: 'Rocuronium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Thiopental', drug2: 'Vérapamil', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Thiopental', drug2: 'Vancomycine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Tramadol', drug2: 'Pantoprazole', severity: 'mineure', effect: 'Turbidité possible' },
+            { drug1: 'Tramadol', drug2: 'Diazépam', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Vancomycine', drug2: 'Héparine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Vancomycine', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Vancomycine', drug2: 'Ceftazidime', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Vancomycine', drug2: 'Pipéracilline-Tazobactam', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Vancomycine', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Vérapamil', drug2: 'Albumine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Vérapamil', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Vérapamil', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Gentamicine', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Gentamicine', drug2: 'Héparine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Gentamicine', drug2: 'Pénicilline', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Gentamicine', drug2: 'Pipéracilline', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Amikacine', drug2: 'Pipéracilline', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Amikacine', drug2: 'Héparine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Tobramycine', drug2: 'Héparine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Ciprofloxacine', drug2: 'Héparine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Ciprofloxacine', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Levofloxacine', drug2: 'Héparine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Levofloxacine', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Ceftriaxone', drug2: 'Calcium', severity: 'majeure', effect: 'PRÉCIPITATION MORTELLE' },
+            { drug1: 'Ceftriaxone', drug2: 'Nutrition parentérale', severity: 'majeure', effect: 'Précipitation avec calcium' },
+            { drug1: 'Ceftazidime', drug2: 'Vancomycine', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Méropénem', drug2: 'Aciclovir', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Aciclovir', drug2: 'Méropénem', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Bicarbonate de sodium', drug2: 'Calcium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Bicarbonate de sodium', drug2: 'Magnésium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Bicarbonate de sodium', drug2: 'Potassium', severity: 'mineure', effect: 'Alcalinisation' },
+            { drug1: 'Alprostadil', drug2: 'Aciclovir', severity: 'mineure', effect: 'Incompatibilité possible' },
+            { drug1: 'Amoxicilline', drug2: 'Gentamicine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Amoxicilline', drug2: 'Amikacine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Amoxicilline/Acide clavulanique', drug2: 'Gentamicine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Amoxicilline/Acide clavulanique', drug2: 'Amikacine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Atracurium', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Dégradation' },
+            { drug1: 'Benzylpénicilline', drug2: 'Gentamicine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Benzylpénicilline', drug2: 'Amikacine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Benzylpénicilline', drug2: 'Tobramycine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Calcium chlorure', drug2: 'Ceftriaxone', severity: 'majeure', effect: 'PRÉCIPITATION LÉTALE' },
+            { drug1: 'Calcium chlorure', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Calcium chlorure', drug2: 'Phosphate de potassium', severity: 'majeure', effect: 'Précipitation létale' },
+            { drug1: 'Calcium chlorure', drug2: 'Pantoprazole', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Cefazoline', drug2: 'Gentamicine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Cefazoline', drug2: 'Amikacine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Cefazoline', drug2: 'Vancomycine', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Cefepime', drug2: 'Gentamicine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Cefepime', drug2: 'Vancomycine', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Cefuroxime', drug2: 'Gentamicine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Cefuroxime', drug2: 'Vancomycine', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Ciclosporine', drug2: 'Furosémide', severity: 'mineure', effect: 'Néphrotoxicité additionnelle' },
+            { drug1: 'Ciclosporine', drug2: 'Magnésium', severity: 'mineure', effect: 'Interaction possible' },
+            { drug1: 'Clarithromycine', drug2: 'Héparine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Clarithromycine', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Clindamycine', drug2: 'Gentamicine', severity: 'mineure', effect: 'Incompatibilité physique possible' },
+            { drug1: 'Clindamycine', drug2: 'Héparine', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Dexamethasone', drug2: 'Ciprofloxacine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Dexamethasone', drug2: 'Midazolam', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Dexamethasone', drug2: 'Vancomycine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Dexmedetomidine', drug2: 'Plasma-Lyte', severity: 'mineure', effect: 'Données de stabilité limitées' },
+            { drug1: 'Esomeprazole', drug2: 'Ceftriaxone', severity: 'majeure', effect: 'Précipitation pH incompatible' },
+            { drug1: 'Flucloxacilline', drug2: 'Gentamicine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Flucloxacilline', drug2: 'Amikacine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Flucloxacilline', drug2: 'Tobramycine', severity: 'majeure', effect: 'Inactivation aminoside' },
+            { drug1: 'Fluconazole', drug2: 'Calcium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Fluconazole', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Hydromorphone', drug2: 'Phénytoïne', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Hydromorphone', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Imipenem/Cilastatine', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Dégradation de l\'imipénem' },
+            { drug1: 'Imipenem/Cilastatine', drug2: 'Vancomycine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Levosimendan', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Methylprednisolone', drug2: 'Ciprofloxacine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Methylprednisolone', drug2: 'Calcium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Methylprednisolone', drug2: 'Phosphate de potassium', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Metoclopramide', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Metoclopramide', drug2: 'Héparine', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Metronidazole', drug2: 'Bicarbonate de sodium', severity: 'majeure', effect: 'Précipitation/dégradation' },
+            { drug1: 'Metronidazole', drug2: 'Dopamine', severity: 'mineure', effect: 'Interaction possible' },
+            { drug1: 'Nifedipine', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Nitroprussiate', drug2: 'Dobutamine', severity: 'majeure', effect: 'Inactivation' },
+            { drug1: 'Nitroprussiate', drug2: 'Insuline', severity: 'majeure', effect: 'Adsorption' },
+            { drug1: 'Octreotide', drug2: 'Nutrition parentérale', severity: 'mineure', effect: 'Données de stabilité limitées' },
+            { drug1: 'Ondansetron', drug2: 'Furosémide', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Ondansetron', drug2: 'Héparine', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Ondansetron', drug2: 'Methylprednisolone', severity: 'mineure', effect: 'Précipitation possible' },
+            { drug1: 'Paracetamol', drug2: 'Diazépam', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Paracetamol', drug2: 'Pantoprazole', severity: 'mineure', effect: 'Interaction possible' },
+            { drug1: 'Tacrolimus', drug2: 'Aciclovir', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Tacrolimus', drug2: 'Pantoprazole', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Trimethoprime/Sulfamethoxazole', drug2: 'Fluconazole', severity: 'majeure', effect: 'Précipitation pH' },
+            { drug1: 'Trimethoprime/Sulfamethoxazole', drug2: 'Midazolam', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Trimethoprime/Sulfamethoxazole', drug2: 'Vancomycine', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Ringer-lactate', drug2: 'Amphotéricine B', severity: 'majeure', effect: 'Précipitation' },
+            { drug1: 'Ringer-lactate', drug2: 'Diazépam', severity: 'majeure', effect: 'Précipitation' },
+        ];
+        
+        // Get all unique drugs
+        const allDrugs = [...new Set(incompatibilities.flatMap(inc => [inc.drug1, inc.drug2]))].sort();
+        
+        // Populate selects
+        const drug1Select = document.getElementById('drug1Select');
+        const drug2Select = document.getElementById('drug2Select');
+        
+        allDrugs.forEach(drug => {
+            const opt1 = document.createElement('option');
+            opt1.value = drug;
+            opt1.textContent = drug;
+            drug1Select.appendChild(opt1);
+            
+            const opt2 = document.createElement('option');
+            opt2.value = drug;
+            opt2.textContent = drug;
+            drug2Select.appendChild(opt2);
+        });
+        
+        // Filter function
+        function filterIncompatibilities() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const drug1 = drug1Select.value;
+            const drug2 = drug2Select.value;
+            
+            const filtered = incompatibilities.filter(inc => {
+                const matchesSearch = searchTerm === '' || 
+                    inc.drug1.toLowerCase().includes(searchTerm) ||
+                    inc.drug2.toLowerCase().includes(searchTerm);
+                
+                const matchesDrugs = (!drug1 && !drug2) ||
+                    (drug1 && (inc.drug1 === drug1 || inc.drug2 === drug1)) ||
+                    (drug2 && (inc.drug1 === drug2 || inc.drug2 === drug2));
+                
+                return matchesSearch && matchesDrugs;
+            });
+            
+            displayIncompatibilities(filtered);
+            
+            const resetBtn = document.getElementById('resetBtn');
+            resetBtn.style.display = (searchTerm || drug1 || drug2) ? 'block' : 'none';
+        }
+        
+        function displayIncompatibilities(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #666;">Aucune incompatibilité trouvée</td></tr>';
+                return;
+            }
+            
+            // TRI PAR SÉVÉRITÉ : majeures en premier, puis alphabétique
+            const sortedData = [...data].sort((a, b) => {
+                // 1. Tri par sévérité (majeure avant mineure)
+                if (a.severity === 'majeure' && b.severity === 'mineure') return -1;
+                if (a.severity === 'mineure' && b.severity === 'majeure') return 1;
+                
+                // 2. Si même sévérité, tri alphabétique par drug1
+                return a.drug1.localeCompare(b.drug1);
+            });
+            
+            sortedData.forEach((inc, idx) => {
+                const tr = document.createElement('tr');
+                
+                const severityClass = inc.severity === 'majeure' ? 'severity-majeure' : 'severity-mineure';
+                const severityIcon = inc.severity === 'majeure' ? '❌' : '⚠️';
+                
+                tr.innerHTML = `
+                    <td style="font-weight: 600;">${inc.drug1}</td>
+                    <td style="font-weight: 600;">${inc.drug2}</td>
+                    <td>
+                        <span class="severity-badge ${severityClass}">
+                            ${severityIcon} ${inc.severity.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>${inc.effect}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterIncompatibilities);
+        drug1Select.addEventListener('change', filterIncompatibilities);
+        drug2Select.addEventListener('change', filterIncompatibilities);
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            drug1Select.value = '';
+            drug2Select.value = '';
+            filterIncompatibilities();
+        });
+        
+        // Tab functionality
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                tabContents.forEach(content => {
+                    if (content.dataset.content === targetTab) {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+                
+                if (targetTab === 'incompatibilities') {
+                    filterIncompatibilities();
+                }
+            });
+        });
+        
+        // Initialize
+        filterIncompatibilities();
+
+        // Init Supabase
+        loadFromSupabase();
+
+</script>
+</body>
+</html>

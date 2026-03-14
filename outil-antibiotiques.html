@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antibiotiques — RéaApp CH Robert Boulin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+
+    /* ── Supabase/RéaApp additions ── */
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+    :root {
+      --bg:#0b0f14;--surface:#121820;--card:#181f28;--border:#1e2a38;
+      --text:#e2eaf4;--muted:#5a7080;--soft:#2a3a4a;
+      --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+      --accent:#2dd4bf;--medical:#3b82f6;--urgent:#ef4444;
+      --warn:#eab308;--purple:#a78bfa;--success:#22c55e;--orange:#fb923c;
+    }
+    html,body{background:var(--bg)!important;color:var(--text)!important;font-family:var(--font)!important}
+    /* Data source badge */
+    .ds-badge{padding:3px 9px;border-radius:20px;font-size:10px;font-family:var(--mono);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+    .ds-badge.supabase{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:#22c55e}
+    .ds-badge.fallback{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.2);color:#eab308}
+    .ds-badge.loading{background:rgba(90,112,128,.1);border:1px solid rgba(90,112,128,.2);color:#5a7080}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{width:10px;height:10px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+
+
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0b0f14;
+      --surface:#121820;
+      --card:#181f28;
+      --border:#1e2a38;
+      --text:#e2eaf4;
+      --muted:#5a7080;
+      --soft:#2a3a4a;
+      --font:'DM Sans',sans-serif;
+      --mono:'DM Mono',monospace;
+      /* Couleurs fonctionnelles */
+      --accent:#2dd4bf;
+      --medical:#3b82f6;
+      --urgent:#ef4444;
+      --warn:#eab308;
+      --purple:#a78bfa;
+      --success:#22c55e;
+      --orange:#fb923c;
+    }
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+    /* ── Header ── */
+    .tool-header{
+      background:var(--surface);
+      border-bottom:1px solid var(--border);
+      padding:16px 24px;
+      display:flex;align-items:center;gap:14px;
+      position:sticky;top:0;z-index:100;
+    }
+    .tool-header-icon{
+      width:38px;height:38px;border-radius:10px;
+      background:linear-gradient(135deg,rgba(45,212,191,.15),rgba(59,130,246,.1));
+      border:1px solid rgba(45,212,191,.25);
+      display:flex;align-items:center;justify-content:center;font-size:18px;
+    }
+    .tool-header-title{font-size:17px;font-weight:600;color:var(--text)}
+    .tool-header-sub{font-size:12px;color:var(--muted);font-family:var(--mono)}
+    .tool-header-badge{
+      margin-left:auto;padding:4px 10px;border-radius:20px;
+      background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.2);
+      font-size:11px;color:var(--accent);font-family:var(--mono);
+    }
+
+    /* ── Layout ── */
+    .tool-body{max-width:1100px;margin:0 auto;padding:24px 20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+    @media(max-width:760px){.tool-body{grid-template-columns:1fr}}
+
+    /* ── Card ── */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;}
+    .card-title{font-size:13px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+    .card-title::before{content:'';width:3px;height:13px;background:var(--accent);border-radius:2px;display:inline-block;}
+
+    /* ── Mode buttons ── */
+    .mode-tabs{display:flex;gap:8px;margin-bottom:18px;}
+    .mode-tab{
+      flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--border);
+      background:transparent;color:var(--muted);font-family:var(--font);font-size:13px;font-weight:500;
+      cursor:pointer;transition:all .15s;
+    }
+    .mode-tab.active{background:rgba(45,212,191,.12);border-color:rgba(45,212,191,.35);color:var(--accent);}
+    .mode-tab:hover:not(.active){border-color:var(--soft);color:var(--text);}
+
+    /* ── Form ── */
+    .form-group{margin-bottom:14px;}
+    .form-label{display:block;font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;}
+    .form-input,.form-select{
+      width:100%;padding:10px 13px;
+      background:var(--surface);border:1px solid var(--border);border-radius:9px;
+      color:var(--text);font-size:14px;font-family:var(--font);outline:none;
+      transition:border-color .15s;appearance:none;
+    }
+    .form-input:focus,.form-select:focus{border-color:rgba(45,212,191,.5);}
+    .form-input::placeholder{color:var(--muted);}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+    .section-divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+
+    .info-block{
+      background:rgba(45,212,191,.05);border:1px solid rgba(45,212,191,.15);
+      border-radius:9px;padding:12px;margin-bottom:14px;
+    }
+    .info-block p:first-child{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:2px;}
+    .info-block p:last-child{font-size:12px;color:var(--muted);}
+
+    /* ── Btn ── */
+    .btn-primary{
+      width:100%;padding:12px;background:var(--accent);border:none;border-radius:10px;
+      color:#0b0f14;font-size:15px;font-weight:600;font-family:var(--font);
+      cursor:pointer;transition:all .15s;
+    }
+    .btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+    .btn-secondary{
+      padding:12px 16px;background:transparent;border:1px solid var(--border);border-radius:10px;
+      color:var(--muted);font-family:var(--font);font-size:14px;cursor:pointer;transition:all .15s;
+    }
+    .btn-secondary:hover{border-color:var(--soft);color:var(--text);}
+    .btn-row{display:flex;gap:10px;margin-top:4px;}
+    .btn-row .btn-primary{flex:1;}
+
+    /* ── Résultats ── */
+    .results-empty{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      height:100%;min-height:280px;gap:12px;color:var(--muted);
+    }
+    .results-empty-icon{font-size:40px;opacity:.3;}
+    .results-empty-text{font-size:13px;font-family:var(--mono);}
+
+    .result-block{animation:fadeUp .3s ease;}
+
+    /* Badge fonction rénale */
+    .fr-badge{
+      border-radius:10px;padding:16px;margin-bottom:14px;
+      border:1px solid;
+    }
+    .fr-badge.normal{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.2);}
+    .fr-badge.legere{background:rgba(45,212,191,.08);border-color:rgba(45,212,191,.2);}
+    .fr-badge.moderee{background:rgba(234,179,8,.08);border-color:rgba(234,179,8,.2);}
+    .fr-badge.severe{background:rgba(251,146,60,.08);border-color:rgba(251,146,60,.2);}
+    .fr-badge.terminale{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);}
+    .fr-badge.eer{background:rgba(167,139,250,.08);border-color:rgba(167,139,250,.2);}
+    .fr-label{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .fr-value{font-size:28px;font-weight:700;line-height:1.1;}
+    .fr-value.normal{color:#22c55e;}
+    .fr-value.legere{color:var(--accent);}
+    .fr-value.moderee{color:var(--warn);}
+    .fr-value.severe{color:var(--orange);}
+    .fr-value.terminale{color:var(--urgent);}
+    .fr-value.eer{color:var(--purple);}
+    .fr-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+
+    /* Posologie principale */
+    .dose-card{
+      background:linear-gradient(135deg,rgba(45,212,191,.08),rgba(59,130,246,.05));
+      border:1px solid rgba(45,212,191,.2);border-radius:10px;padding:16px;margin-bottom:12px;
+    }
+    .dose-molecule{font-size:20px;font-weight:700;color:var(--text);margin-bottom:2px;}
+    .dose-classe{font-size:12px;font-family:var(--mono);color:var(--accent);}
+    .dose-indication{
+      background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.15);
+      border-radius:7px;padding:8px 12px;margin:10px 0;
+      font-size:12px;color:var(--medical);font-family:var(--mono);
+    }
+    .dose-value{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:8px;padding:12px;
+      font-size:16px;font-weight:600;color:var(--text);
+    }
+    .dose-value-label{font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;text-transform:uppercase;}
+
+    /* Précautions */
+    .prec-item{
+      padding:10px 0 10px 14px;border-left:3px solid;margin-bottom:8px;
+    }
+    .prec-item.prep{border-color:var(--medical);}
+    .prec-item.admin{border-color:var(--success);}
+    .prec-item.stab{border-color:var(--purple);}
+    .prec-item.incomp{border-color:var(--urgent);background:rgba(239,68,68,.04);padding:10px;border-radius:0 7px 7px 0;}
+    .prec-item.effi{border-color:var(--accent);}
+    .prec-item.tol{border-color:var(--orange);background:rgba(251,146,60,.04);padding:10px;border-radius:0 7px 7px 0;}
+    .prec-item.inter{border-color:var(--warn);}
+    .prec-title{font-size:11px;font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+    .prec-item.prep .prec-title{color:var(--medical);}
+    .prec-item.admin .prec-title{color:var(--success);}
+    .prec-item.stab .prec-title{color:var(--purple);}
+    .prec-item.incomp .prec-title{color:var(--urgent);}
+    .prec-item.effi .prec-title{color:var(--accent);}
+    .prec-item.tol .prec-title{color:var(--orange);}
+    .prec-item.inter .prec-title{color:var(--warn);}
+    .prec-text{font-size:13px;color:var(--text);}
+
+    /* Avertissement */
+    .disclaimer{
+      background:rgba(234,179,8,.06);border:1px solid rgba(234,179,8,.15);
+      border-radius:10px;padding:14px 16px;margin-top:14px;
+      font-size:12px;color:var(--muted);
+    }
+    .disclaimer strong{color:var(--warn);}
+
+    /* select optgroup */
+    optgroup{background:var(--surface);color:var(--muted);}
+    option{background:var(--card);color:var(--text);}
+
+    /* hidden */
+    .hidden{display:none!important;}
+  
+  </style>
+</head>
+<body>
+<!-- Header -->
+  <header class="tool-header">
+    <div class="tool-header-icon">💊</div>
+    <div>
+      <div class="tool-header-title">Antibiotiques en Réanimation</div>
+      <div class="tool-header-sub">CH Robert Boulin — Adaptation posologique</div>
+    </div>
+    <div class="ds-badge loading" id="data-badge"><div class="spinner"></div><span>Chargement…</span></div>
+    <div class="tool-header-badge" id="mol-count-badge">44 molécules</div>
+  </header>
+
+  <!-- Body -->
+  <div class="tool-body">
+
+    <!-- Colonne gauche : formulaire -->
+    <div>
+      <div class="card">
+        <div class="card-title">Paramètres Patient</div>
+
+        <!-- Mode tabs -->
+        <div class="mode-tabs">
+          <button class="mode-tab active" id="btnModeCalcul" onclick="switchMode('calcul')">📐 Calculer ClCr</button>
+          <button class="mode-tab" id="btnModeDirect" onclick="switchMode('direct')">⌨️ Saisie directe</button>
+        </div>
+
+        <!-- Mode Calcul -->
+        <div id="modeCalcul">
+          <div class="info-block">
+            <p>Méthode de référence</p>
+            <p>Récolte urinaire 24h (mesurée)</p>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Volume (mL)</label>
+              <input type="number" id="volU" placeholder="1500" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Durée</label>
+              <select id="duree" class="form-select">
+                <option value="12">12h</option>
+                <option value="24" selected>24h</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Créat U (μmol/L)</label>
+              <input type="number" id="creatU" placeholder="4420" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Créat P (μmol/L)</label>
+              <input type="number" id="creatP" placeholder="110" class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode Direct -->
+        <div id="modeDirect" class="hidden">
+          <div class="info-block" style="background:rgba(34,197,94,.05);border-color:rgba(34,197,94,.15);">
+            <p style="color:var(--success)">Clairance du laboratoire</p>
+            <p>Résultat direct mesuré</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Clairance mesurée (mL/min)</label>
+            <input type="number" id="clcrDirect" placeholder="ex: 65" step="0.1" class="form-input" style="font-size:18px;font-weight:600;">
+          </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- EER -->
+        <div class="form-group">
+          <label class="form-label">Épuration Extra-Rénale</label>
+          <select id="dialyse" class="form-select">
+            <option value="non">Aucune</option>
+            <option value="hdi">HDI — Hémodialyse Intermittente</option>
+            <option value="eerc">EERC — CVVH / CVVHDF</option>
+          </select>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Antibiotique -->
+        <div class="form-group">
+          <label class="form-label">Antibiotique</label>
+          <select id="atb" class="form-select" onchange="updateIndications()">
+            <option value="">— Sélectionner —</option>
+            <optgroup label="Pénicillines">
+              <option value="amoxicilline">Amoxicilline</option>
+              <option value="amoxicilline-clavulanique">Amoxicilline + Clavulanique</option>
+              <option value="piperacilline">Pipéracilline</option>
+              <option value="piperacilline-tazobactam">Pipéracilline + Tazobactam</option>
+              <option value="cloxacilline">Cloxacilline</option>
+              <option value="penicillineG">Pénicilline G</option>
+              <option value="temocilline">Témocilline</option>
+              <option value="ticarcilline">Ticarcilline</option>
+            </optgroup>
+            <optgroup label="Céphalosporines">
+              <option value="cefazoline">Céfazoline (C1G)</option>
+              <option value="cefotaxime">Céfotaxime (C3G)</option>
+              <option value="ceftriaxone">Ceftriaxone (C3G)</option>
+              <option value="ceftazidime">Ceftazidime (C3G)</option>
+              <option value="ceftazidime-avibactam">Ceftazidime + Avibactam</option>
+              <option value="ceftolozane-tazobactam">Ceftolozane + Tazobactam</option>
+              <option value="cefepime">Céfépime (C4G)</option>
+              <option value="ceftaroline">Ceftaroline (C5G)</option>
+              <option value="ceftobiprole">Ceftobiprole (C5G)</option>
+              <option value="cefiderocol">Céfidérocol (Sidérophore)</option>
+            </optgroup>
+            <optgroup label="Carbapénèmes">
+              <option value="ertapenem">Ertapénem</option>
+              <option value="imipenem">Imipénem</option>
+              <option value="imipenem-relebactam">Imipénem + Relebactam</option>
+              <option value="meropenem">Méropénem</option>
+              <option value="meropenem-vaborbactam">Méropénem + Vaborbactam</option>
+            </optgroup>
+            <optgroup label="Monobactame">
+              <option value="aztreonam">Aztréonam</option>
+            </optgroup>
+            <optgroup label="Glycopeptides">
+              <option value="vancomycine">Vancomycine</option>
+              <option value="dalbavancine">Dalbavancine</option>
+            </optgroup>
+            <optgroup label="Aminosides">
+              <option value="amikacine">Amikacine</option>
+              <option value="gentamicine">Gentamicine</option>
+              <option value="tobramycine">Tobramycine</option>
+            </optgroup>
+            <optgroup label="Fluoroquinolones">
+              <option value="ciprofloxacine">Ciprofloxacine</option>
+              <option value="levofloxacine">Lévofloxacine</option>
+              <option value="ofloxacine">Ofloxacine</option>
+            </optgroup>
+            <optgroup label="Oxazolidinones">
+              <option value="linezolide">Linézolide</option>
+              <option value="tedizolide">Tédizolide</option>
+            </optgroup>
+            <optgroup label="Autres">
+              <option value="colistine">Colistine</option>
+              <option value="daptomycine">Daptomycine</option>
+              <option value="clindamycine">Clindamycine</option>
+              <option value="metronidazole">Métronidazole</option>
+              <option value="cotrimoxazole">Cotrimoxazole</option>
+              <option value="fosfomycine">Fosfomycine</option>
+              <option value="rifampicine">Rifampicine</option>
+              <option value="tigecycline">Tigécycline</option>
+              <option value="erythromycine">Érythromycine</option>
+              <option value="spiramycine">Spiramycine</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- Indication -->
+        <div class="form-group">
+          <label class="form-label">Type d'infection</label>
+          <select id="indication" class="form-select">
+            <option value="severe">Infection sévère</option>
+            <option value="peusevere">Infection peu sévère</option>
+          </select>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-primary" onclick="calculer()">Calculer la posologie</button>
+          <button class="btn-secondary" onclick="resetForm()">↺</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Colonne droite : résultats -->
+    <div id="results-col">
+      <div class="card" style="height:100%;min-height:300px;display:flex;align-items:center;justify-content:center;" id="results-empty">
+        <div class="results-empty">
+          <div class="results-empty-icon">💊</div>
+          <div class="results-empty-text">Renseignez les paramètres</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">puis cliquez sur Calculer</div>
+        </div>
+      </div>
+      <div id="results-content" class="hidden"></div>
+    </div>
+
+  </div>
+  <script>
+
+  // ══════════════════════════════════════════════════════════
+  // SUPABASE CONFIG
+  // Pour modifier les posologies : Dashboard Supabase → antibiotiques_indications
+  // ══════════════════════════════════════════════════════════
+  const SUPABASE_URL  = 'https://mvcidplmvqaokftoszex.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12Y2lkcGxtdnFhb2tmdG9zemV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzk4MTUsImV4cCI6MjA4ODk1NTgxNX0.MiQoOve99hax2yEDq8cVpnD3GoK19cp6nb1I5xDGDzY';
+
+  // La DB locale originale sera stockée dans DB_FALLBACK après que la DB soit initialisée
+  let DB_FALLBACK = null;
+  let dataSource  = 'fallback';
+
+  async function loadFromSupabase() {
+    // Sauvegarder la DB locale comme fallback
+    DB_FALLBACK = Object.assign({}, DB);
+
+    try {
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+      const { data: mols, error: e1 } = await sb
+        .from('antibiotiques_molecules')
+        .select('*').eq('actif', true).order('groupe').order('nom');
+      if (e1) throw e1;
+
+      const { data: inds, error: e2 } = await sb
+        .from('antibiotiques_indications')
+        .select('*').eq('actif', true).order('ordre');
+      if (e2) throw e2;
+
+      if (!mols || mols.length === 0) throw new Error('Aucune molécule');
+
+      // Reconstruire DB depuis Supabase
+      const newDB = {};
+      const indByMol = {};
+      for (const ind of inds) {
+        if (!indByMol[ind.molecule_id]) indByMol[ind.molecule_id] = [];
+        indByMol[ind.molecule_id].push(ind);
+      }
+      for (const mol of mols) {
+        const indications = {};
+        for (const ind of (indByMol[mol.id] || [])) {
+          indications[ind.slug] = {
+            n:   ind.pos_normale   || 'NC',
+            l:   ind.pos_legere    || 'NC',
+            m:   ind.pos_moderee   || 'NC',
+            s:   ind.pos_severe    || 'NC',
+            t:   ind.pos_terminale || 'NC',
+            hdi: ind.pos_hdi       || 'NC',
+            eerc:ind.pos_eerc      || 'NC',
+          };
+          if (ind.label) NOMS_INDICATIONS[ind.slug] = ind.label;
+        }
+        newDB[mol.slug] = {
+          nom:mol.nom, classe:mol.classe, groupe:mol.groupe,
+          prep:mol.prep, admin:mol.admin, stab:mol.stab,
+          incomp:mol.incomp, effi:mol.effi, tol:mol.tol, inter:mol.inter,
+          indications,
+        };
+      }
+
+      // Mettre à jour DB et select
+      Object.assign(DB, newDB);
+      // Supprimer les slugs absents de Supabase
+      for (const k of Object.keys(DB)) { if (!newDB[k]) delete DB[k]; }
+
+      dataSource = 'supabase';
+
+      const badge = document.getElementById('data-badge');
+      badge.className = 'ds-badge supabase';
+      badge.innerHTML = '<span>&#9679; Supabase</span>';
+      document.getElementById('mol-count-badge').textContent = mols.length + ' molécules';
+
+      rebuildSelectFromSupabase(mols);
+      console.log('Supabase OK:', mols.length, 'molécules,', inds.length, 'indications');
+
+    } catch(err) {
+      console.warn('Supabase indispo → fallback local', err.message || err);
+      const badge = document.getElementById('data-badge');
+      badge.className = 'ds-badge fallback';
+      badge.innerHTML = '<span>&#9889; Local</span>';
+    }
+  }
+
+  function rebuildSelectFromSupabase(mols) {
+    const sel = document.getElementById('atb');
+    const cur = sel.value;
+    const ORDER = ['Pénicillines','Céphalosporines','Carbapénèmes','Monobactame',
+                   'Glycopeptides','Aminosides','Fluoroquinolones','Oxazolidinones','Autres'];
+    const byG = {};
+    mols.forEach(m => {
+      const g = ORDER.includes(m.groupe) ? m.groupe : 'Autres';
+      if (!byG[g]) byG[g] = [];
+      byG[g].push(m);
+    });
+    sel.innerHTML = '<option value="">— Sélectionner —</option>';
+    for (const g of ORDER) {
+      if (!byG[g]) continue;
+      const og = document.createElement('optgroup');
+      og.label = g;
+      byG[g].forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.slug; opt.textContent = m.nom;
+        og.appendChild(opt);
+      });
+      sel.appendChild(og);
+    }
+    if (cur && DB[cur]) sel.value = cur;
+    updateIndications();
+  }
+
+
+
+  // ══════════════════════════════════════════════════════════
+  // DONNÉES — Modifier ici pour ajouter/modifier une molécule
+  // ══════════════════════════════════════════════════════════
+
+  const INDICATIONS_PAR_ATB = {
+    'amoxicilline': ['severe', 'peusevere', 'endocardite'],
+    'cefotaxime': ['severe', 'peusevere', 'neuromeningee', 'osteo'],
+    'ceftriaxone': ['severe', 'peusevere', 'neuromeningee'],
+    'cotrimoxazole': ['severe', 'pneumocystose', 'prophylaxie'],
+    'rifampicine': ['severe', 'tuberculose'],
+    'gentamicine': ['bgn', 'cgp'],
+    'tobramycine': ['bgn', 'cgp'],
+    'cloxacilline': ['severe', 'peusevere'],
+    'linezolide': ['severe', 'peusevere'],
+    'piperacilline': ['severe', 'peusevere'],
+    'piperacilline-tazobactam': ['severe', 'peusevere'],
+    'meropenem': ['severe', 'peusevere'],
+    'imipenem': ['severe', 'peusevere'],
+    'ertapenem': ['severe', 'peusevere'],
+    'vancomycine': ['severe', 'peusevere'],
+    'ceftazidime': ['severe', 'peusevere'],
+    'cefepime': ['severe', 'peusevere'],
+    'aztreonam': ['severe', 'peusevere'],
+    'ceftolozane-tazobactam': ['severe', 'peusevere'],
+    'temocilline': ['severe', 'peusevere'],
+    'tigecycline': ['severe', 'peusevere'],
+    'spiramycine': ['severe', 'peusevere'],
+    'cefazoline': ['severe', 'peusevere'],
+    'levofloxacine': ['severe', 'peusevere'],
+    'ciprofloxacine': ['severe', 'peusevere'],
+    'ceftobiprole': ['severe', 'peusevere']
+  };
+
+  const NOMS_INDICATIONS = {
+    'severe': 'Infection sévère',
+    'peusevere': 'Infection peu sévère',
+    'neuromeningee': 'Infection neuroméningée',
+    'endocardite': 'Endocardite infectieuse',
+    'osteo': 'Infection ostéo-articulaire',
+    'pneumocystose': 'Pneumocystose',
+    'bgn': 'Infection à BGN',
+    'cgp': 'Infection à CG+',
+    'tuberculose': 'Tuberculose',
+    'prophylaxie': 'Prophylaxie'
+  };
+
+  // ── Base de données des molécules ──
+  const DB = {
+    'amikacine': {
+      nom: 'Amikacine', classe: 'Aminoside',
+      indications: {
+        'severe': { n:'25-30mg/kg dose unique', l:'25-30mg/kg dose unique', m:'25-30mg/kg dose unique', s:'25-30mg/kg dose unique', t:'25-30mg/kg dose unique', eerc:'25-30mg/kg dose unique' },
+        'peusevere': { n:'25-30mg/kg dose unique', l:'25-30mg/kg dose unique', m:'25-30mg/kg dose unique', s:'25-30mg/kg dose unique', t:'25-30mg/kg dose unique', eerc:'25-30mg/kg dose unique' }
+      },
+      prep:'NaCl 0.9% ou G5%. [C] max 20mg/mL (1g/50mL).',
+      admin:'Perfusion 30min. 🔴 DOSAGES OBLIGATOIRES.',
+      stab:'Poids ajusté si obèse = PI + 0,4(PR - PI)',
+      incomp:'⚠️⚠️ BÉTA-LACTAMINES : voies séparées ABSOLUMENT (inactivation).',
+      effi:'Pic 30min après fin perf: 60-80mg/mL. Résiduelle si >5j ou IRC: <2,5mg/mL.',
+      tol:'⚠️⚠️ Néphrotoxicité, ototoxicité irréversible.',
+      inter:'Vanco/furosémide: toxicité++. Curares prolongés.'
+    },
+    'amoxicilline': {
+      nom: 'Amoxicilline', classe: 'Pénicilline A',
+      indications: {
+        'severe': { n:'100mg/kg/j en 3-4 injections', l:'100mg/kg/j en 3-4 injections', m:'100mg/kg/j en 3-4 injections', s:'50mg/kg/j', t:'25mg/kg/j', hdi:'500mg à 1g /24h (après séance)', eerc:'NC' },
+        'endocardite': { n:'200mg/kg/j en 3-4 injections', l:'200mg/kg/j en 3-4 injections', m:'200mg/kg/j en 3-4 injections', s:'100mg/kg/j en 3-4 injections', t:'50mg/kg/j', hdi:'500mg à 1g /24h (après séance)', eerc:'NC' },
+        'peusevere': { n:'50mg/kg/j en 3-4 injections', l:'50mg/kg/j en 3-4 injections', m:'50mg/kg/j en 3-4 injections', s:'25mg/kg/j', t:'15mg/kg/j', hdi:'500mg/24h (après séance)', eerc:'NC' }
+      },
+      prep:'NaCl 0,9% UNIQUEMENT. [C] max 20mg/mL (1g/50mL).',
+      admin:'IVD max 1g (3-4min). IVL 30-60min max 2g adulte, 50mg/kg enfant.',
+      stab:'⚠️ Stabilité altérée par G5%. Poids ajusté obèse.',
+      incomp:'Aminosides: voies séparées. G5% déconseillé.',
+      effi:'Hyperhydratation si >2g/perf (cristallurie).',
+      tol:'Allergie, diarrhée. Convulsions si IRC+surdosage.',
+      inter:'Allopurinol: éruption. AVK: ↑INR. MTX: ↑toxicité.'
+    },
+    'amoxicilline-clavulanique': {
+      nom: 'Amoxicilline + Ac. Clavulanique', classe: 'Péni + Inhibiteur',
+      indications: {
+        'severe': { n:'2g/8h', l:'2g/8h', m:'2g/8h', s:'1g/8h', t:'1,5g/j', hdi:'1g/200mg /24h (après séance)', eerc:'NC' },
+        'peusevere': { n:'1g/8h', l:'1g/8h', m:'1g/8h', s:'Dose de charge 1g puis 500mg/8h', t:'Dose de charge 1g puis 750mg/j', hdi:'1g/200mg /24h (après séance)', eerc:'Dose de charge 1g puis 750mg/j' }
+      },
+      prep:'NaCl 0,9% UNIQUEMENT. [C] max 20mg/mL (1g/50mL).',
+      admin:'IVD max 1g adulte (3-4min). IVL 30-60min max 2g adulte, 25mg/kg enfant.',
+      stab:'⚠️ Clamper perfusion G5% avant injection.',
+      incomp:'Aminosides, vancomycine: voies séparées.',
+      effi:'Max ac. clavulanique: 200mg/injection, 1200mg/24h.',
+      tol:'⚠️ Hépatotoxicité (↑transaminases, cholestase si >72h). Diarrhée++.',
+      inter:'AVK: ↑INR. MTX: ↑toxicité.'
+    },
+    'aztreonam': {
+      nom: 'Aztréonam', classe: 'Monobactame',
+      indications: {
+        'severe': { n:'2g/6-8h', l:'2g/6-8h', m:'2g/6-8h', s:'Dose de charge 2g puis 1g/6h ou 4g/24h IVSE', t:'Dose de charge 2g puis 500mg/6h ou 2g/24h IVSE', hdi:'500mg à 1g dose initiale, puis 1/4 dose /6-8-12h + supplément après dialyse (1/8 dose)', eerc:'2g/12h' },
+        'peusevere': { n:'Dose de charge 2g puis 1g/8h', l:'Dose de charge 2g puis 1g/8h', m:'Dose de charge 2g puis 1g/8h', s:'Dose de charge 2g puis 500mg/8h', t:'Dose de charge 2g puis 250mg/8h', eerc:'1g/12h' }
+      },
+      prep:'NaCl 0,9% UNIQUEMENT. [C] max 100mg/mL (viscosité).',
+      admin:'IVL 30-60min. Continue IVSE possible. Stable >24h à 25°C.',
+      stab:'>24h T°, 100mg/mL.',
+      incomp:'Données limitées.',
+      effi:'Pseudomonas multi-R. BGN chez allergiques β-lactamines. Si CMI>4mg/L: doses élevées.',
+      tol:'Bien toléré. Allergie croisée péni rare.',
+      inter:"Peu d'interactions."
+    },
+    'cefazoline': {
+      nom: 'Céfazoline', classe: 'Céphalosporine 1G',
+      indications: {
+        'severe': { n:'Dose de charge 30mg/kg puis 80-100mg/kg/j en 3 perfusions ou IVSE', l:'Dose de charge 30mg/kg puis 80-100mg/kg/j en 3 perfusions ou IVSE', m:'Dose de charge 15mg/kg puis 40-50mg/kg/j', s:'Dose de charge 250mg puis 20-25mg/kg/j', t:'Dose de charge 250mg puis 20-25mg/kg/j', hdi:'1g à 2g /48h (après séance)', eerc:'Dose de charge 2g puis 2g/12h' },
+        'peusevere': { n:'Dose de charge 20mg/kg puis 60-80mg/kg/j en 4 injections', l:'Dose de charge 20mg/kg puis 60-80mg/kg/j en 4 injections', m:'Dose de charge 500mg puis 30-40mg/kg/j', s:'Dose de charge 250mg puis 15-20mg/kg/j', t:'Dose de charge 250mg puis 15-20mg/kg/j', eerc:'Dose de charge 2g puis 2g/12h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 100mg/mL (1g/10mL).',
+      admin:'IVL 30-60min. Continue IVSE possible après dose de charge. Stable 24h à 25°C.',
+      stab:'Poids ajusté obèse = PI + 0,3(PR - PI)',
+      incomp:'Aminosides: séparés.',
+      effi:'Indiqué en continu pour infections osseuses et endocardites.',
+      tol:'Surveillance TP. Supplémentation vit K si baisse (10mg/sem).',
+      inter:'AVK: ↑INR.'
+    },
+    'cefepime': {
+      nom: 'Céfépime', classe: 'Céphalosporine 4G',
+      indications: {
+        'severe': { n:'Dose de charge 2g puis 2g/8h', l:'Dose de charge 2g puis 2g/8h', m:'Dose de charge 2g puis 2g/8h', s:'Dose de charge 1g puis 1g/8h', t:'1g/24h', hdi:'1g dose initiale, puis 500mg à 1g /24h (après séance)', eerc:"2g/12h ou 2g/8h avec surveillance plasmatique" },
+        'peusevere': { n:'2g/12h ou 1g/8h', l:'2g/12h ou 1g/8h', m:'2g/12h ou 1g/8h', s:'2g/24h', t:'500mg/24h', eerc:'2g/12h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 100mg/mL (1g/10mL).',
+      admin:'IVL 30-60min. Continue IVSE possible mais ⚠️ stable 8h SEULEMENT à 25°C.',
+      stab:'⚠️⚠️ 8h MAX. Produits dégradation toxiques si >8h.',
+      incomp:'Aminosides, amphotéricine B, vancomycine.',
+      effi:'⚠️ NEUROTOXICITÉ++. Dosage plasmatique recommandé +++. P. aeruginosa, BLSE.',
+      tol:'Encéphalopathie, convulsions (surtout IRC). Thrombopénie.',
+      inter:'Probénécide: ↑concentration.'
+    },
+    'cefotaxime': {
+      nom: 'Céfotaxime', classe: 'Céphalosporine 3G',
+      indications: {
+        'severe': { n:'2g/8h', l:'2g/8h', m:'2g/12h', s:'1,5g/12h', t:'1g/24h', hdi:'1g /24h (après séance)', eerc:'2g/12h' },
+        'peusevere': { n:'1g/8h', l:'1g/8h', m:'1g/12h', s:'750mg/12h', t:'750mg/12h', eerc:'1g/12h' },
+        'neuromeningee': { n:'200-300mg/kg/j en 4 injections', l:'200-300mg/kg/j en 4 injections', m:'150-225mg/kg/j en 4 injections', s:'100-150mg/kg/j en 4 injections', t:'50-75mg/kg/j en 4 injections', eerc:'2g/8h' },
+        'osteo': { n:'2g/8h', l:'2g/8h', m:'2g/12h', s:'1g/12h', t:'1g/24h', eerc:'2g/12h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 100mg/mL.',
+      admin:'IVL 30min à 1h. IVD possible pour doses <2g.',
+      stab:'Stable 24h à 25°C.',
+      incomp:'Aminosides: séparés.',
+      effi:'LCR: passage actif. Méningites, endocardites, infections sévères.',
+      tol:'Bonne tolérance. Neutropénie, thrombopénie rares.',
+      inter:'AVK: ↑INR. Probénécide: ↑concentration.'
+    },
+    'ceftazidime': {
+      nom: 'Ceftazidime', classe: 'Céphalosporine 3G anti-Pseudomonas',
+      indications: {
+        'severe': { n:'Dose de charge 2g puis 2g/8h ou 6g/24h IVSE', l:'Dose de charge 2g puis 2g/8h ou 6g/24h IVSE', m:'Dose de charge 2g puis 2g/12h ou 4g/24h IVSE', s:'Dose de charge 1g puis 1g/12h ou 2g/24h IVSE', t:'Dose de charge 1g puis 500mg/12h ou 1g/24h IVSE', hdi:'1g dose initiale, puis 500mg /24h (après séance)', eerc:'2g/12h ou 4g/24h IVSE' },
+        'peusevere': { n:'1g/8h ou 2g/12h', l:'1g/8h ou 2g/12h', m:'1g/12h', s:'500mg/12h', t:'500mg/24h', eerc:'1g/12h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 50mg/mL (2g/40mL).',
+      admin:'IVL 30min. Continue IVSE possible. Stable 12h à 25°C.',
+      stab:'12h à température ambiante. Réfrigération 24h.',
+      incomp:'Aminosides, vancomycine: séparés. Bicarbonate: incompatible.',
+      effi:'P. aeruginosa++. IVSE pour PK/PD optimal. Dosage plasmatique si possible.',
+      tol:'Bonne tolérance. Encéphalopathie possible (rare).',
+      inter:'Probénécide: ↑concentration.'
+    },
+    'ceftazidime-avibactam': {
+      nom: 'Ceftazidime + Avibactam', classe: 'C3G + Inhibiteur β-lactamase',
+      indications: {
+        'severe': { n:'2,5g/8h (perf 2h)', l:'2,5g/8h (perf 2h)', m:'1,25g/8h (perf 2h)', s:'0,94g/12h (perf 2h)', t:'0,94g/24h (perf 2h)', hdi:'0,94g dose unique puis 0,94g /24h après séance', eerc:'1,25g/8h (perf 2h)' },
+        'peusevere': { n:'2,5g/8h (perf 2h)', l:'2,5g/8h (perf 2h)', m:'1,25g/8h (perf 2h)', s:'0,94g/12h', t:'0,94g/24h', eerc:'1,25g/8h' }
+      },
+      prep:'NaCl 0,9%. Reconstitution puis dilution. [C] 8-40mg/mL.',
+      admin:'Perfusion 2h OBLIGATOIRE. Ne pas administrer en IVD.',
+      stab:'12h à T° ambiante, 24h réfrigéré.',
+      incomp:'Rincer voie avant/après. Pas de mélange avec autres ATB.',
+      effi:'🔴 BGN RÉSISTANTS UNIQUEMENT: KPC, OXA-48, Pseudomonas R. Pas de spectre entérocoques.',
+      tol:'Bien toléré. Diarrhée possible. Transaminases.',
+      inter:'Valproate: réduction concentrations.'
+    },
+    'ceftobiprole': {
+      nom: 'Ceftobiprole', classe: 'Céphalosporine 5G',
+      indications: {
+        'severe': { n:'500mg/8h (perf 2h)', l:'500mg/8h (perf 2h)', m:'250mg/8h (perf 2h)', s:'250mg/12h (perf 2h)', t:'250mg/24h (perf 2h)', hdi:'250mg dose initiale puis /24h après séance', eerc:'500mg/12h (perf 2h)' },
+        'peusevere': { n:'500mg/8h (perf 2h)', l:'500mg/8h (perf 2h)', m:'250mg/8h', s:'250mg/12h', t:'250mg/24h', eerc:'500mg/12h' }
+      },
+      prep:'NaCl 0,9% ou G5%. Perf 2h.',
+      admin:'Perfusion 2h OBLIGATOIRE.',
+      stab:'12h à T° ambiante.',
+      incomp:'Lactate de Ringer: incompatible.',
+      effi:'SARM, PSDP, P. aeruginosa. Pneumonies +++ (spectre large).',
+      tol:'Bien toléré. Dysgueusie possible pendant perf.',
+      inter:"Peu d'interactions connues."
+    },
+    'ceftolozane-tazobactam': {
+      nom: 'Ceftolozane + Tazobactam', classe: 'C3G + Inhibiteur',
+      indications: {
+        'severe': { n:'1,5g/8h (perf 1h)', l:'1,5g/8h (perf 1h)', m:'750mg/8h (perf 1h)', s:'375mg/8h (perf 1h)', t:'150mg/8h', hdi:'750mg dose unique puis 150mg/8h', eerc:'900mg/8h (perf 1h)' },
+        'peusevere': { n:'1,5g/8h', l:'1,5g/8h', m:'750mg/8h', s:'375mg/8h', t:'150mg/8h', eerc:'900mg/8h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 20mg/mL.',
+      admin:'Perfusion 1h.',
+      stab:'12h à T° ambiante, 7j réfrigéré.',
+      incomp:'Rincer voie.',
+      effi:'🔴 Pseudomonas aeruginosa MDR UNIQUEMENT. Pas de KPC.',
+      tol:'Bien toléré. Fièvre, céphalées possibles.',
+      inter:"Peu d'interactions."
+    },
+    'ceftriaxone': {
+      nom: 'Ceftriaxone', classe: 'Céphalosporine 3G',
+      indications: {
+        'severe': { n:'2g/24h à 4g/24h', l:'2g/24h à 4g/24h', m:'2g/24h à 4g/24h', s:'2g/24h', t:'2g/24h', hdi:'2g/24h', eerc:'2g/24h' },
+        'peusevere': { n:'1g/24h à 2g/24h', l:'1g/24h à 2g/24h', m:'1g/24h à 2g/24h', s:'1g/24h', t:'1g/24h', hdi:'1g/24h', eerc:'1g/24h' },
+        'neuromeningee': { n:'100mg/kg/j en 1-2 injections (max 4g/j)', l:'100mg/kg/j en 1-2 injections', m:'75mg/kg/j', s:'50mg/kg/j', t:'50mg/kg/j', eerc:'2g/24h' }
+      },
+      prep:'NaCl 0,9%. [C] max 40mg/mL IV, 350mg/mL IM.',
+      admin:'IVL 30min. IM possible. Ne pas mélanger avec calcium IV.',
+      stab:'24h à T° ambiante.',
+      incomp:'🔴 CALCIUM IV: précipitation létale (nourrissons). Aminosides: séparés.',
+      effi:'Pas d\'adaptation IRC (élimination biliaire). T1/2 long: 1 injection/j.',
+      tol:'Lithiase biliaire, boue biliaire (rare). Bonne tolérance générale.',
+      inter:'AVK: ↑INR. Calcium IV: CI absolue simultanée.'
+    },
+    'cefiderocol': {
+      nom: 'Céfidérocol', classe: 'Céphalosporine Sidérophore',
+      indications: {
+        'severe': { n:'2g/8h (perf 3h)', l:'2g/8h (perf 3h)', m:'1,5g/8h (perf 3h)', s:'1g/12h (perf 3h)', t:'1g/12h (perf 3h)', hdi:'1g /48h après séance', eerc:'2g/8h (perf 3h)' },
+        'peusevere': { n:'2g/8h (perf 3h)', l:'2g/8h (perf 3h)', m:'1,5g/8h', s:'1g/12h', t:'1g/12h', eerc:'2g/8h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] 4-8mg/mL. Reconstitution avec eau PPI.',
+      admin:'Perfusion 3h OBLIGATOIRE. Ne pas accélérer.',
+      stab:'1h après reconstitution, 6h après dilution à T° ambiante.',
+      incomp:'Données limitées. Administration seul.',
+      effi:'🔴 BGN PANRÉSISTANTS: NDM, KPC, OXA-48, OXA-23, P. aeruginosa XDR. Dernier recours.',
+      tol:'Hypokaliémie. Diarrhée. Transaminases.',
+      inter:"Peu d'interactions connues."
+    },
+    'ceftaroline': {
+      nom: 'Ceftaroline', classe: 'Céphalosporine 5G',
+      indications: {
+        'severe': { n:'600mg/12h (perf 1h)', l:'600mg/12h (perf 1h)', m:'400mg/12h (perf 1h)', s:'300mg/12h (perf 1h)', t:'200mg/12h', hdi:'200mg /24h après séance', eerc:'400mg/8h (perf 1h)' },
+        'peusevere': { n:'600mg/12h', l:'600mg/12h', m:'400mg/12h', s:'300mg/12h', t:'200mg/12h', eerc:'400mg/8h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 12mg/mL.',
+      admin:'Perfusion 1h.',
+      stab:'6h T° ambiante, 24h réfrigéré.',
+      incomp:'Pas de données de compatibilité avec autres ATB.',
+      effi:'SARM, PSDP, Streptococcus. Pneumonies, infections cutanées.',
+      tol:'Diarrhée, nausées. Neutropénie si traitement prolongé.',
+      inter:"Peu d'interactions."
+    },
+    'ciprofloxacine': {
+      nom: 'Ciprofloxacine', classe: 'Fluoroquinolone',
+      indications: {
+        'severe': { n:'400mg/8-12h (perf 1h)', l:'400mg/8-12h', m:'400mg/12h', s:'200mg/12h', t:'200mg/24h', hdi:'200mg /24h', eerc:'400mg/12h' },
+        'peusevere': { n:'400mg/12h', l:'400mg/12h', m:'200mg/12h', s:'200mg/12h', t:'100mg/12h', eerc:'200mg/12h' }
+      },
+      prep:'NaCl 0,9%, G5%. Solution prête à l\'emploi.',
+      admin:'Perfusion 1h (400mg), 30min (200mg).',
+      stab:'Stable 14j à T° ambiante.',
+      incomp:'Métal divalents (Mg2+, Al3+): ne pas mélanger. Héparine: séparée.',
+      effi:'BGN++, Pseudomonas. Bonne pénétration tissulaire. PK/PD: AUC/CMI.',
+      tol:'⚠️ Allongement QT. Tendinopathie (rare). Convulsions si IRC. Dysglycémie.',
+      inter:'AVK: ↑INR++. Théophylline: ↑toxicité. Antiacides: ↓absorption (oral).'
+    },
+    'clindamycine': {
+      nom: 'Clindamycine', classe: 'Lincosamide',
+      indications: {
+        'severe': { n:'600-900mg/8h', l:'600-900mg/8h', m:'600-900mg/8h', s:'600-900mg/8h', t:'600-900mg/8h', eerc:'600-900mg/8h' },
+        'peusevere': { n:'600mg/8h', l:'600mg/8h', m:'600mg/8h', s:'600mg/8h', t:'600mg/8h', eerc:'600mg/8h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 18mg/mL (dilution obligatoire).',
+      admin:'IVL 30-60min. Max 1,2g/h. PAS IVD (risque arrêt cardio).',
+      stab:'Stable 24h à T° ambiante.',
+      incomp:'Ampicilline, phénytoïne, barbituriques, aminophylline.',
+      effi:'Anaérobies++, cocci G+. Toxine streptococcique (choc toxique). Paludisme.',
+      tol:'⚠️⚠️ Colite pseudomembraneuse (Clostridium difficile). Diarrhée ++.',
+      inter:'Curares: potentialisation.'
+    },
+    'cloxacilline': {
+      nom: 'Cloxacilline', classe: 'Pénicilline M (anti-staphylococcique)',
+      indications: {
+        'severe': { n:'2g/4-6h (12g/j)', l:'2g/4-6h', m:'2g/4-6h', s:'1g/4-6h', t:'1g/6h', hdi:'1g/6h', eerc:'2g/4-6h' },
+        'peusevere': { n:'1g/6h', l:'1g/6h', m:'1g/6h', s:'500mg/6h', t:'500mg/8h', eerc:'1g/6h' }
+      },
+      prep:'NaCl 0,9% UNIQUEMENT. [C] max 20mg/mL.',
+      admin:'IVD (4-5min) ou IVL 30-60min. IVSE possible.',
+      stab:'Stable 8h à T° ambiante.',
+      incomp:'G5%: déconseillé. Aminosides: séparés.',
+      effi:'Staphylococcus SAMS uniquement. Endocardites, infections ostéo.',
+      tol:'Hépatite cholestatique (surveillance bilan hépatique). Leucopénie.',
+      inter:'AVK: ↑INR. MTX: ↑toxicité.'
+    },
+    'colistine': {
+      nom: 'Colistine (Colistiméthate)', classe: 'Polymyxine',
+      indications: {
+        'severe': { n:'Dose charge 9MUI puis 4,5MUI/12h (perf 1-2h)', l:'Dose charge 9MUI puis 4,5MUI/12h', m:'Dose charge 6MUI puis 2,25MUI/12h', s:'Dose charge 6MUI puis 1,5MUI/12h', t:'1,5MUI/24h (CI si ClCr<5)', hdi:'Dose charge 6MUI puis 1,5MUI après séance', eerc:'Dose charge 6MUI puis 2,25MUI/12h' },
+        'peusevere': { n:'3MUI/8h', l:'3MUI/8h', m:'2,25MUI/8h', s:'1,5MUI/12h', t:'1,5MUI/24h', eerc:'2,25MUI/8h' }
+      },
+      prep:'NaCl 0,9%. Reconstituer puis diluer (100mL). En MUI = millions UI.',
+      admin:'Perfusion 1-2h. Dose de charge obligatoire.',
+      stab:'8h après reconstitution.',
+      incomp:'Ne pas mélanger. Voie dédiée.',
+      effi:'🔴 BGN PAN-RÉSISTANTS UNIQUEMENT. Dosage sérique (résiduelle <2mg/L).',
+      tol:'⚠️⚠️⚠️ NÉPHROTOXICITÉ MAJEURE. Neurotoxicité. Surveillance quotidienne créatinine.',
+      inter:'Aminosides: néphrotoxicité++. Curares: potentialisation.'
+    },
+    'cotrimoxazole': {
+      nom: 'Cotrimoxazole (TMP-SMX)', classe: 'Sulfamide + Diaminopyrimidine',
+      indications: {
+        'severe': { n:'15-20mg/kg/j de TMP en 3-4 perf (infections sévères)', l:'15-20mg/kg/j TMP en 3-4 perf', m:'10-15mg/kg/j TMP', s:'5-10mg/kg/j TMP', t:'5mg/kg/j TMP', hdi:'5mg/kg/j TMP après séance', eerc:'10-15mg/kg/j TMP' },
+        'pneumocystose': { n:'15-20mg/kg/j de TMP en 3-4 perf ou voie orale', l:'15-20mg/kg/j TMP', m:'10-15mg/kg/j TMP', s:'5-10mg/kg/j TMP', t:'5mg/kg/j TMP', eerc:'10mg/kg/j TMP' },
+        'prophylaxie': { n:'1cp SS/j ou 1cp F/j 3×/sem', l:'1cp SS/j', m:'1cp SS/j', s:'1cp SS/j 3×/sem', t:'1cp SS/j 3×/sem', eerc:'1cp SS/j 3×/sem' }
+      },
+      prep:'G5% de préférence. [C] de TMP max 1mg/mL (solvant lipophile).',
+      admin:'Perfusion 1h minimum pour 1 ampoule.',
+      stab:'Précipite si T°<15°C. Vérifier limpidité.',
+      incomp:'Attention: solvant (PEG). CI si allergie sulfamides.',
+      effi:'Pneumocystis jirovecii, Nocardia, Listeria, Toxoplasma. Ratio TMP:SMX = 1:5.',
+      tol:'⚠️ Insuffisance rénale, hyperkaliémie (tubulaire). Cytopénies. Stevens-Johnson.',
+      inter:'AVK: ↑↑INR. MTX: ↑toxicité. Phénytoïne: ↑concentrations.'
+    },
+    'dalbavancine': {
+      nom: 'Dalbavancine', classe: 'Glycopeptide (2ème génération)',
+      indications: {
+        'severe': { n:'1500mg dose unique IV OU 1000mg J1 + 500mg J8', l:'1500mg dose unique', m:'1125mg dose unique', s:'750mg dose unique', t:'750mg dose unique', hdi:'750mg', eerc:'1125mg' },
+        'peusevere': { n:'1500mg dose unique', l:'1500mg dose unique', m:'1125mg dose unique', s:'750mg dose unique', t:'750mg dose unique', eerc:'1125mg' }
+      },
+      prep:'Eau PPI puis NaCl 0,9%. [C] final 1-5mg/mL.',
+      admin:'Perfusion 30min.',
+      stab:'48h après reconstitution réfrigéré.',
+      incomp:'Ne pas mélanger.',
+      effi:'Cocci G+ SARM et VISA. T1/2 très long (>7j). Infections ostéo, cutanées++.',
+      tol:'Bien toléré. Red man syndrome (rare si perf lente).',
+      inter:"Peu d'interactions."
+    },
+    'daptomycine': {
+      nom: 'Daptomycine', classe: 'Lipopeptide cyclique',
+      indications: {
+        'severe': { n:'8-12mg/kg/j (infections compliquées)', l:'8-12mg/kg/j', m:'6-8mg/kg/j', s:'6mg/kg/48h', t:'6mg/kg/48h', hdi:'6mg/kg après séance /48h', eerc:'8mg/kg/j' },
+        'peusevere': { n:'6mg/kg/j', l:'6mg/kg/j', m:'6mg/kg/j', s:'6mg/kg/48h', t:'6mg/kg/48h', eerc:'6mg/kg/j' }
+      },
+      prep:'NaCl 0,9% UNIQUEMENT (G5%: incompatible). [C] max 50mg/mL.',
+      admin:'IVD 2min ou IVL 30min.',
+      stab:'12h à T° ambiante, 48h réfrigéré.',
+      incomp:'G5%: incompatible. ReadyMed: incompatible.',
+      effi:'🔴 SARM, VISA, VRSA, entérocoques R. INUTILE pour pneumonies (inactivé surfactant).',
+      tol:'⚠️ Myopathie, rhabdomyolyse: CPK hebdomadaires. Pneumonie éosinophile.',
+      inter:'Statines: ↑myopathie (arrêt statines). Tobramycine: ↑Cmax.'
+    },
+    'ertapenem': {
+      nom: 'Ertapénem', classe: 'Carbapénème',
+      indications: {
+        'severe': { n:'1g/24h', l:'1g/24h', m:'1g/24h', s:'500mg/24h', t:'500mg/24h', hdi:'500mg/24h (après séance)', eerc:'1g/24h' },
+        'peusevere': { n:'1g/24h', l:'1g/24h', m:'1g/24h', s:'500mg/24h', t:'500mg/24h', eerc:'1g/24h' }
+      },
+      prep:'NaCl 0,9% ou eau PPI (reconstitution). JAMAIS G5%.',
+      admin:'IVL 30-60min.',
+      stab:'6h T° ambiante, 24h réfrigéré.',
+      incomp:'G5%: incompatible.',
+      effi:'BGN BLSE. PAS anti-Pseudomonas ni Acinetobacter. Couverture anaérobies. 1 injection/j.',
+      tol:'Bien toléré. Convulsions possibles (< imipénem).',
+      inter:'Valproate: ↓↓concentrations (CI relative).'
+    },
+    'erythromycine': {
+      nom: 'Érythromycine', classe: 'Macrolide',
+      indications: {
+        'severe': { n:'1g/6h (infections sévères: légionellose)', l:'1g/6h', m:'500mg/6h', s:'500mg/12h', t:'500mg/12h', hdi:'500mg/12h', eerc:'500mg/8h' },
+        'peusevere': { n:'500mg/8h', l:'500mg/8h', m:'500mg/8h', s:'250mg/8h', t:'250mg/12h', eerc:'500mg/8h' }
+      },
+      prep:'Eau PPI puis G5% ou NaCl (pH dépendant). [C] max 5mg/mL.',
+      admin:'Perfusion lente 60min (minimum). IVD INTERDITE.',
+      stab:'8h après préparation.',
+      incomp:'NaCl 0,9% à éviter (pH). Nombreuses incompatibilités.',
+      effi:'Légionellose, Mycoplasma, Chlamydia. Promotilité gastrique à faible dose.',
+      tol:'⚠️ Allongement QT. Toxicité GI. Cholestase. Thrombophlébite si IV.',
+      inter:'⚠️ Nombreuses interactions: statines++, ciclosporine, warfarine, amiodarone (QT).'
+    },
+    'fosfomycine': {
+      nom: 'Fosfomycine IV', classe: 'Acide phosphonique',
+      indications: {
+        'severe': { n:'12-24g/j en 3-4 perf (200mg/kg/j max)', l:'12-24g/j', m:'8-16g/j', s:'4-8g/j', t:'4g/j', hdi:'2-4g après séance', eerc:'8-12g/j' },
+        'peusevere': { n:'8-12g/j', l:'8-12g/j', m:'6-8g/j', s:'4-6g/j', t:'4g/j', eerc:'8g/j' }
+      },
+      prep:'G5% OBLIGATOIRE (haute osmolarité). [C]: 40-80mg/mL.',
+      admin:'Perfusion 1-2h. Surveiller natrémie (sel sodique: 14,4mEq/g).',
+      stab:'Stable 24h à T° ambiante.',
+      incomp:'Voie séparée recommandée.',
+      effi:'En association UNIQUEMENT (résistances rapides). Staph, BGN. Bonne diffusion osseuse.',
+      tol:'⚠️ Apport sodé important (surveillance TA, natrémie). Hypokaliémie.',
+      inter:'Calcium IV: interaction possible.'
+    },
+    'gentamicine': {
+      nom: 'Gentamicine', classe: 'Aminoside',
+      indications: {
+        'bgn': { n:'3-5mg/kg dose unique /24h', l:'3-5mg/kg/24h', m:'3mg/kg/24h', s:'2mg/kg/36-48h', t:'2mg/kg/48-72h', hdi:'2mg/kg après séance', eerc:'2-3mg/kg /24h' },
+        'cgp': { n:'3mg/kg dose unique /24h (synergie)', l:'3mg/kg/24h', m:'2-3mg/kg/24h', s:'2mg/kg/36h', t:'2mg/kg/48h', hdi:'2mg/kg après séance', eerc:'2-3mg/kg/24h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 3mg/mL.',
+      admin:'Perfusion 30min. DOSAGES OBLIGATOIRES.',
+      stab:'Stable 24h à T° ambiante.',
+      incomp:'⚠️ BÉTA-LACTAMINES: voies séparées (inactivation).',
+      effi:'Pic 30min fin perf: >10×CMI. Résiduelle: <0,5mg/mL (générale), <1mg/mL (endocardite).',
+      tol:'⚠️ Néphrotoxicité, ototoxicité (réversible partielle).',
+      inter:'Vanco/furosémide: toxicité++.'
+    },
+    'imipenem': {
+      nom: 'Imipénem + Cilastatine', classe: 'Carbapénème',
+      indications: {
+        'severe': { n:'1g/6-8h (perf 3h)', l:'1g/6-8h', m:'500mg/6h', s:'250-500mg/6h', t:'250mg/6h', hdi:'500mg après séance puis /12h', eerc:'500mg/6h' },
+        'peusevere': { n:'500mg/8h', l:'500mg/8h', m:'500mg/8h', s:'250mg/8h', t:'250mg/12h', eerc:'500mg/8h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 5mg/mL.',
+      admin:'Perfusion 3h (T>CMI++). IVD: risque convulsions ++.',
+      stab:'4h à T° ambiante.',
+      incomp:'Lactate Ringer: incompatible. Aminosides: séparés.',
+      effi:'BGN carbapénème-S, anaérobies. Instable en IVSE prolongée.',
+      tol:'⚠️⚠️ Seuil épileptogène le plus élevé des carbapénèmes. Nausées.',
+      inter:'Valproate: ↓↓↓ (éviter). Cyclosporine: neurotoxicité.'
+    },
+    'imipenem-relebactam': {
+      nom: 'Imipénem + Cilastatine + Relebactam', classe: 'Carbapénème + Inhibiteur',
+      indications: {
+        'severe': { n:'1,25g/6h (perf 30min)', l:'1,25g/6h', m:'1g/6h', s:'625mg/6h', t:'625mg/12h', hdi:'625mg/12h', eerc:'1g/6h' },
+        'peusevere': { n:'1,25g/6h', l:'1,25g/6h', m:'1g/6h', s:'625mg/6h', t:'625mg/12h', eerc:'1g/6h' }
+      },
+      prep:'NaCl 0,9%. [C] max 5mg/mL (imipénem).',
+      admin:'Perfusion 30min.',
+      stab:'4h T° ambiante.',
+      incomp:'Lactate Ringer incompatible.',
+      effi:'🔴 Pseudomonas aeruginosa R, KPC. Pas NDM ni OXA-48.',
+      tol:'Similaire à imipénem. Convulsions (moins fréquentes).',
+      inter:'Valproate: ↓↓. Ganciclovir: convulsions.'
+    },
+    'levofloxacine': {
+      nom: 'Lévofloxacine', classe: 'Fluoroquinolone',
+      indications: {
+        'severe': { n:'500mg/12h ou 750mg/24h (perf 1h)', l:'500mg/12h', m:'250mg/12h', s:'250mg/24h', t:'250mg/48h', hdi:'250mg/48h', eerc:'250mg/12h' },
+        'peusevere': { n:'500mg/24h', l:'500mg/24h', m:'250mg/24h', s:'250mg/48h', t:'125mg/48h', eerc:'250mg/24h' }
+      },
+      prep:'NaCl 0,9% ou G5%. Solution prête à l\'emploi (5mg/mL).',
+      admin:'Perfusion 1h (500mg) ou 1,5h (750mg). Protéger lumière.',
+      stab:'Stable 24h à T° ambiante (lumière).',
+      incomp:'Héparine: précipitation. Métal divalents.',
+      effi:'S. pneumoniae, Legionella, Mycoplasma. PK/PD: AUC/CMI. ATU légionellose.',
+      tol:'⚠️ Allongement QT. Tendinopathie. Dysglycémie. Neuropathie périphérique.',
+      inter:'AVK: ↑INR. Antidiabétiques: dysglycémie. Antiacides: ↓absorption (oral).'
+    },
+    'linezolide': {
+      nom: 'Linézolide', classe: 'Oxazolidinone',
+      indications: {
+        'severe': { n:'600mg/12h', l:'600mg/12h', m:'600mg/12h', s:'600mg/12h', t:'600mg/12h', hdi:'600mg/12h', eerc:'600mg/12h' },
+        'peusevere': { n:'600mg/12h', l:'600mg/12h', m:'600mg/12h', s:'600mg/12h', t:'600mg/12h', eerc:'600mg/12h' }
+      },
+      prep:'Solution prête à l\'emploi (2mg/mL, 300mL). Protéger lumière.',
+      admin:'Perfusion 30-120min.',
+      stab:'Ne pas congeler.',
+      incomp:'Amphotéricine B, chlorpromazine, diazépam, érythromycine, phénytoïne, TMP-SMX.',
+      effi:'SARM, VRE, SDRP. Bonne diffusion pulmonaire. Dosage plasmatique si IRC sévère.',
+      tol:'⚠️⚠️ Thrombopénie (NFS hebdomadaire). Anémie. IMAO partiel: interactions ICs +++.',
+      inter:'⚠️⚠️ IMAO partiel: CONTRE-INDIQUÉ avec sérotonine/adrénaline (serotonergie, poussées HTA). Limiter tyramine alimentaire.'
+    },
+    'meropenem': {
+      nom: 'Méropénem', classe: 'Carbapénème',
+      indications: {
+        'severe': { n:'2g/8h (perf 3h)', l:'2g/8h (perf 3h)', m:'2g/8h (perf 3h)', s:'1g/8h (perf 3h)', t:'500mg/12h', hdi:'1g après séance puis /24h', eerc:'1g/8h' },
+        'peusevere': { n:'1g/8h', l:'1g/8h', m:'1g/8h', s:'500mg/8h', t:'500mg/12h', eerc:'1g/8h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 50mg/mL.',
+      admin:'Perfusion 3h (T>CMI). IVD possible si urgence (500mg en 5min).',
+      stab:'6h T° ambiante, 24h réfrigéré.',
+      incomp:'Compatibilité limitée. Rincer voie.',
+      effi:'BGN BLSE, Pseudomonas, Acinetobacter. Meilleure stabilité imipénem. 3h perf = T>CMI max.',
+      tol:'Bien toléré. Seuil épileptogène plus bas qu\'imipénem.',
+      inter:'Valproate: ↓↓↓ (éviter absolument).'
+    },
+    'meropenem-vaborbactam': {
+      nom: 'Méropénem + Vaborbactam', classe: 'Carbapénème + Inhibiteur',
+      indications: {
+        'severe': { n:'4g/8h (perf 3h)', l:'4g/8h (perf 3h)', m:'2g/8h (perf 3h)', s:'1g/12h (perf 3h)', t:'1g/24h', hdi:'1g/24h', eerc:'2g/8h' },
+        'peusevere': { n:'4g/8h (perf 3h)', l:'4g/8h', m:'2g/8h', s:'1g/12h', t:'1g/24h', eerc:'2g/8h' }
+      },
+      prep:'NaCl 0,9%. Reconstitution + dilution. [C] max 8mg/mL (méropénem).',
+      admin:'Perfusion 3h obligatoire.',
+      stab:'4h T° ambiante, 22h réfrigéré.',
+      incomp:'Rincer voie. Administration seul.',
+      effi:'🔴 KPC exclusivement (pas NDM, OXA-48, Pseudomonas).',
+      tol:'Similaire méropénem. Céphalées possibles.',
+      inter:'Valproate: ↓↓↓.'
+    },
+    'metronidazole': {
+      nom: 'Métronidazole', classe: 'Nitroimidazolé',
+      indications: {
+        'severe': { n:'500mg/8h', l:'500mg/8h', m:'500mg/8h', s:'500mg/12h', t:'500mg/12h', hdi:'500mg/12h', eerc:'500mg/8h' },
+        'peusevere': { n:'500mg/8h', l:'500mg/8h', m:'500mg/8h', s:'500mg/12h', t:'500mg/12h', eerc:'500mg/8h' }
+      },
+      prep:'Solution prête à l\'emploi (5mg/mL). NaCl 0,9%.',
+      admin:'Perfusion 30-60min. Protéger lumière.',
+      stab:'Stable 24h à T° ambiante.',
+      incomp:'Aluminium: coloration brunâtre (sans perte efficacité). Ceftriaxone: compatible.',
+      effi:'Anaérobies stricts, Clostridiaceae, amibiase, giardiase, Trichomonas.',
+      tol:'Nausées. Goût métallique. Névrite périphérique (traitement prolongé). Encéphalopathie.',
+      inter:'AVK: ↑↑INR. Alcool: effet antabuse. Lithium: ↑toxicité.'
+    },
+    'ofloxacine': {
+      nom: 'Ofloxacine', classe: 'Fluoroquinolone',
+      indications: {
+        'severe': { n:'400mg/12h', l:'400mg/12h', m:'200mg/12h', s:'200mg/24h', t:'100mg/24h', hdi:'100mg/24h', eerc:'200mg/12h' },
+        'peusevere': { n:'200mg/12h', l:'200mg/12h', m:'200mg/24h', s:'100mg/24h', t:'100mg/48h', eerc:'200mg/24h' }
+      },
+      prep:'NaCl 0,9%. Solution prête à l\'emploi (2mg/mL).',
+      admin:'Perfusion 30-60min.',
+      stab:'Stable 24h.',
+      incomp:'Héparine.',
+      effi:'Spectre large. Moins actif que lévofloxacine sur pneumocoque.',
+      tol:'⚠️ Allongement QT. Tendinopathie. Convulsions si IRC.',
+      inter:'AVK: ↑INR. Antiacides: ↓absorption.'
+    },
+    'penicillineG': {
+      nom: 'Pénicilline G (Benzylpénicilline)', classe: 'Pénicilline naturelle',
+      indications: {
+        'severe': { n:'24MUI/j IVSE ou en 4-6 perf', l:'24MUI/j', m:'16MUI/j', s:'8MUI/j', t:'4MUI/j', hdi:'4MUI/j', eerc:'12-16MUI/j' },
+        'peusevere': { n:'12MUI/j', l:'12MUI/j', m:'8MUI/j', s:'4MUI/j', t:'2MUI/j', eerc:'8MUI/j' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 100 000UI/mL.',
+      admin:'IVSE ou perfusions 30-60min. Stabilité limites en IVSE.',
+      stab:'⚠️ 8-12h seulement en solution. Changer flacons régulièrement.',
+      incomp:'Aminosides: voies séparées. pH basique: incompatible avec nombreux médicaments.',
+      effi:'Streptocoques A/B, S. pneumoniae sensible, Treponema, Actinomyces. T>CMI: IVSE optimal.',
+      tol:'Allergie ++. Convulsions si doses élevées + IRC (neurotoxicité).',
+      inter:'AVK: ↑INR. Probénécide: ↑concentrations.'
+    },
+    'piperacilline': {
+      nom: 'Pipéracilline', classe: 'Uréidopénicilline',
+      indications: {
+        'severe': { n:'4g/8h ou 4g/6h', l:'4g/8h', m:'4g/8h', s:'2g/8h', t:'2g/12h', hdi:'2g/12h', eerc:'4g/8h' },
+        'peusevere': { n:'2g/8h', l:'2g/8h', m:'2g/8h', s:'2g/12h', t:'2g/24h', eerc:'2g/8h' }
+      },
+      prep:'NaCl 0,9%. [C] max 200mg/mL.',
+      admin:'IVD (3-5min) ou IVL 30min.',
+      stab:'12h T° ambiante.',
+      incomp:'Aminosides: inactivation in vitro.',
+      effi:'Pseudomonas. Moins utilisé seul depuis Tazocilline.',
+      tol:'Bonne tolérance. Hypokaliémie (apport sodé).',
+      inter:'Aminosides: inactivation si mélangés.'
+    },
+    'piperacilline-tazobactam': {
+      nom: 'Pipéracilline + Tazobactam', classe: 'Uréidopénicilline + Inhibiteur',
+      indications: {
+        'severe': { n:'4g/500mg/6-8h (perf 4h)', l:'4g/6-8h (perf 4h)', m:'4g/6-8h (perf 4h)', s:'2g/6h', t:'2g/8h', hdi:'2g/8h', eerc:'4g/8h (perf 4h)' },
+        'peusevere': { n:'4g/500mg/8h', l:'4g/8h', m:'4g/8h', s:'2g/8h', t:'2g/12h', eerc:'4g/8h' }
+      },
+      prep:'NaCl 0,9%. [C] max 200mg/mL (pipéracilline).',
+      admin:'Perfusion 4h (T>CMI optimal). Dose de charge possible 30min.',
+      stab:'12h T° ambiante si perf 4h: changer seringue/poche à mi-perf.',
+      incomp:'⚠️⚠️ Aminosides: voies séparées ABSOLUES (inactivation). Vancomycine: séparée.',
+      effi:'BGN BLSE partiel, Pseudomonas, anaérobies. IVSE ou perf prolongée = T>CMI.',
+      tol:'Hépatotoxicité (transaminases). Hypokaliémie. Leucopénie si >14j.',
+      inter:'Aminosides: inactivation si mélangés. Méthotrexate: ↑toxicité.'
+    },
+    'rifampicine': {
+      nom: 'Rifampicine', classe: 'Rifamycine',
+      indications: {
+        'severe': { n:'600mg/12h (association)', l:'600mg/12h', m:'600mg/12h', s:'600mg/12h', t:'450mg/12h', hdi:'600mg/12h', eerc:'600mg/12h' },
+        'tuberculose': { n:'10mg/kg/j (max 600mg)', l:'10mg/kg/j', m:'10mg/kg/j', s:'10mg/kg/j', t:'10mg/kg/j', eerc:'10mg/kg/j' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 6mg/mL (couleur rouge-orangé normal).',
+      admin:'Perfusion 30-60min.',
+      stab:'6h après préparation.',
+      incomp:'Diltiazem, ondansétron. Nombreuses incompatibilités physico-chimiques.',
+      effi:'TOUJOURS en association (résistances rapides). Staphylocoques, tuberculose, Legionella.',
+      tol:'⚠️⚠️ INDUCTEUR enzymatique PUISSANT (CYP3A4, P-gp). Coloration orangée urines/sécrétions. Hépatotoxicité.',
+      inter:'⚠️⚠️⚠️ TRÈS nombreuses: antirétroviraux, antifongiques azolés, AVK, ciclosporine, corticoïdes, contraceptifs oraux (↓↓↓ concentrations). Vérifier TOUTES les associations.'
+    },
+    'spiramycine': {
+      nom: 'Spiramycine', classe: 'Macrolide',
+      indications: {
+        'severe': { n:'1,5MUI/8h IV', l:'1,5MUI/8h', m:'1,5MUI/8h', s:'1,5MUI/12h', t:'1,5MUI/12h', hdi:'1,5MUI/12h', eerc:'1,5MUI/8h' },
+        'peusevere': { n:'1,5MUI/8h', l:'1,5MUI/8h', m:'1,5MUI/8h', s:'1,5MUI/12h', t:'1,5MUI/12h', eerc:'1,5MUI/8h' }
+      },
+      prep:'Eau PPI puis G5%. [C] max 5mg/mL.',
+      admin:'Perfusion 1h.',
+      stab:'Préparer extemporanément.',
+      incomp:'Ne pas mélanger à d\'autres médicaments.',
+      effi:'Toxoplasmose (grossesse++). Infections ORL/respi. Moins actif qu\'érythromycine sur légionellose.',
+      tol:'Bonne tolérance GI. Allongement QT (faible). Pas hépatotoxicité.',
+      inter:'Dopamine/lévodopa: possibles. Moins d\'interactions que érythromycine.'
+    },
+    'tedizolide': {
+      nom: 'Tédizolide', classe: 'Oxazolidinone (2ème génération)',
+      indications: {
+        'severe': { n:'200mg/24h', l:'200mg/24h', m:'200mg/24h', s:'200mg/24h', t:'200mg/24h', hdi:'200mg/24h', eerc:'200mg/24h' },
+        'peusevere': { n:'200mg/24h', l:'200mg/24h', m:'200mg/24h', s:'200mg/24h', t:'200mg/24h', eerc:'200mg/24h' }
+      },
+      prep:'Eau PPI reconstitution puis NaCl 0,9%. [C] 0,8mg/mL.',
+      admin:'Perfusion 1h.',
+      stab:'24h T° ambiante.',
+      incomp:'Pas d\'autres médicaments.',
+      effi:'SARM, VRE. 1 injection/j. Moins de toxicité hématologique que linézolide.',
+      tol:'NFS hebdomadaire recommandée. Moins de myélosuppression que linézolide.',
+      inter:'IMAO: éviter. Moins d\'interactions sérotonine que linézolide.'
+    },
+    'temocilline': {
+      nom: 'Témocilline', classe: 'Pénicilline (Methoxy-pénicilline)',
+      indications: {
+        'severe': { n:'2g/8h ou 6g/24h IVSE', l:'2g/8h', m:'2g/12h', s:'1g/12h', t:'1g/24h', hdi:'1g/24h après séance', eerc:'2g/8h' },
+        'peusevere': { n:'2g/12h', l:'2g/12h', m:'2g/12h', s:'1g/12h', t:'1g/24h', eerc:'2g/12h' }
+      },
+      prep:'NaCl 0,9%. [C] max 80mg/mL.',
+      admin:'IVL 30-60min ou IVSE.',
+      stab:'Stable 12h.',
+      incomp:'Données limitées.',
+      effi:'BGN BLSE, KPC partiel. PAS Pseudomonas, Acinetobacter, cocci G+. Spectre étroit.',
+      tol:'Bien toléré.',
+      inter:"Peu d'interactions."
+    },
+    'ticarcilline': {
+      nom: 'Ticarcilline', classe: 'Carboxypénicilline',
+      indications: {
+        'severe': { n:'15-20g/j en 4-6 perf', l:'15g/j', m:'12g/j', s:'8g/j', t:'4g/j', hdi:'4g/j', eerc:'12g/j' },
+        'peusevere': { n:'12g/j', l:'12g/j', m:'8g/j', s:'6g/j', t:'4g/j', eerc:'8g/j' }
+      },
+      prep:'NaCl 0,9%. [C] max 100mg/mL.',
+      admin:'IVL 30-60min.',
+      stab:'Stable 12h.',
+      incomp:'Aminosides: séparés.',
+      effi:'Pseudomonas (moins utilisé depuis tazocilline). Spectre BGN large.',
+      tol:'Apport sodé important. Hypokaliémie. Thrombopénie.',
+      inter:'Aminosides: inactivation si mélangés.'
+    },
+    'tigecycline': {
+      nom: 'Tigécycline', classe: 'Glycylcycline (Tétracycline)',
+      indications: {
+        'severe': { n:'Dose de charge 100mg puis 50mg/12h', l:'Dose de charge 100mg puis 50mg/12h', m:'Dose de charge 100mg puis 50mg/12h', s:'Dose de charge 100mg puis 50mg/12h', t:'Dose de charge 100mg puis 50mg/12h', hdi:'Dose de charge 100mg puis 50mg/12h', eerc:'Dose de charge 100mg puis 50mg/12h' },
+        'peusevere': { n:'Dose de charge 100mg puis 50mg/12h', l:'Dose de charge 100mg puis 50mg/12h', m:'Dose de charge 100mg puis 50mg/12h', s:'Dose de charge 100mg puis 50mg/12h', t:'Dose de charge 100mg puis 50mg/12h', eerc:'Dose de charge 100mg puis 50mg/12h' }
+      },
+      prep:'G5% ou NaCl 0,9%. [C] max 1mg/mL.',
+      admin:'Perfusion 30-60min.',
+      stab:'Stable 6h T° ambiante (lumière).',
+      incomp:'Amphotéricine B, méthylprednisolone, voriconazole: incompatibles.',
+      effi:'🔴 EN ASSOCIATION si BGN résistants, SARM, anaérobies, Acinetobacter. PAS Pseudomonas, Proteus. Mauvaise diffusion sanguine (Cmax faible).',
+      tol:'⚠️ Nausées++, vomissements (prémédication antiémétique). Hépatotoxicité.',
+      inter:'AVK: surveillance INR. Contraceptifs: ↓efficacité.'
+    },
+    'tobramycine': {
+      nom: 'Tobramycine', classe: 'Aminoside',
+      indications: {
+        'bgn': { n:'5-7mg/kg dose unique /24h', l:'5-7mg/kg/24h', m:'3-5mg/kg/24h', s:'2-3mg/kg/36-48h', t:'2mg/kg/48-72h', hdi:'2mg/kg après séance', eerc:'2-3mg/kg/24h' },
+        'cgp': { n:'3mg/kg /24h (synergie)', l:'3mg/kg/24h', m:'2-3mg/kg/24h', s:'2mg/kg/36h', t:'2mg/kg/48h', hdi:'2mg/kg après séance', eerc:'2-3mg/kg/24h' }
+      },
+      prep:'NaCl 0,9% ou G5%. [C] max 3mg/mL.',
+      admin:'Perfusion 30min. DOSAGES OBLIGATOIRES.',
+      stab:'Stable 24h.',
+      incomp:'⚠️ BÉTA-LACTAMINES: inactivation. Voies SÉPARÉES.',
+      effi:'Pseudomonas++ (plus actif que gentamicine). Pic >10×CMI. Résiduelle <0,5mg/mL.',
+      tol:'⚠️ Néphrotoxicité, ototoxicité.',
+      inter:'Vanco/furosémide: toxicité++.'
+    },
+    'vancomycine': {
+      nom: 'Vancomycine', classe: 'Glycopeptide',
+      indications: {
+        'severe': { n:'25-30mg/kg dose de charge, puis IVSE 30-45mg/kg/j (objectif AUC/CMI 400-600)', l:'IVSE 30-40mg/kg/j', m:'IVSE 20-25mg/kg/j', s:'IVSE 15-20mg/kg/j', t:'IVSE 10-15mg/kg/j', hdi:'1g après séance (dosage résiduelle)', eerc:'IVSE 15-25mg/kg/j' },
+        'peusevere': { n:'Dose de charge 25mg/kg puis IVSE 25-30mg/kg/j', l:'IVSE 20-30mg/kg/j', m:'IVSE 15-20mg/kg/j', s:'IVSE 10-15mg/kg/j', t:'IVSE 10mg/kg/j', hdi:'500mg-1g après séance', eerc:'IVSE 15-20mg/kg/j' }
+      },
+      prep:'G5% ou NaCl 0,9%. [C] IVSE max 5mg/mL. [C] bolus max 5mg/mL (lent).',
+      admin:'IVSE de référence. Si bolus: JAMAIS IVD (choc anaphylactoïde). Perf >1h.',
+      stab:'96h à T° ambiante, 14j réfrigéré.',
+      incomp:'Pénicillines: séparées. Héparine: précipitation. Nombreuses incompatibilités.',
+      effi:'🔴 DOSAGE AUC/CMI OBLIGATOIRE (objectif 400-600 mg.h/L). SARM, SCN, entérocoques. IVSE = gold standard.',
+      tol:'⚠️⚠️ Néphrotoxicité (surtout si aminosides). Neutropénie. Red man syndrome (si perfusion trop rapide).',
+      inter:'Aminosides: néphrotoxicité++. Furosémide: ↑néphrotoxicité. Bloquants neuromusculaires: ↑effet.'
+    }
+  };
+
+  // ══════════════════════════════════════════════════════════
+  // LOGIQUE APPLICATIVE
+  // ══════════════════════════════════════════════════════════
+
+  let currentMode = 'calcul';
+
+  function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('btnModeCalcul').classList.toggle('active', mode === 'calcul');
+    document.getElementById('btnModeDirect').classList.toggle('active', mode === 'direct');
+    document.getElementById('modeCalcul').classList.toggle('hidden', mode !== 'calcul');
+    document.getElementById('modeDirect').classList.toggle('hidden', mode !== 'direct');
+  }
+
+  function updateIndications() {
+    const atb = document.getElementById('atb').value;
+    const sel = document.getElementById('indication');
+    const current = sel.value;
+    sel.innerHTML = '';
+    const indications = (atb && INDICATIONS_PAR_ATB[atb]) 
+      ? INDICATIONS_PAR_ATB[atb] 
+      : ['severe', 'peusevere'];
+    indications.forEach(ind => {
+      const opt = document.createElement('option');
+      opt.value = ind;
+      opt.textContent = NOMS_INDICATIONS[ind] || ind;
+      sel.appendChild(opt);
+    });
+    if (indications.includes(current)) sel.value = current;
+  }
+
+  function getStade(clcr) {
+    if (clcr >= 90) return { code: 'n', label: 'Normale', cl: 'normal', css: 'normal' };
+    if (clcr >= 60) return { code: 'l', label: 'Légèrement diminuée', cl: 'legere', css: 'legere' };
+    if (clcr >= 30) return { code: 'm', label: 'Modérément diminuée', cl: 'moderee', css: 'moderee' };
+    if (clcr >= 15) return { code: 's', label: 'Sévèrement diminuée', cl: 'severe', css: 'severe' };
+    return { code: 't', label: 'Terminale / Dialyse', cl: 'terminale', css: 'terminale' };
+  }
+
+  function calculer() {
+    const atb = document.getElementById('atb').value;
+    const indication = document.getElementById('indication').value;
+    const dialyse = document.getElementById('dialyse').value;
+
+    if (!atb) {
+      alert('Veuillez sélectionner un antibiotique');
+      return;
+    }
+
+    let clcr = 0;
+    if (dialyse === 'non') {
+      if (currentMode === 'direct') {
+        clcr = parseFloat(document.getElementById('clcrDirect').value);
+        if (!clcr || clcr <= 0) { alert('Saisir la clairance'); return; }
+      } else {
+        const vol = parseFloat(document.getElementById('volU').value);
+        const duree = parseFloat(document.getElementById('duree').value);
+        const creatU = parseFloat(document.getElementById('creatU').value);
+        const creatP = parseFloat(document.getElementById('creatP').value);
+        if (!vol || !creatU || !creatP) { alert('Remplir tous les champs'); return; }
+        clcr = (vol / 1000 * creatU) / (duree * 60 * creatP / 1000);
+      }
+    }
+
+    const d = DB[atb];
+    if (!d) { alert('Molécule non trouvée'); return; }
+
+    const st = getStade(clcr);
+    const dosageMap = d.indications[indication] || d.indications['severe'] || {};
+
+    let pos = '', eerc_pos = '', hdi_pos = '';
+    if (dialyse === 'eerc') {
+      eerc_pos = dosageMap.eerc || 'NC — Consulter pharmacien';
+    } else if (dialyse === 'hdi') {
+      hdi_pos = dosageMap.hdi || 'NC — Consulter pharmacien';
+    } else {
+      pos = dosageMap[st.code] || 'NC — Consulter pharmacien';
+    }
+
+    // Affichage
+    document.getElementById('results-empty').classList.add('hidden');
+    document.getElementById('results-content').classList.remove('hidden');
+    document.getElementById('results-content').innerHTML = buildResult(d, st, clcr, dialyse, pos, eerc_pos, hdi_pos, indication);
+    document.getElementById('results-content').style.animation = 'none';
+    requestAnimationFrame(() => { document.getElementById('results-content').style.animation = 'fadeUp .3s ease'; });
+  }
+
+  function buildResult(d, st, clcr, dialyse, pos, eerc_pos, hdi_pos, indication) {
+    // Bloc fonction rénale
+    let frBlock = '';
+    if (dialyse === 'eerc') {
+      frBlock = `<div class="fr-badge eer"><div class="fr-label">Épuration Extra-Rénale</div><div class="fr-value eer">EERC Active</div><div class="fr-sub">CVVH / CVVHDF — Clairance native non pertinente</div></div>`;
+    } else if (dialyse === 'hdi') {
+      frBlock = `<div class="fr-badge eer"><div class="fr-label">Épuration Extra-Rénale</div><div class="fr-value eer">HDI Active</div><div class="fr-sub">Hémodialyse Intermittente — Administrer après séance</div></div>`;
+    } else {
+      frBlock = `<div class="fr-badge ${st.css}">
+        <div class="fr-label">Clairance rénale mesurée</div>
+        <div class="fr-value ${st.css}">${clcr.toFixed(1)} <span style="font-size:16px;font-weight:400">mL/min</span></div>
+        <div class="fr-sub">${st.label}</div>
+      </div>`;
+    }
+
+    // Bloc posologie
+    let doseBlock = '';
+    if (dialyse === 'eerc') {
+      doseBlock = `<div class="dose-value" style="border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.05);">
+        <div class="dose-value-label" style="color:var(--purple)">⚠️ Posologie EERC</div>
+        ${eerc_pos}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(251,146,60,.06);border-radius:6px;">
+        ℹ️ Utiliser UNIQUEMENT la posologie EERC ci-dessus
+      </div>`;
+    } else if (dialyse === 'hdi') {
+      doseBlock = `<div class="dose-value" style="border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.05);">
+        <div class="dose-value-label" style="color:var(--purple)">⚠️ Posologie HDI</div>
+        ${hdi_pos}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(251,146,60,.06);border-radius:6px;">
+        ℹ️ Administrer APRÈS la séance d'hémodialyse (sauf mention contraire)
+      </div>`;
+    } else {
+      doseBlock = `<div class="dose-value">
+        <div class="dose-value-label">Posologie adaptée (ClCr ${clcr.toFixed(1)} mL/min)</div>
+        ${pos}
+      </div>`;
+    }
+
+    return `
+      <div class="card result-block" style="margin-bottom:14px;">
+        <div class="card-title">Fonction Rénale</div>
+        ${frBlock}
+      </div>
+
+      <div class="card result-block" style="margin-bottom:14px;">
+        <div class="card-title">Posologie Recommandée</div>
+        <div class="dose-card">
+          <div class="dose-molecule">${d.nom}</div>
+          <div class="dose-classe">${d.classe}</div>
+        </div>
+        <div class="dose-indication">📋 ${NOMS_INDICATIONS[indication] || indication}</div>
+        ${doseBlock}
+      </div>
+
+      <div class="card result-block" style="margin-bottom:14px;">
+        <div class="card-title">Précautions d'Emploi</div>
+        <div class="prec-item prep"><div class="prec-title">Préparation</div><div class="prec-text">${d.prep}</div></div>
+        <div class="prec-item admin"><div class="prec-title">Administration</div><div class="prec-text">${d.admin}</div></div>
+        <div class="prec-item stab"><div class="prec-title">Stabilité</div><div class="prec-text">${d.stab}</div></div>
+        <div class="prec-item incomp"><div class="prec-title">⚠️ Incompatibilités</div><div class="prec-text">${d.incomp}</div></div>
+        <div class="prec-item effi"><div class="prec-title">Surveillance Efficacité</div><div class="prec-text">${d.effi}</div></div>
+        <div class="prec-item tol"><div class="prec-title">⚠️ Surveillance Tolérance</div><div class="prec-text">${d.tol}</div></div>
+        <div class="prec-item inter"><div class="prec-title">Interactions</div><div class="prec-text">${d.inter}</div></div>
+      </div>
+
+      <div class="disclaimer">
+        <strong>⚠️ Avertissement</strong> — Aide à la décision uniquement. Ne remplace pas le jugement clinique. Consulter infectiologue/pharmacien si doute.
+        <br>Sources : Adaptation Antibiotiques CH Robert Boulin · GPR · OMEDIT · SPILF/SFAR/SRLF
+      </div>
+    `;
+  }
+
+  function resetForm() {
+    document.getElementById('volU').value = '';
+    document.getElementById('creatU').value = '';
+    document.getElementById('creatP').value = '';
+    document.getElementById('clcrDirect').value = '';
+    document.getElementById('atb').value = '';
+    document.getElementById('dialyse').value = 'non';
+    updateIndications();
+    document.getElementById('results-empty').classList.remove('hidden');
+    document.getElementById('results-content').classList.add('hidden');
+  }
+
+  // Init
+  document.getElementById('volU').value = '1500';
+  document.getElementById('creatU').value = '4420';
+  document.getElementById('creatP').value = '110';
+  document.getElementById('atb').value = 'vancomycine';
+  updateIndications();
+
+  // Charger depuis Supabase (fallback local si indispo)
+  loadFromSupabase();
+
+  </script>
+</body>
+</html>
