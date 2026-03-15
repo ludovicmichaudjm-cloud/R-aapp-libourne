@@ -29,6 +29,8 @@ const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
   auth: { persistSession: true, autoRefreshToken: true },
   realtime: { params: { eventsPerSecond: 10 } }
 });
+// Alias global pour compatibilité avec tout le code
+const supabaseClient = sbClient;
 
 let currentUser     = null;
 let userRole        = null;
@@ -3312,7 +3314,7 @@ console.log('✅ Gestionnaire d\'utilisateurs chargé');
 <script>
 // ═══ AUTH ═══
 const USERS={'admin':{pass:'rea2025!',role:'admin',name:'Administrateur',initials:'AD'},'equipe':{pass:'rea2025',role:'reader',name:'Équipe',initials:'EQ'}};
-currentUser=null;
+let currentUser=null;
 function doLogin(){
   const u=document.getElementById('input-user').value.trim().toLowerCase();
   const p=document.getElementById('input-pass').value;
@@ -3966,7 +3968,7 @@ tick();setInterval(tick,1000);
 <!-- JavaScript -->
 <script>
 allUsers = [];
-isEditMode = false;
+let isEditMode = false;
 
 // Charger la liste des utilisateurs
 async function loadUsersList() {
@@ -4675,7 +4677,7 @@ const PDF_URLS = {
 };
 
 // Titres des documents PDF
-PDF_TITLES = {
+const PDF_TITLES = {
   'protocole-sedation': 'Protocole sédation-analgésie 2025',
   'delirium': 'Prévention et prise en charge du delirium',
   'sevrage-vm': 'Sevrage de la ventilation mécanique',
@@ -4852,7 +4854,7 @@ function switchTab(section,tabId,btn){
 // openExternalTool defined above
 
 // ═══ VIEWER ═══
-DOCS={
+const DOCS={
   'sdra-ventilation':{type:'ppt',title:'SDRA — Physiopathologie et ventilation',meta:{Auteur:'Dr Dupont',Date:'Janvier 2025',Format:'42 slides',Version:'v3.0'},
     toc:['Définitions Berlin 2012','Physiopathologie','Objectifs ventilatoires','Paramètres cibles','Décubitus ventral','Curarisation','Conclusion'],
     slides:[
@@ -5217,7 +5219,7 @@ tick();setInterval(tick,1000);
 <!-- JavaScript -->
 <script>
 allUsers = [];
-isEditMode = false;
+let isEditMode = false;
 
 // Charger la liste des utilisateurs
 async function loadUsersList() {
