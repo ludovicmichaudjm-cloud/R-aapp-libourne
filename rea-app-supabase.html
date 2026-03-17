@@ -537,8 +537,7 @@ console.log('✅ Supabase initialisé');
     <div class="form-group"><label class="form-label">Mot de passe</label><div class="form-input-wrap"><input class="form-input" id="input-pass" type="password" placeholder="••••••••" style="padding-right:42px" autocomplete="current-password"/><button class="form-eye" id="eye-btn" onclick="toggleEye()" type="button">👁</button></div></div>
     <button class="login-btn" id="login-btn" onclick="doLogin()"><span id="login-btn-text">Se connecter</span></button>
     <div class="login-error" id="login-error">❌ Identifiant ou mot de passe incorrect</div>
-    <div class="login-separator"><span>ou</span></div>
-    <button class="login-guest-btn" onclick="loginAs('reader','Équipe','equipe','EQ')">👥 Accès lecteur — Personnel du service</button>
+
     <div class="login-footer">Accès sécurisé · RéaApp v1.0</div>
   </div>
 </div>
@@ -2731,7 +2730,7 @@ console.log('✅ Gestionnaire de documents chargé');
 // Charger les statistiques — Supabase
 async function loadStats() {
   try {
-    const { data: docs, error } = await supabase
+    const { data: docs, error } = await sbClient
       .from('documents').select('*').eq('actif', true);
     if (error) throw error;
 
@@ -3312,260 +3311,6 @@ console.log('✅ Gestionnaire d\'utilisateurs chargé');
 </div>
 
 <script>
-// ═══ AUTH ═══
-const USERS={'admin':{pass:'rea2025!',role:'admin',name:'Administrateur',initials:'AD'},'equipe':{pass:'rea2025',role:'reader',name:'Équipe',initials:'EQ'}};
-currentUser=null;
-function doLogin(){
-  const u=document.getElementById('input-user').value.trim().toLowerCase();
-  const p=document.getElementById('input-pass').value;
-  const btn=document.getElementById('login-btn');
-  const err=document.getElementById('login-error');
-  err.classList.remove('show');btn.disabled=true;
-  document.getElementById('login-btn-text').textContent='Connexion…';
-  setTimeout(()=>{
-    if(USERS[u]&&USERS[u].pass===p){loginAs(USERS[u].role,USERS[u].name,u,USERS[u].initials);}
-    else{err.classList.add('show');btn.disabled=false;document.getElementById('login-btn-text').textContent='Se connecter';}
-  },600);
-}
-function loginAs(role,name,username,initials){
-  currentUser={role,name,username,initials:initials||name.slice(0,2).toUpperCase()};
-  applyUserUI();
-  document.getElementById('login-screen').classList.add('hidden');
-  document.getElementById('app').classList.add('visible');
-  showPage('accueil');
-}
-function doLogout(){
-  currentUser=null;
-  document.getElementById('user-dropdown').classList.remove('open');
-  document.getElementById('app').classList.remove('visible');
-  document.getElementById('login-screen').classList.remove('hidden');
-  document.getElementById('input-user').value='';document.getElementById('input-pass').value='';
-  document.getElementById('login-error').classList.remove('show');
-  document.getElementById('login-btn').disabled=false;document.getElementById('login-btn-text').textContent='Se connecter';
-}
-function applyUserUI(){
-  const isAdmin=currentUser.role==='admin';
-  const av=document.getElementById('top-avatar');
-  av.textContent=currentUser.initials;av.className='user-avatar '+(isAdmin?'admin':'reader');
-  document.getElementById('top-name').textContent=currentUser.name;
-  document.getElementById('top-role').textContent=isAdmin?'Administrateur':'Lecteur';
-  document.getElementById('dd-role-label').textContent=isAdmin?'Administrateur':'Lecteur';
-  const badge=document.getElementById('dd-role-badge');badge.textContent=isAdmin?'Admin':'Lecteur';badge.className='role-badge '+(isAdmin?'admin':'reader');
-  document.getElementById('admin-divider').style.display=isAdmin?'block':'none';
-  document.getElementById('admin-nav-section').style.display=isAdmin?'block':'none';
-  document.getElementById('sidebar-role-label').textContent=isAdmin?'🔐 Admin':'👁 Lecteur';
-  const h=new Date().getHours();const g=h<12?'Bonjour':h<18?'Bon après-midi':'Bonsoir';
-  document.getElementById('greeting').textContent=`${g}, ${currentUser.name}`;
-}
-
-// ═══ VIDEO YOUTUBE ═══
-// URLs YouTube cachées dans le code (remplacer par vos vrais liens après upload)
-const VIDEO_DB = {
-  // Format : 'id': { youtubeId: 'XXXXXXXXXXX', title: '...', duration: '00:00' }
-  // Exemples d'emplacements à remplir :
-  // 'intubation': { youtubeId: 'VOTRE_ID_YOUTUBE', title: 'Intubation oro-trachéale', duration: '18:24' },
-};
-
-function openVideo(videoId, title) {
-  const video = VIDEO_DB[videoId];
-  if (video && video.youtubeId) {
-    // Vidéo disponible → Ouvrir le lecteur
-    document.getElementById('video-modal-title').textContent = video.title || title;
-    // URL YouTube avec paramètres de sécurité (pas de suggestions, pas de logo cliquable)
-    const ytUrl = `https://www.youtube.com/embed/${video.youtubeId}?rel=0&modestbranding=1&autoplay=1`;
-    document.getElementById('video-iframe').src = ytUrl;
-    document.getElementById('video-modal').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  } else {
-    // Emplacement réservé → Message d'info
-    alert(`📹 "${title}"\n\nCette vidéo n'est pas encore disponible.\n\nPour l'ajouter :\n1. Uploadez votre vidéo sur YouTube (non listée)\n2. Récupérez l'ID YouTube\n3. Ajoutez-le dans VIDEO_DB dans le code`);
-  }
-}
-
-function closeVideo() {
-  document.getElementById('video-modal').classList.remove('open');
-  document.getElementById('video-iframe').src = '';
-  document.body.style.overflow = '';
-}
-
-// Fermer la vidéo en cliquant en dehors
-document.getElementById('video-modal')?.addEventListener('click', e => {
-  if (e.target.id === 'video-modal') closeVideo();
-});
-
-// ═══ PDF VIEWER ═══
-// URLs Firebase des PDFs (à remplir après déploiement)
-const PDF_URLS = {
-  // Format : 'id': 'https://reaapp-libourne.web.app/pdfs/nom-du-fichier.pdf'
-  // Exemples à configurer après Firebase :
-  // 'protocole-sedation': 'https://reaapp-libourne.web.app/pdfs/protocole-sedation.pdf',
-  // 'vm-sdra': 'https://reaapp-libourne.web.app/pdfs/vm-sdra.pdf',
-};
-
-// Titres des documents PDF
-const PDF_TITLES = {
-  'protocole-sedation': 'Protocole sédation-analgésie 2025',
-  'delirium': 'Prévention et prise en charge du delirium',
-  'sevrage-vm': 'Sevrage de la ventilation mécanique',
-  'vm-sdra': 'Ventilation mécanique protectrice — SDRA',
-  'vni': 'Ventilation non invasive (VNI)',
-  'decubitus': 'Décubitus ventral — Procédure et surveillance',
-  'antibio-serv': 'Antibiothérapie probabiliste',
-  'antifongiques-proto': 'Antifongiques — Indications et posologies',
-  'nutrition-proto': 'Nutrition entérale et parentérale',
-  'transfusion': 'Transfusion — Seuils et indications',
-  'ventile-surveillance': 'Surveillance du patient ventilé',
-  'vvc-picc': 'Gestion des voies veineuses centrales',
-  'rass-cpot': 'Score RASS et CPOT',
-  'drogues-vasoactives': 'Drogues vasoactives',
-};
-
-function openPdfViewer(docId) {
-  const url = PDF_URLS[docId];
-  const title = PDF_TITLES[docId] || 'Document';
-  document.getElementById('pdf-modal-title').textContent = title;
-
-  if (url) {
-    // PDF disponible → afficher dans iframe (lecture seule, pas de download)
-    document.getElementById('pdf-placeholder').style.display = 'none';
-    const container = document.getElementById('pdf-frame-container');
-    // Utiliser Google Docs viewer pour bloquer le téléchargement
-    const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-    container.innerHTML = `<iframe src="${viewerUrl}" style="width:100%;height:100%;border:none"></iframe>`;
-  } else {
-    // PDF pas encore uploadé → afficher placeholder
-    document.getElementById('pdf-placeholder').style.display = 'block';
-    document.getElementById('pdf-placeholder-url').textContent = `pdfs/${docId}.pdf — À uploader sur Supabase`;
-    document.getElementById('pdf-frame-container').innerHTML = '';
-    document.getElementById('pdf-frame-container').appendChild(document.getElementById('pdf-placeholder'));
-  }
-  document.getElementById('pdf-modal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closePdfModal() {
-  document.getElementById('pdf-modal').classList.remove('open');
-  document.getElementById('pdf-frame-container').innerHTML = '<div class="pdf-placeholder" id="pdf-placeholder"><div class="pdf-placeholder-icon">📄</div><div class="pdf-placeholder-title">Document non encore uploadé</div><div class="pdf-placeholder-desc">Ce document sera disponible une fois uploadé sur Supabase.</div><div class="pdf-placeholder-url" id="pdf-placeholder-url">URL Supabase à configurer</div></div>';
-  document.body.style.overflow = '';
-}
-
-// Fermer avec Escape
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    if (document.getElementById('video-modal').classList.contains('open')) closeVideo();
-    if (document.getElementById('pdf-modal').classList.contains('open')) closePdfModal();
-  }
-});
-
-
-const SEARCH_INDEX = [
-  // Protocoles
-  {id:'protocole-sedation',type:'protocole',title:'Protocole sédation-analgésie 2025',desc:'Évaluation RASS/CPOT, propofol vs midazolam, sevrage',page:'protocoles'},
-  {id:'delirium',type:'protocole',title:'Prévention et prise en charge du delirium',desc:'CAM-ICU, mesures non pharmacologiques, halopéridol',page:'protocoles'},
-  {id:'vm-sdra',type:'protocole',title:'Ventilation mécanique protectrice — SDRA',desc:'6 ml/kg, PEEP adaptée, Pplat ≤ 30 cmH₂O',page:'protocoles'},
-  {id:'vni',type:'protocole',title:'Ventilation non invasive (VNI)',desc:'Indications, modalités, surveillance',page:'protocoles'},
-  {id:'decubitus',type:'protocole',title:'Décubitus ventral',desc:'Procédure, surveillance, indications SDRA sévère',page:'protocoles'},
-  {id:'bse-reco',type:'protocole',title:'Antibiothérapie probabiliste',desc:'Recommandations service, écologie locale',page:'protocoles'},
-  {id:'nutrition-proto',type:'protocole',title:'Nutrition entérale et parentérale',desc:'Indications, protocoles, surveillance',page:'protocoles'},
-  // Cours
-  {id:'sdra-ventilation',type:'cours',title:'SDRA — Physiopathologie et ventilation',desc:'Berlin 2012, ventilation protectrice, PEEP',page:'cours'},
-  {id:'choc-septique-cours',type:'cours',title:'Choc septique — Diagnostic et stratégie',desc:'Sepsis-3, vasopresseurs, antibiothérapie',page:'cours'},
-  {id:'nutrition-rea',type:'cours',title:'Nutrition en réanimation — ESPEN 2023',desc:'Recommandations, calcul besoins, voies d\'administration',page:'cours'},
-  {id:'antibio-proba',type:'cours',title:'Antibiothérapie probabiliste en réanimation',desc:'Stratégies, écologie, désescalade',page:'cours'},
-  // Outils
-  {id:'antibiotiques',type:'outil',title:'Adaptation Antibiotiques',desc:'42 molécules, fonction rénale, EER',page:'outils'},
-  {id:'antiviraux',type:'outil',title:'Adaptation Antiviraux',desc:'Posologies selon fonction rénale',page:'outils'},
-  {id:'antifongiques',type:'outil',title:'Adaptation Antifongiques',desc:'Surveillance thérapeutique',page:'outils'},
-  {id:'incompatibilites',type:'outil',title:'Incompatibilités Médicamenteuses',desc:'Compatibilités voies centrales',page:'outils'},
-  {id:'uree',type:'outil',title:'Index Excrétion Urée Urinaire',desc:'Évaluation nutritionnelle, catabolisme',page:'outils'},
-  {id:'allergie',type:'outil',title:'Allergie Bêta-lactamines',desc:'Alternatives antibiotiques',page:'outils'},
-  // Biblio
-  {id:'ventilation-sdra',type:'biblio',title:'NEJM — Ventilation protectrice en SDRA 2024',desc:'Low tidal volume, PEEP, prone positioning',page:'veille'},
-  {id:'acurasys',type:'biblio',title:'ACURASYS — Curarisation précoce SDRA',desc:'NEJM 2010, cisatracurium, mortalité',page:'veille'},
-  {id:'proseva',type:'biblio',title:'PROSEVA — Décubitus ventral SDRA sévère',desc:'NEJM 2013, réduction mortalité',page:'veille'},
-  {id:'revues',type:'biblio',title:'Revues de la littérature',desc:'Revues narratives et systématiques du service',page:'veille'}
-];
-
-function openSearchModal(){
-  document.getElementById('search-modal').classList.add('open');
-  document.getElementById('search-modal-input').focus();
-  document.body.style.overflow='hidden';
-}
-
-function closeSearchModal(){
-  document.getElementById('search-modal').classList.remove('open');
-  document.getElementById('search-modal-input').value='';
-  document.getElementById('search-results').innerHTML='<div class="search-empty"><div style="font-size:32px;margin-bottom:12px">🔍</div><p style="font-size:14px">Tapez pour rechercher</p></div>';
-  document.body.style.overflow='';
-}
-
-function performSearch(query){
-  if(!query||query.length<2){
-    document.getElementById('search-results').innerHTML='<div class="search-empty"><div style="font-size:32px;margin-bottom:12px">🔍</div><p style="font-size:14px">Tapez au moins 2 caractères</p></div>';
-    return;
-  }
-  const q=query.toLowerCase();
-  const results=SEARCH_INDEX.filter(item=>
-    item.title.toLowerCase().includes(q)||
-    item.desc.toLowerCase().includes(q)
-  );
-  if(results.length===0){
-    document.getElementById('search-results').innerHTML='<div class="search-empty"><div style="font-size:32px;margin-bottom:12px">😕</div><p style="font-size:14px">Aucun résultat pour "'+query+'"</p></div>';
-    return;
-  }
-  const html=results.map(r=>`
-    <div class="search-result-item" onclick="goToResult('${r.id}','${r.page}','${r.type}')">
-      <div class="search-result-title">
-        <span class="search-result-type ${r.type}">${r.type.toUpperCase()}</span>
-        ${r.title}
-      </div>
-      <div class="search-result-desc">${r.desc}</div>
-    </div>
-  `).join('');
-  document.getElementById('search-results').innerHTML=html;
-}
-
-function goToResult(id,page,type){
-  closeSearchModal();
-  if(type==='outil'){
-    showPage(page);
-    setTimeout(()=>openExternalTool(id),300);
-  }else if(type==='protocole'||type==='cours'||type==='biblio'){
-    showPage(page);
-    setTimeout(()=>openDoc(id),300);
-  }else{
-    showPage(page);
-  }
-}
-
-document.getElementById('search-modal-input')?.addEventListener('input',e=>performSearch(e.target.value));
-document.addEventListener('keydown',e=>{
-  if((e.metaKey||e.ctrlKey)&&e.key==='k'){
-    e.preventDefault();
-    openSearchModal();
-  }
-  if(e.key==='Escape'&&document.getElementById('search-modal').classList.contains('open')){
-    closeSearchModal();
-  }
-});
-document.getElementById('search-modal')?.addEventListener('click',e=>{
-  if(e.target.id==='search-modal')closeSearchModal();
-});
-
-// ═══ NAV ═══
-function showPage(id){
-  if(id==='admin'&&currentUser?.role!=='admin')return;
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+id)?.classList.add('active');
-  document.querySelector(`[data-page="${id}"]`)?.classList.add('active');
-}
-function switchTab(section,tabId,btn){
-  document.querySelectorAll(`#tabs-${section} .tab-btn`).forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll(`#page-${section} .tab-panel`).forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById(`${section}-${tabId}`)?.classList.add('active');
-}
 
 // ═══ EXTERNAL TOOLS ═══
 const TOOL_URLS={
@@ -3610,147 +3355,6 @@ function closeToolOverlay(){
   document.body.style.overflow = '';
 }
 
-// ═══ VIEWER ═══
-const DOCS={
-  'sdra-ventilation':{type:'ppt',title:'SDRA — Physiopathologie et ventilation',meta:{Auteur:'Dr Dupont',Date:'Janvier 2025',Format:'42 slides',Version:'v3.0'},
-    toc:['Définitions Berlin 2012','Physiopathologie','Objectifs ventilatoires','Paramètres cibles','Décubitus ventral','Curarisation','Conclusion'],
-    slides:[
-      {kind:'slide',eyebrow:'SDRA · SLIDE 1/7',title:'Définition et critères de Berlin 2012',subtitle:'Dr Dupont · Réanimation CHU · Janvier 2025',body:`<div class="slide-section"><div class="slide-section-title">Critères de Berlin</div><div class="slide-point">Début aigu en moins de 7 jours</div><div class="slide-point">Opacités bilatérales non expliquées par épanchement ou atélectasie</div><div class="slide-point">Non expliqué par insuffisance cardiaque ou surcharge</div><div class="slide-point">PaO₂/FiO₂ ≤ 300 mmHg sous PEEP ≥ 5 cmH₂O</div></div><div class="slide-section"><div class="slide-section-title">Classification sévérité</div><div class="slide-two-col"><div><div class="slide-point">Léger : 200 &lt; PaO₂/FiO₂ ≤ 300</div><div class="slide-point">Modéré : 100 &lt; PaO₂/FiO₂ ≤ 200</div><div class="slide-point">Sévère : PaO₂/FiO₂ ≤ 100</div></div><div class="slide-highlight">Mortalité globale ~40% — Bellani JAMA 2016 (n=29 144 patients)</div></div></div>`},
-      {kind:'slide',eyebrow:'SDRA · SLIDE 2/7',title:'Ventilation protectrice — Paramètres cibles',subtitle:'D\'après ARDS Network & SSC 2021',body:`<div class="slide-section"><div class="slide-section-title">Objectifs ventilatoires</div><div class="slide-point">Volume courant : <strong>6 ml/kg</strong> de poids prédit (PP)</div><div class="slide-point">Pression de plateau ≤ 30 cmH₂O</div><div class="slide-point">Pression motrice (ΔP = Pplat − PEEP) ≤ <strong>15 cmH₂O</strong></div><div class="slide-point">PEEP adaptée selon table ARDS-Network (FiO₂/PEEP)</div></div><div class="slide-section"><div class="slide-section-title">Paramètres cibles</div><table class="slide-table"><tr><th>Paramètre</th><th>Objectif</th></tr><tr><td>SpO₂</td><td>88–95%</td></tr><tr><td>PaO₂</td><td>55–80 mmHg</td></tr><tr><td>pH</td><td>> 7.20 (hypercapnie permissive)</td></tr><tr><td>Fréquence</td><td>≤ 35/min</td></tr></table></div>`},
-    ]},
-  'protocole-sedation':{type:'pdf',title:'Protocole sédation-analgésie 2025',meta:{Auteur:'Service Réanimation',Date:'Février 2025',Format:'12 pages',Version:'v4.1 — Validé CODEC'},
-    toc:['Objectifs','Évaluation RASS/CPOT','Objectifs de sédation','Analgésie en 1ère ligne','Propofol vs Midazolam','Protocole sevrage','Delirium — CAM-ICU','Cas particuliers'],
-    slides:[
-      {kind:'pdf',title:'Protocole Sédation-Analgésie — Service de Réanimation',authors:'Service de Réanimation — CHU',journal:'Version 4.1 · Validé Février 2025 · Révision annuelle',content:`<div class="pdf-abstract-title">Objectif du protocole</div><div class="pdf-abstract">Ce protocole définit les modalités d'évaluation et de prise en charge de la sédation, de l'analgésie et du delirium (SAD) au sein du service. Il s'appuie sur les recommandations SRLF/SFAR 2020.</div><div class="pdf-keyword-row"><span class="pdf-keyword">RASS</span><span class="pdf-keyword">CPOT</span><span class="pdf-keyword">Propofol</span><span class="pdf-keyword">Midazolam</span><span class="pdf-keyword">Delirium</span></div><div class="pdf-section-h">1. Évaluation systématique</div><div class="pdf-para">L'évaluation de la sédation est réalisée au minimum toutes les 4 heures et à chaque modification thérapeutique. Elle utilise l'échelle RASS. Objectifs : RASS 0 à -2 pour sédation légère, RASS -2 à -3 pour sédation profonde dans les premières 48h du SDRA sévère.</div><div class="pdf-section-h">2. Analgésie en première ligne</div><div class="pdf-para">Conformément à la stratégie ASD (Analgésie-Sédation-Delirium), l'analgésie est prioritaire. Le paracétamol IV est administré systématiquement. Les morphiniques IV sont utilisés en titration selon le score CPOT (objectif CPOT &lt; 3).</div>`},
-      {kind:'pdf',title:'Protocole Sédation-Analgésie — Page 2',authors:'Service de Réanimation — CHU',journal:'Version 4.1 · Février 2025',content:`<div class="pdf-section-h">3. Choix de l'agent hypnotique</div><div class="pdf-para">Le propofol est l'agent de première intention pour les sédations courtes (&lt; 72h). Posologie titrée entre 0.5 et 4 mg/kg/h selon l'objectif RASS. Surveillance des triglycérides et CPK au-delà de 48h. Le midazolam est réservé aux contre-indications au propofol ou aux sédations prolongées.</div><div class="pdf-section-h">4. Protocole de sevrage</div><div class="pdf-para">Le sevrage débute dès que la cause de la sédation est contrôlée. Une épreuve de réveil quotidienne (DIS) est réalisée chaque matin. Objectif : RASS entre 0 et -1 dans les 4 heures suivant l'arrêt des hypnotiques.</div><div class="pdf-section-h">5. Prévention du delirium</div><div class="pdf-para">Dépistage par CAM-ICU deux fois par 24h. Mesures non pharmacologiques prioritaires : réorientation, mobilisation précoce, respect du cycle circadien. L'halopéridol ou la dexmedetomidine peuvent être utilisés selon les recommandations SSC 2021.</div>`},
-    ]},
-  'ventilation-sdra':{type:'pdf',title:'NEJM — Ventilation protectrice en SDRA 2024',meta:{Auteur:'Fan E. et al.',Date:'Février 2025',Journal:'N Engl J Med 2024',DOI:'10.1056/NEJMra2305898'},
-    toc:['Abstract','Introduction','Tidal volume & Driving pressure','PEEP optimale','Décubitus ventral','Curarisation','Nouvelles approches'],
-    slides:[
-      {kind:'pdf',title:'Mechanical Ventilation in ARDS — 2024 Update',authors:'Fan E., Del Sorbo L., Goligher E.C. et al.',journal:'N Engl J Med 2024 · Vol. 391, pp. 256-271',content:`<div class="pdf-abstract-title">Abstract</div><div class="pdf-abstract">ARDS affects ~10% of ICU patients worldwide, with mortality between 30–45% depending on severity. This review summarizes current evidence for protective mechanical ventilation, including low tidal volume, PEEP selection, prone positioning, and neuromuscular blockade, incorporating findings from the most recent RCTs through 2023.</div><div class="pdf-keyword-row"><span class="pdf-keyword">ARDS</span><span class="pdf-keyword">Mechanical ventilation</span><span class="pdf-keyword">Prone positioning</span><span class="pdf-keyword">PEEP</span><span class="pdf-keyword">NMB</span></div><div class="pdf-section-h">Tidal Volume & Driving Pressure</div><div class="pdf-para">Low tidal volume (6 mL/kg PBW) remains the cornerstone of lung-protective ventilation. Beyond tidal volume, driving pressure (Pplat − PEEP) has emerged as a stronger predictor of mortality. A driving pressure ≤ 15 cmH₂O is associated with improved survival in observational studies. Prospective validation of driving-pressure-guided ventilation is ongoing.</div><div class="pdf-section-h">PEEP Selection</div><div class="pdf-para">Optimal PEEP remains debated. The ARDS Network table provides a pragmatic approach. Individualized PEEP titration using esophageal pressure measurement or electrical impedance tomography may optimize respiratory mechanics, though evidence for mortality benefit is limited. Higher PEEP improves oxygenation but may cause hemodynamic compromise in some patients.</div>`},
-    ]},
-  'choc-septique-ppt':{type:'ppt',title:'Choc septique et vasopresseurs — Staff Jan 2025',meta:{Auteur:'Dr Martin',Date:'Janvier 2025',Format:'22 slides',Type:'Staff bibliographique'},
-    toc:['Définitions Sepsis-3','Physiopathologie','Objectifs PAM','Noradrénaline 1ère ligne','Vasopressine','Comparaison études','Recommandations SSC 2021','Take-home messages'],
-    slides:[
-      {kind:'slide',eyebrow:'SEPSIS · SLIDE 1/8',title:'Choc septique : quel vasopresseur en 2025 ?',subtitle:'Dr Martin · Staff bibliographique · Janvier 2025',body:`<div class="slide-section"><div class="slide-section-title">Rappel Sepsis-3 (Singer JAMA 2016)</div><div class="slide-point">Sepsis : dysfonction d'organe menaçant le pronostic vital secondaire à une réponse inappropriée à une infection</div><div class="slide-point">Choc septique : sepsis + vasopresseurs nécessaires pour PAM ≥ 65 + lactate > 2 mmol/L malgré remplissage</div></div><div class="slide-section"><div class="slide-section-title">Noradrénaline — Premier choix (SSC 2021 — Grade 1B)</div><div class="slide-highlight">Recommandation forte : noradrénaline en première ligne pour le maintien de la PAM ≥ 65 mmHg dans le choc septique</div><div class="slide-point">Vasoconstricteur α1 prédominant avec effet β1 modéré</div><div class="slide-point">Moins d'arythmies que la dopamine — SOAP II (De Backer NEJM 2010)</div></div>`},
-      {kind:'slide',eyebrow:'SEPSIS · SLIDE 2/8',title:'Vasopresseurs adjuvants — Quand les utiliser ?',subtitle:'D\'après SSC 2021 et méta-analyses récentes',body:`<div class="slide-section"><div class="slide-section-title">Vasopressine (ADH)</div><div class="slide-point">Indication : doses de noradrénaline > 0.25–0.5 μg/kg/min (Grade 2B)</div><div class="slide-point">Efficacité similaire à la noradrénaline sur la PAM</div><div class="slide-point">VASST Trial (Russell NEJM 2008) : pas de réduction de mortalité globale mais bénéfice dans le sous-groupe moins sévère</div></div><div class="slide-section"><div class="slide-section-title">Adrénaline</div><div class="slide-point">Réservée en 3ème ligne ou choc réfractaire</div><div class="slide-point">Attention : augmentation du lactate, effet métabolique</div></div><div class="slide-section"><div class="slide-section-title">Take-home messages</div><div class="slide-highlight">Noradrénaline 1ère ligne → Vasopressine si doses élevées → PAM cible 65 mmHg (sauf vasculaire connu)</div></div>`},
-    ]},
-  'acurasys':{type:'pdf',title:'ACURASYS — The Bottom Line Summary',meta:{Source:'thebottomline.org.uk',Étude:'Papazian — NEJM 2010',Patients:'340',Design:'RCT multicentrique double aveugle'},
-    toc:['The Bottom Line','Design & Population','Primary Outcome','Key Results','Limitations','Our Conclusion'],
-    slides:[
-      {kind:'pdf',title:'ACURASYS Trial — The Bottom Line',authors:'Summary · thebottomline.org.uk',journal:'NEJM 2010 · Papazian JM et al. · n=340 · SDRA sévère (P/F < 150)',content:`<div class="pdf-abstract-title">The Bottom Line</div><div class="pdf-abstract">Cisatracurium infusion for 48 hours in severe ARDS (P/F &lt; 150) significantly reduced 90-day mortality and increased ventilator-free days without increasing weakness. This trial established early NMB as standard care in severe ARDS — though ROSE (2019) did not replicate this benefit under modern light sedation protocols.</div><div class="pdf-keyword-row"><span class="pdf-keyword">ARDS</span><span class="pdf-keyword">Cisatracurium</span><span class="pdf-keyword">NMB</span><span class="pdf-keyword">Mortalité</span><span class="pdf-keyword">Ventilation</span></div><div class="pdf-section-h">Design</div><div class="pdf-para">RCT multicentrique, double aveugle. 340 patients avec SDRA sévère (P/F &lt; 150, PEEP ≥ 5). Randomisation : cisatracurium 37.5 mg/h × 48h vs placebo. Critère principal : mortalité à 90 jours ajustée sur P/F, Pplat, SAPS II.</div><div class="pdf-section-h">Résultats clés</div><div class="pdf-para">Mortalité J90 : 31.6% vs 40.7% (HR 0.68, IC95% 0.48–0.98, p=0.04). Barotraumatisme : 4.0% vs 11.7% (p=0.01). Pas de différence pour la faiblesse acquise en soins intensifs à J28.</div><div class="pdf-section-h">Limites & Contexte</div><div class="pdf-para">L'essai ROSE (2019) sous protocole de sédation légère n'a pas retrouvé de bénéfice sur la mortalité. Le bénéfice de l'ACURASYS pourrait être lié à la réduction de la sédation profonde plutôt qu'à la curarisation per se. Débat en cours sur l'indication.</div>`},
-    ]},
-  'proseva':{type:'pdf',title:'PROSEVA — The Bottom Line Summary',meta:{Source:'thebottomline.org.uk',Étude:'Guérin — NEJM 2013',Patients:'466',Design:'RCT multicentrique'},
-    toc:['Bottom Line','Design','Population','Résultats primaires','Résultats secondaires','Limites','Conclusion'],
-    slides:[
-      {kind:'pdf',title:'PROSEVA Trial — The Bottom Line',authors:'Summary · thebottomline.org.uk',journal:'NEJM 2013 · Guérin C. et al. · n=466 · SDRA sévère',content:`<div class="pdf-abstract-title">The Bottom Line</div><div class="pdf-abstract">Early prone positioning for at least 16 hours per day in severe ARDS (P/F &lt; 150) significantly reduced 28-day and 90-day mortality compared to supine positioning. This is one of the most impactful RCTs in critical care medicine and establishes prone positioning as standard of care in severe ARDS.</div><div class="pdf-keyword-row"><span class="pdf-keyword">ARDS</span><span class="pdf-keyword">Prone</span><span class="pdf-keyword">Décubitus ventral</span><span class="pdf-keyword">Mortalité</span></div><div class="pdf-section-h">Design & Population</div><div class="pdf-para">RCT multicentrique (26 centres ICU, France & Espagne). 466 patients avec SDRA sévère (P/F &lt; 150 sous PEEP ≥ 5 et FiO₂ ≥ 0.6 après 12-24h de ventilation protectrice). DV ≥ 16h/j vs décubitus dorsal. Curarisation autorisée dans les 2 groupes.</div><div class="pdf-section-h">Résultats clés</div><div class="pdf-para">Mortalité J28 : 16.0% vs 32.8% (OR 0.39, IC95% 0.25–0.63, p &lt; 0.001). Mortalité J90 : 23.6% vs 41.0% (p &lt; 0.001). Extubation réussie à J90 : 57.8% vs 38.5%. Nombre d'arrêts cardiaques : 16 vs 31.</div><div class="pdf-section-h">Points forts</div><div class="pdf-para">Essai pragmatique dans des centres expérimentés. Ventilation protectrice dans les 2 groupes (Vt ~6 ml/kg, PEEP élevée). Résultats répliqués dans plusieurs méta-analyses. Base des recommandations SSC 2021 (Grade 1B).</div>`},
-    ]},
-  'andromeda':{type:'pdf',title:'ANDROMEDA-SHOCK — The Bottom Line',meta:{Source:'thebottomline.org.uk',Étude:'Hernandez — JAMA 2019',Patients:'424',Design:'RCT multicentrique'},
-    toc:['Bottom Line','Design','Résultats primaires','Résultats secondaires','Limites','Conclusion'],
-    slides:[
-      {kind:'pdf',title:'ANDROMEDA-SHOCK — The Bottom Line',authors:'Summary · thebottomline.org.uk',journal:'JAMA 2019 · Hernandez G. et al. · n=424 · Choc septique',content:`<div class="pdf-abstract-title">The Bottom Line</div><div class="pdf-abstract">In septic shock, a peripheral capillary refill time (CRT)-targeted resuscitation reduced 28-day mortality compared to lactate-targeted resuscitation (34.9% vs 43.4%), though the primary outcome (organ dysfunction at 72h) was not statistically different. CRT emerges as a simple, bedside tool for guiding resuscitation.</div><div class="pdf-keyword-row"><span class="pdf-keyword">Choc septique</span><span class="pdf-keyword">CRT</span><span class="pdf-keyword">Lactate</span><span class="pdf-keyword">Réanimation</span></div><div class="pdf-section-h">Design</div><div class="pdf-para">RCT multicentrique (5 centres, Chili). 424 patients avec choc septique. Randomisation : stratégie guidée par le temps de recoloration capillaire (TRC &lt; 3s) vs stratégie guidée par la normolactacémie (réduction ≥ 20% toutes les 2h). Critère principal : SOFA score à 72h.</div><div class="pdf-section-h">Résultats</div><div class="pdf-para">Critère principal (SOFA 72h) : 5.6 ± 4.3 vs 5.8 ± 4.2 (p=0.58). Mortalité J28 : 34.9% vs 43.4% (p=0.06). Analyse en sous-groupe : bénéfice surtout dans le sous-groupe cryptic shock. Le groupe CRT a reçu moins de liquides et de vasopresseurs.</div>`},
-    ]},
-  'smart':{type:'pdf',title:'SMART Trial — The Bottom Line',meta:{Source:'thebottomline.org.uk',Étude:'Semler — NEJM 2018',Patients:'15802',Design:'RCT cluster croisé'},
-    toc:['Bottom Line','Design','Résultats primaires','Résultats secondaires','Limites','Conclusion'],
-    slides:[
-      {kind:'pdf',title:'SMART Trial — The Bottom Line',authors:'Summary · thebottomline.org.uk',journal:'NEJM 2018 · Semler MW et al. · n=15 802 · Réanimation',content:`<div class="pdf-abstract-title">The Bottom Line</div><div class="pdf-abstract">In ICU patients, balanced crystalloids (Plasma-Lyte or lactated Ringer's) were associated with lower rates of the composite outcome (death, new renal replacement therapy, or persistent renal dysfunction) compared to normal saline (0.9% NaCl), particularly in patients with sepsis or AKI.</div><div class="pdf-keyword-row"><span class="pdf-keyword">Cristalloïdes</span><span class="pdf-keyword">Plasma-Lyte</span><span class="pdf-keyword">NaCl 0.9%</span><span class="pdf-keyword">Remplissage</span><span class="pdf-keyword">IRA</span></div><div class="pdf-section-h">Design</div><div class="pdf-para">RCT cluster croisé pragmatique. 15 802 patients dans 5 unités de soins intensifs (Vanderbilt). Alternance mensuelle entre cristalloïdes balancés et sérum physiologique. Critère principal composite : décès, TRR ou dysfonction rénale persistante à J30.</div><div class="pdf-section-h">Résultats</div><div class="pdf-para">Critère principal : 14.3% vs 15.4% (OR 0.90, IC95% 0.82–0.99, p=0.04). Décès à J30 : 10.3% vs 11.1% (p=0.06). Effet principalement observé dans les sous-groupes sepsis et traumatisme. Aucune différence sur les effets secondaires.</div>`},
-    ]},
-};
-
-let currentDoc=null,currentPage=0,currentZoom=100;
-
-function openDoc(id){
-  // D'abord vérifier si c'est un PDF à afficher dans le PDF viewer
-  if(PDF_TITLES[id]){
-    openPdfViewer(id);
-    return;
-  }
-  // Sinon utiliser l'ancien viewer pour les démos (PPT/slides simulés)
-  const doc=DOCS[id];
-  if(!doc){alert('Document non disponible en démo.\nEn production, Firebase chargera le fichier réel.');return;}
-  currentDoc=doc;currentPage=0;currentZoom=100;
-  document.getElementById('v-type').textContent=doc.type.toUpperCase();
-  document.getElementById('v-type').className='viewer-doc-type '+doc.type;
-  document.getElementById('v-title').textContent=doc.title;
-  document.getElementById('v-meta').innerHTML=Object.entries(doc.meta).map(([k,v])=>`<span><strong>${k}</strong> : ${v}</span>`).join('');
-  document.getElementById('v-filename').textContent=doc.title.substring(0,55)+(doc.type==='ppt'?'.pptx':'.pdf');
-  document.getElementById('v-zoom').textContent='100%';
-  const toc=document.getElementById('v-toc');
-  toc.innerHTML=doc.toc.map((t,i)=>`<div class="viewer-toc-item ${i===0?'active':''}" onclick="goToPage(${i})" id="toc-${i}"><span class="viewer-toc-num">${String(i+1).padStart(2,'0')}</span>${t}</div>`).join('');
-  renderPage();
-  document.getElementById('viewer-overlay').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-
-function renderPage(){
-  const slide=currentDoc.slides[currentPage]||currentDoc.slides[currentDoc.slides.length-1];
-  const total=currentDoc.toc.length;
-  document.getElementById('v-pageinfo').textContent=`${currentPage+1} / ${total}`;
-  document.getElementById('v-prev').disabled=currentPage===0;
-  document.getElementById('v-next').disabled=currentPage>=currentDoc.slides.length-1;
-  document.querySelectorAll('.viewer-toc-item').forEach((el,i)=>el.classList.toggle('active',i===currentPage));
-  const content=document.getElementById('v-content');
-  const s=currentZoom/100;
-  if(slide.kind==='slide'){
-    content.innerHTML=`<div class="viewer-slide" style="transform:scale(${s});transform-origin:top center">
-      <div class="slide-header"><div class="slide-eyebrow">${slide.eyebrow}</div><div class="slide-title">${slide.title}</div><div class="slide-subtitle">${slide.subtitle||''}</div></div>
-      <div class="slide-body">${slide.body}</div>
-      <div class="slide-footer"><span>Service Réanimation · CHU</span><span>RéaApp v1.0</span></div>
-    </div>`;
-  } else {
-    content.innerHTML=`<div class="pdf-page" style="transform:scale(${s});transform-origin:top center">
-      <div class="pdf-title">${slide.title}</div>
-      <div class="pdf-authors">${slide.authors}</div>
-      <div class="pdf-journal">${slide.journal}</div>
-      ${slide.content}
-    </div>`;
-  }
-}
-
-function changePage(dir){
-  const newPage=currentPage+dir;
-  if(newPage>=0&&newPage<currentDoc.slides.length){currentPage=newPage;renderPage();}
-}
-function goToPage(idx){
-  if(idx<currentDoc.slides.length){currentPage=idx;renderPage();}
-}
-function changeZoom(delta){
-  currentZoom=Math.min(150,Math.max(60,currentZoom+delta));
-  document.getElementById('v-zoom').textContent=currentZoom+'%';
-  renderPage();
-}
-function closeViewer(){
-  document.getElementById('viewer-overlay').classList.remove('open');
-  document.body.style.overflow='';
-}
-function simulateDownload(){
-  alert('En production, ce bouton téléchargera le fichier réel depuis Supabase Storage.\n\nFichier : '+currentDoc.title);
-}
-
-// Keyboard nav
-document.addEventListener('keydown',e=>{
-  if(document.getElementById('tool-overlay').classList.contains('open')){
-    if(e.key==='Escape')closeToolOverlay();
-    return;
-  }
-  if(!document.getElementById('viewer-overlay').classList.contains('open'))return;
-  if(e.key==='ArrowRight'||e.key==='ArrowDown')changePage(1);
-  if(e.key==='ArrowLeft'||e.key==='ArrowUp')changePage(-1);
-  if(e.key==='Escape')closeViewer();
-});
-// ═══ DROPDOWN ═══
-function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('open')}
-document.addEventListener('click',e=>{if(!e.target.closest('.user-chip'))document.getElementById('user-dropdown').classList.remove('open')});
-
-// ═══ UTILS ═══
-function toggleEye(){
-  const i=document.getElementById('input-pass');const e=document.getElementById('eye-btn');
-  i.type=i.type==='password'?'text':'password';e.textContent=i.type==='password'?'👁':'🙈';
-}
-['input-user','input-pass'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()}));
-let clock=document.getElementById('clock');
-function tick(){clock.textContent='● '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
-tick();setInterval(tick,1000);
 </script>
 
 <!-- ========================================== -->
@@ -4210,7 +3814,7 @@ sbClient.auth.onAuthStateChange(async (event, session) => {
 // Charger le profil utilisateur
 async function loadUserProfile(uid) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sbClient
       .from('profiles')
       .select('*')
       .eq('id', uid)
@@ -4222,7 +3826,7 @@ async function loadUserProfile(uid) {
     userRole    = data.role || 'reader';
 
     // MAJ dernière connexion
-    await supabase
+    await sbClient
       .from('profiles')
       .update({ dernier_acces: new Date().toISOString() })
       .eq('id', uid);
@@ -4369,6 +3973,7 @@ function showLoginScreen() {
 function showApp() {
   document.getElementById('login-screen')?.classList.add('hidden');
   document.getElementById('app')?.classList.add('visible');
+  showPage('accueil');
 }
 
 // Log d'activité
@@ -4399,7 +4004,7 @@ async function loadUserNotifications() {
   if (!currentUser) return;
   try {
     // Chargement initial
-    const { data, error } = await supabase
+    const { data, error } = await sbClient
       .from('notifications')
       .select('*')
       .in('destinataire', [currentUser.id, 'all'])
@@ -4413,7 +4018,7 @@ async function loadUserNotifications() {
     renderNotificationsDropdown(data);
 
     // Abonnement Realtime (remplace onSnapshot Firebase)
-    realtimeChannel = supabase
+    realtimeChannel = sbClient
       .channel('notifications-channel')
       .on(
         'postgres_changes',
@@ -4445,7 +4050,7 @@ async function loadUserNotifications() {
 // Rafraîchir les notifications
 async function refreshNotifications() {
   if (!currentUser) return;
-  const { data } = await supabase
+  const { data } = await sbClient
     .from('notifications')
     .select('*')
     .in('destinataire', [currentUser.id, 'all'])
@@ -4526,7 +4131,7 @@ async function createNotification(data) {
 // Marquer une notification comme lue
 async function markAsRead(notifId) {
   try {
-    await supabase
+    await sbClient
       .from('notifications')
       .update({ lu: true })
       .eq('id', notifId);
@@ -4539,7 +4144,7 @@ async function markAsRead(notifId) {
 // Marquer toutes comme lues
 async function markAllAsRead() {
   try {
-    await supabase
+    await sbClient
       .from('notifications')
       .update({ lu: true })
       .in('destinataire', [currentUser.id, 'all'])
@@ -4677,7 +4282,7 @@ const PDF_URLS = {
 };
 
 // Titres des documents PDF
-PDF_TITLES = {
+const PDF_TITLES = {
   'protocole-sedation': 'Protocole sédation-analgésie 2025',
   'delirium': 'Prévention et prise en charge du delirium',
   'sevrage-vm': 'Sevrage de la ventilation mécanique',
@@ -4854,7 +4459,7 @@ function switchTab(section,tabId,btn){
 // openExternalTool defined above
 
 // ═══ VIEWER ═══
-DOCS={
+const DOCS={
   'sdra-ventilation':{type:'ppt',title:'SDRA — Physiopathologie et ventilation',meta:{Auteur:'Dr Dupont',Date:'Janvier 2025',Format:'42 slides',Version:'v3.0'},
     toc:['Définitions Berlin 2012','Physiopathologie','Objectifs ventilatoires','Paramètres cibles','Décubitus ventral','Curarisation','Conclusion'],
     slides:[
@@ -4999,8 +4604,8 @@ function toggleEye(){
   i.type=i.type==='password'?'text':'password';e.textContent=i.type==='password'?'👁':'🙈';
 }
 ['input-user','input-pass'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()}));
-clock=document.getElementById('clock');
-function tick(){clock.textContent='● '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+const clock=document.getElementById('clock');
+function tick(){if(clock)clock.textContent='● '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
 tick();setInterval(tick,1000);
 </script>
 
@@ -5500,7 +5105,7 @@ async function loadDocumentsList(categorie) {
 // Ouvrir un document (depuis Supabase Storage ou URL externe)
 async function openDoc(docId) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sbClient
       .from('documents')
       .select('*')
       .eq('id', docId)
@@ -5581,7 +5186,7 @@ async function startUpload(file, categorie, metadata = {}) {
       actif: true
     };
 
-    const { data, error: dbError } = await supabase
+    const { data, error: dbError } = await sbClient
       .from('documents')
       .insert(docData)
       .select()
@@ -5645,7 +5250,7 @@ async function saveUser(userData) {
   try {
     if (userData.id) {
       // Mise à jour
-      const { error } = await supabase
+      const { error } = await sbClient
         .from('profiles')
         .update({
           nom:   userData.nom,
@@ -5667,7 +5272,7 @@ async function saveUser(userData) {
 
 async function toggleUserStatus(userId, currentStatus) {
   try {
-    const { error } = await supabase
+    const { error } = await sbClient
       .from('profiles')
       .update({ actif: !currentStatus })
       .eq('id', userId);
@@ -5698,7 +5303,7 @@ async function renderUsers() {
   if (!container) return;
   container.innerHTML = '<div style="padding:20px;color:var(--muted)">Chargement...</div>';
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sbClient
       .from('profiles')
       .select('*')
       .order('date_creation', { ascending: false });
@@ -5737,7 +5342,7 @@ async function renderUsers() {
 // Téléchargement simulé (Supabase Storage)
 async function simulateDownload(docId, filename) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sbClient
       .from('documents')
       .select('storage_path, titre, telechargeable')
       .eq('id', docId)
