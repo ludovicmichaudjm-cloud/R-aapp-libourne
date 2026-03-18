@@ -696,41 +696,9 @@ console.log('✅ Supabase initialisé');
         <div class="news-header">
           <span class="news-icon">📢</span>
           <span class="news-title">Actualités & Ajouts récents</span>
-          <span class="news-date">Dernière mise à jour : 11 fév 2025</span>
+          <span class="news-date" id="news-last-update">Chargement…</span>
         </div>
-        <div class="news-items">
-          <div class="news-item" onclick="openDoc('protocole-sedation')">
-            <div class="news-item-header">
-              <span class="news-badge new">NOUVEAU</span>
-              <span class="news-item-title">Protocole sédation-analgésie 2025</span>
-              <span class="news-item-time">il y a 2j</span>
-            </div>
-            <div class="news-item-desc">Mise à jour annuelle du protocole avec les nouvelles recommandations SRLF/SFAR 2020. Version 4.1 disponible.</div>
-          </div>
-          <div class="news-item" onclick="showPage('outils')">
-            <div class="news-item-header">
-              <span class="news-badge new">NOUVEAU</span>
-              <span class="news-item-title">Outil d'adaptation des antibiotiques</span>
-              <span class="news-item-time">il y a 5j</span>
-            </div>
-            <div class="news-item-desc">Calculateur posologique pour 42 molécules selon la fonction rénale et l'EER. Disponible dans Outils Rx.</div>
-          </div>
-          <div class="news-item" onclick="openDoc('bse-reco')">
-            <div class="news-item-header">
-              <span class="news-badge update">MODIFIÉ</span>
-              <span class="news-item-title">Antibiothérapie probabiliste — Version 6.0</span>
-              <span class="news-item-time">il y a 1 sem</span>
-            </div>
-            <div class="news-item-desc">Mise à jour des recommandations avec l'écologie locale. Consultation des antibiogrammes trimestriels.</div>
-          </div>
-          <div class="news-item" onclick="openDoc('ventilation-sdra')">
-            <div class="news-item-header">
-              <span class="news-badge added">AJOUTÉ</span>
-              <span class="news-item-title">NEJM — Ventilation protectrice en SDRA</span>
-              <span class="news-item-time">il y a 1 sem</span>
-            </div>
-            <div class="news-item-desc">Revue 2024 sur les stratégies ventilatoires protectrices. Disponible dans Veille bibliographique.</div>
-          </div>
+        <div class="news-items" id="news-items-list">
         </div>
       </div>
 
@@ -779,52 +747,11 @@ console.log('✅ Supabase initialisé');
       <div class="tab-panel active" id="cours-internes">
         <div class="section-title">Cours internes — Médecins &amp; Internes</div>
         <div class="doc-grid">
-          <div class="doc-card" style="--dc-color:var(--accent2)" onclick="openDoc('sdra-ventilation')"><div class="doc-card-top"><div class="doc-card-thumb">📊<span class="thumb-badge ppt">PPT</span></div><div class="doc-card-info"><div class="doc-card-title">Prise en charge du SDRA — Physiopathologie et ventilation</div><div class="doc-card-meta"><span>Dr Dupont · Jan 2025</span><span>42 slides</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">SDRA</span><span class="doc-tag">Ventilation</span></div><span class="doc-card-open">Ouvrir ↗</span></div></div>
-          <div class="doc-card" style="--dc-color:var(--accent2)" onclick="openDoc('choc-septique-cours')"><div class="doc-card-top"><div class="doc-card-thumb">📄<span class="thumb-badge pdf">PDF</span></div><div class="doc-card-info"><div class="doc-card-title">Choc septique — Diagnostic et stratégie thérapeutique</div><div class="doc-card-meta"><span>Dr Martin · Déc 2024</span><span>28 pages</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">Sepsis</span><span class="doc-tag">Choc</span></div><span class="doc-card-open">Ouvrir ↗</span></div></div>
-          <div class="doc-card" style="--dc-color:var(--accent2)" onclick="openDoc('nutrition-rea')"><div class="doc-card-new">NOUVEAU</div><div class="doc-card-top"><div class="doc-card-thumb">📊<span class="thumb-badge ppt">PPT</span></div><div class="doc-card-info"><div class="doc-card-title">Nutrition en réanimation — ESPEN 2023</div><div class="doc-card-meta"><span>Dr Bernard · Nov 2024</span><span>28 slides</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">Nutrition</span><span class="doc-tag">ESPEN</span></div><span class="doc-card-open">Ouvrir ↗</span></div></div>
-          <div class="doc-card" style="--dc-color:var(--accent2)" onclick="openDoc('antibio-proba')"><div class="doc-card-top"><div class="doc-card-thumb">📄<span class="thumb-badge pdf">PDF</span></div><div class="doc-card-info"><div class="doc-card-title">Antibiothérapie probabiliste en réanimation</div><div class="doc-card-meta"><span>Dr Petit · Oct 2024</span><span>18 pages</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">Antibiotiques</span></div><span class="doc-card-open">Ouvrir ↗</span></div></div>
-          <div class="doc-card" style="--dc-color:var(--accent2)" onclick="openDoc('ira-eer')"><div class="doc-card-top"><div class="doc-card-thumb">📊<span class="thumb-badge ppt">PPT</span></div><div class="doc-card-info"><div class="doc-card-title">Insuffisance rénale aiguë — EER</div><div class="doc-card-meta"><span>Dr Dupont · Sep 2024</span><span>35 slides</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">IRA</span><span class="doc-tag">EER</span></div><span class="doc-card-open">Ouvrir ↗</span></div></div>
         </div>
 
         <!-- VIDÉOS INTERNES -->
         <div class="section-title" style="margin-top:28px">🎬 Vidéos — Cours internes</div>
         <div class="video-grid">
-          <div class="video-card" onclick="openVideo('','Intubation oro-trachéale — Technique et complications')">
-            <div class="video-thumb">
-              <div class="video-thumb-placeholder">
-                <div class="video-play-btn">▶</div>
-                <div class="video-coming">Vidéo à venir</div>
-              </div>
-            </div>
-            <div class="video-info">
-              <div class="video-title">Intubation oro-trachéale — Technique et complications</div>
-              <div class="video-meta"><span>Dr Dupont</span><span>Emplacement réservé</span></div>
-            </div>
-          </div>
-          <div class="video-card" onclick="openVideo('','Décubitus ventral — Procédure pas à pas')">
-            <div class="video-thumb">
-              <div class="video-thumb-placeholder">
-                <div class="video-play-btn">▶</div>
-                <div class="video-coming">Vidéo à venir</div>
-              </div>
-            </div>
-            <div class="video-info">
-              <div class="video-title">Décubitus ventral — Procédure pas à pas</div>
-              <div class="video-meta"><span>Dr Martin</span><span>Emplacement réservé</span></div>
-            </div>
-          </div>
-          <div class="video-card" onclick="openVideo('','Choc septique — Prise en charge initiale')">
-            <div class="video-thumb">
-              <div class="video-thumb-placeholder">
-                <div class="video-play-btn">▶</div>
-                <div class="video-coming">Vidéo à venir</div>
-              </div>
-            </div>
-            <div class="video-info">
-              <div class="video-title">Choc septique — Prise en charge initiale</div>
-              <div class="video-meta"><span>Dr Petit</span><span>Emplacement réservé</span></div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -832,51 +759,11 @@ console.log('✅ Supabase initialisé');
       <div class="tab-panel" id="cours-infirmiers">
         <div class="section-title">Cours infirmiers</div>
         <div class="doc-grid">
-          <div class="doc-card" style="--dc-color:var(--gold)" onclick="openDoc('ventile-surveillance')"><div class="doc-card-new">NOUVEAU</div><div class="doc-card-top"><div class="doc-card-thumb">📄<span class="thumb-badge pdf">PDF</span></div><div class="doc-card-info"><div class="doc-card-title">Surveillance du patient ventilé — Paramètres et alarmes</div><div class="doc-card-meta"><span>Cadre Infirmier · Fév 2025</span><span>14 pages</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">Ventilation</span></div><span class="doc-card-open">Ouvrir ↗</span></div></div>
-          <div class="doc-card" style="--dc-color:var(--gold)" onclick="openDoc('vvc-picc')"><div class="doc-card-top"><div class="doc-card-thumb">📊<span class="thumb-badge ppt">PPT</span></div><div class="doc-card-info"><div class="doc-card-title">Gestion des voies veineuses centrales et PICC</div><div class="doc-card-meta"><span>Cadre Infirmier · Jan 2025</span><span>20 slides</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">VVC</span><span class="doc-tag">PICC</span></div><span class="doc-card-open">Ouvrir ↗</span></div></div>
-          <div class="doc-card" style="--dc-color:var(--gold)" onclick="openDoc('rass-cpot')"><div class="doc-card-top"><div class="doc-card-thumb">📄<span class="thumb-badge pdf">PDF</span></div><div class="doc-card-info"><div class="doc-card-title">Score RASS et CPOT — Évaluation pratique</div><div class="doc-card-meta"><span>Dr Martin · Nov 2024</span><span>10 pages</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">RASS</span><span class="doc-tag">Sédation</span></div><span class="doc-card-open">Ouvrir ↗</span></div></div>
-          <div class="doc-card" style="--dc-color:var(--gold)" onclick="openDoc('drogues-vasoactives')"><div class="doc-card-top"><div class="doc-card-thumb">📊<span class="thumb-badge ppt">PPT</span></div><div class="doc-card-info"><div class="doc-card-title">Drogues vasoactives — Préparation et administration</div><div class="doc-card-meta"><span>Pharmacie + Réa · Oct 2024</span><span>15 slides</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">Vasoactifs</span></div><span class="doc-card-open">Ouvrir ↗</span></div></div>
         </div>
 
         <!-- VIDÉOS INFIRMIERS -->
         <div class="section-title" style="margin-top:28px">🎬 Vidéos — Formation infirmière</div>
         <div class="video-grid">
-          <div class="video-card" onclick="openVideo('','Pose et gestion d\'une voie veineuse centrale')">
-            <div class="video-thumb">
-              <div class="video-thumb-placeholder">
-                <div class="video-play-btn">▶</div>
-                <div class="video-coming">Vidéo à venir</div>
-              </div>
-            </div>
-            <div class="video-info">
-              <div class="video-title">Pose et gestion d'une voie veineuse centrale</div>
-              <div class="video-meta"><span>Cadre Infirmier</span><span>Emplacement réservé</span></div>
-            </div>
-          </div>
-          <div class="video-card" onclick="openVideo('','Aspiration trachéale — Technique stérile')">
-            <div class="video-thumb">
-              <div class="video-thumb-placeholder">
-                <div class="video-play-btn">▶</div>
-                <div class="video-coming">Vidéo à venir</div>
-              </div>
-            </div>
-            <div class="video-info">
-              <div class="video-title">Aspiration trachéale — Technique stérile</div>
-              <div class="video-meta"><span>Cadre Infirmier</span><span>Emplacement réservé</span></div>
-            </div>
-          </div>
-          <div class="video-card" onclick="openVideo('','Préparation des drogues vasoactives')">
-            <div class="video-thumb">
-              <div class="video-thumb-placeholder">
-                <div class="video-play-btn">▶</div>
-                <div class="video-coming">Vidéo à venir</div>
-              </div>
-            </div>
-            <div class="video-info">
-              <div class="video-title">Préparation des drogues vasoactives</div>
-              <div class="video-meta"><span>Pharmacie · Réanimation</span><span>Emplacement réservé</span></div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -900,29 +787,39 @@ console.log('✅ Supabase initialisé');
           <a href="https://www.esicm.org/resources/guidelines-consensus-statements/" target="_blank" rel="noopener" class="ext-card esicm"><div class="ext-card-header"><div class="ext-logo">🇪🇺</div><div class="ext-card-info"><div class="ext-name">ESICM — Guidelines</div><div class="ext-url">esicm.org</div><div class="ext-desc">Guidelines et consensus statements de l'European Society of Intensive Care Medicine. Standards européens de référence.</div></div></div><div class="ext-card-footer"><div class="ext-tags"><span class="ext-tag">ESICM</span><span class="ext-tag">🇪🇺</span><span class="ext-tag">Guidelines</span></div><span class="ext-open">Ouvrir ↗</span></div></a>
           <a href="https://www.sccm.org/clinical-resources/guidelines/guidelines" target="_blank" rel="noopener" class="ext-card sccm"><div class="ext-card-header"><div class="ext-logo">🇺🇸</div><div class="ext-card-info"><div class="ext-name">SCCM — Guidelines</div><div class="ext-url">sccm.org</div><div class="ext-desc">Guidelines de la Society of Critical Care Medicine. Standards américains de référence mondiale en médecine intensive.</div></div></div><div class="ext-card-footer"><div class="ext-tags"><span class="ext-tag">SCCM</span><span class="ext-tag">🇺🇸</span><span class="ext-tag">Guidelines</span></div><span class="ext-open">Ouvrir ↗</span></div></a>
         </div>
+        <!-- BOTTOM LINE — dynamique via Netlify Function -->
         <div class="tbl-strip">
-          <div class="tbl-strip-header"><span class="tbl-strip-logo">📊</span><div><div class="tbl-strip-title">The Bottom Line — Études clés</div><div class="tbl-strip-sub">Cliquer pour lire le résumé</div></div><a href="https://www.thebottomline.org.uk" target="_blank" rel="noopener" class="tbl-strip-link">Voir tout ↗</a></div>
-          <div class="tbl-items">
-            <div class="tbl-item" onclick="openDoc('acurasys')"><div class="tbl-item-dot"></div><span class="tbl-item-text">ACURASYS — Curarisation précoce et mortalité dans le SDRA</span><span class="tbl-item-year">NEJM 2010</span></div>
-            <div class="tbl-item" onclick="openDoc('proseva')"><div class="tbl-item-dot"></div><span class="tbl-item-text">PROSEVA — Décubitus ventral et mortalité dans le SDRA sévère</span><span class="tbl-item-year">NEJM 2013</span></div>
-            <div class="tbl-item" onclick="openDoc('andromeda')"><div class="tbl-item-dot"></div><span class="tbl-item-text">ANDROMEDA-SHOCK — Temps de recoloration vs Lactatémie</span><span class="tbl-item-year">JAMA 2019</span></div>
-            <div class="tbl-item" onclick="openDoc('smart')"><div class="tbl-item-dot"></div><span class="tbl-item-text">SMART — Cristalloïdes balancés vs sérum physiologique</span><span class="tbl-item-year">NEJM 2018</span></div>
+          <div class="tbl-strip-header">
+            <span class="tbl-strip-logo">📊</span>
+            <div>
+              <div class="tbl-strip-title">The Bottom Line — Derniers articles</div>
+              <div class="tbl-strip-sub" id="tbl-sub">Chargement en cours…</div>
+            </div>
+            <a href="https://www.thebottomline.org.uk/category/summaries/icm/" target="_blank" rel="noopener" class="tbl-strip-link">Voir tout ↗</a>
+          </div>
+          <div class="tbl-items" id="biblio-tbl-items">
+            <div class="tbl-item"><div class="tbl-item-dot" style="opacity:.4"></div><span class="tbl-item-text" style="color:var(--muted)">Chargement…</span></div>
           </div>
         </div>
+
+        <!-- CCR — dynamique via Netlify Function -->
         <div class="ccr-strip">
-          <div class="tbl-strip-header"><span class="tbl-strip-logo">🔬</span><div><div class="tbl-strip-title">Critical Care Reviews — Highlights 2024</div><div class="tbl-strip-sub">Dernières publications</div></div><a href="https://criticalcarereviews.com" target="_blank" rel="noopener" class="tbl-strip-link">Voir tout ↗</a></div>
-          <div class="tbl-items">
-            <div class="tbl-item" onclick="openDoc('ccr-2024')"><div class="tbl-item-dot" style="background:var(--accent2)"></div><span class="tbl-item-text">CCR Meeting 2024 — State of the art en réanimation</span><span class="tbl-item-year">2024</span></div>
-            <div class="tbl-item"><div class="tbl-item-dot" style="background:var(--accent2)"></div><span class="tbl-item-text">Sepsis update — Surviving Sepsis Campaign 2024</span><span class="tbl-item-year">2024</span></div>
+          <div class="tbl-strip-header">
+            <span class="tbl-strip-logo">🔬</span>
+            <div>
+              <div class="tbl-strip-title">Critical Care Reviews — RCTs récents</div>
+              <div class="tbl-strip-sub" id="ccr-sub">Chargement en cours…</div>
+            </div>
+            <a href="https://criticalcarereviews.com/latest-evidence/journal-watch" target="_blank" rel="noopener" class="tbl-strip-link">Voir tout ↗</a>
+          </div>
+          <div class="tbl-items" id="biblio-ccr-items">
+            <div class="tbl-item"><div class="tbl-item-dot" style="background:var(--accent2);opacity:.4"></div><span class="tbl-item-text" style="color:var(--muted)">Chargement…</span></div>
           </div>
         </div>
       </div>
       <div class="tab-panel" id="veille-service">
         <div class="section-title">Bibliographie sélectionnée par le service</div>
         <div class="doc-grid">
-          <div class="doc-card" style="--dc-color:var(--purple)" onclick="openDoc('ventilation-sdra')"><div class="doc-card-new">NOUVEAU</div><div class="doc-card-top"><div class="doc-card-thumb">📄<span class="thumb-badge pdf">PDF</span></div><div class="doc-card-info"><div class="doc-card-title">NEJM — Ventilation protectrice en SDRA : revue 2024</div><div class="doc-card-meta"><span>Admin · Fév 2025</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">SDRA</span><span class="doc-tag">NEJM</span></div><span class="doc-card-open">Lire ↗</span></div></div>
-          <div class="doc-card" style="--dc-color:var(--purple)" onclick="openDoc('acurasys')"><div class="doc-card-top"><div class="doc-card-thumb">📄<span class="thumb-badge pdf">PDF</span></div><div class="doc-card-info"><div class="doc-card-title">ACURASYS — TBL Summary · Curarisation en SDRA</div><div class="doc-card-meta"><span>Admin · Jan 2025</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">SDRA</span><span class="doc-tag">NEJM</span></div><span class="doc-card-open">Lire ↗</span></div></div>
-          <div class="doc-card" style="--dc-color:var(--purple)" onclick="openDoc('proseva')"><div class="doc-card-top"><div class="doc-card-thumb">📄<span class="thumb-badge pdf">PDF</span></div><div class="doc-card-info"><div class="doc-card-title">PROSEVA — Décubitus ventral en SDRA sévère</div><div class="doc-card-meta"><span>Admin · Déc 2024</span></div></div></div><div class="doc-card-footer"><div class="doc-card-tags"><span class="doc-tag">SDRA</span><span class="doc-tag">NEJM</span></div><span class="doc-card-open">Lire ↗</span></div></div>
         </div>
       </div>
 
@@ -931,35 +828,6 @@ console.log('✅ Supabase initialisé');
         <div class="section-title">Revues de la littérature — Service de Réanimation</div>
         <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Revues narratives et systématiques rédigées par l'équipe ou sélectionnées pour leur pertinence clinique.</p>
         <div class="doc-grid">
-          <div class="doc-card" style="--dc-color:var(--accent)">
-            <div class="doc-card-top">
-              <div class="doc-card-thumb">📑<span class="thumb-badge pdf">PDF</span></div>
-              <div class="doc-card-info">
-                <div class="doc-card-title">Emplacement réservé — Revue de la littérature</div>
-                <div class="doc-card-meta"><span>À uploader · 2025</span></div>
-              </div>
-            </div>
-            <div class="doc-card-footer">
-              <div class="doc-card-tags"><span class="doc-tag">À venir</span></div>
-              <span class="doc-card-open" style="color:var(--muted)">Bientôt ↗</span>
-            </div>
-          </div>
-          <div class="doc-card" style="--dc-color:var(--accent)">
-            <div class="doc-card-top">
-              <div class="doc-card-thumb">📑<span class="thumb-badge pdf">PDF</span></div>
-              <div class="doc-card-info">
-                <div class="doc-card-title">Emplacement réservé — Revue de la littérature</div>
-                <div class="doc-card-meta"><span>À uploader · 2025</span></div>
-              </div>
-            </div>
-            <div class="doc-card-footer">
-              <div class="doc-card-tags"><span class="doc-tag">À venir</span></div>
-              <span class="doc-card-open" style="color:var(--muted)">Bientôt ↗</span>
-            </div>
-          </div>
-        </div>
-        <div class="info-box" style="margin-top:20px">
-          💡 <strong>Pour ajouter une revue de la littérature</strong> — Uploadez votre PDF sur Supabase Storage puis ajoutez son URL dans le code. L'admin peut également le faire directement depuis l'espace admin.
         </div>
       </div>
     </div>
@@ -982,56 +850,7 @@ console.log('✅ Supabase initialisé');
         <div class="section-title" style="color:var(--urgent)">🚨 Urgences vitales — Accès prioritaire</div>
         <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Protocoles d'urgence à consulter en situation critique. Algorithmes décisionnels rapides.</p>
         <div class="doc-list">
-          <!-- ========== URGENCE: Arrêt cardiaque ========== -->
-          <div class="doc-item" style="border-left:3px solid var(--urgent)" onclick="openDoc('rcp-acr')">
-            <div class="doc-item-icon" style="background:rgba(239,68,68,.15);color:var(--urgent)">🚨</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Réanimation cardio-pulmonaire (RCP) — Algorithme ACR adulte</div>
-              <div class="doc-item-meta">Version 3.5 · Jan 2025 · ERC 2021</div>
-            </div>
-            <span class="doc-item-badge" style="background:rgba(239,68,68,.15);color:var(--urgent);border:1px solid rgba(239,68,68,.3);font-weight:600">VITAL</span>
-          </div>
-          <!-- ========== /URGENCE ========== -->
-
-          <!-- ========== URGENCE: Intubation difficile ========== -->
-          <div class="doc-item" style="border-left:3px solid var(--urgent)" onclick="openDoc('intubation-difficile')">
-            <div class="doc-item-icon" style="background:rgba(239,68,68,.15);color:var(--urgent)">🚨</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Intubation difficile — Algorithme et matériel d'urgence</div>
-              <div class="doc-item-meta">Version 1.8 · Nov 2024 · SFAR 2023</div>
-            </div>
-            <span class="doc-item-badge" style="background:rgba(239,68,68,.15);color:var(--urgent);border:1px solid rgba(239,68,68,.3);font-weight:600">VITAL</span>
-          </div>
-          <!-- ========== /URGENCE ========== -->
-
-          <!-- ========== URGENCE: Choc hémorragique ========== -->
-          <div class="doc-item" style="border-left:3px solid var(--urgent)" onclick="openDoc('choc-hemorragique')">
-            <div class="doc-item-icon" style="background:rgba(239,68,68,.15);color:var(--urgent)">🚨</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Choc hémorragique — Protocole transfusion massive</div>
-              <div class="doc-item-meta">Version 2.0 · Déc 2024</div>
-            </div>
-            <span class="doc-item-badge" style="background:rgba(239,68,68,.15);color:var(--urgent);border:1px solid rgba(239,68,68,.3);font-weight:600">VITAL</span>
-          </div>
-          <!-- ========== /URGENCE ========== -->
-
-          <!-- ========== URGENCE: Bronchospasme ========== -->
-          <!-- PLACEZ ICI VOTRE PROTOCOLE BRONCHOSPASME -->
-          <!-- ========== /URGENCE ========== -->
-
-          <!-- ========== URGENCE: Évènement indésirable transfusionnel ========== -->
-          <!-- PLACEZ ICI VOTRE PROTOCOLE EIT -->
-          <!-- ========== /URGENCE ========== -->
-
-          <!-- ========== URGENCE: Extubation accidentelle ========== -->
-          <!-- PLACEZ ICI VOTRE PROTOCOLE EXTUBATION -->
-          <!-- ========== /URGENCE ========== -->
-
-          <!-- ========== URGENCE: Désaturation brutale ========== -->
-          <!-- PLACEZ ICI VOTRE PROTOCOLE DÉSATURATION -->
-          <!-- ========== /URGENCE ========== -->
-
-        </div>
+</div>
       </div>
 
       <!-- VENTILATION -->
@@ -1039,38 +858,6 @@ console.log('✅ Supabase initialisé');
         <div class="section-title" style="color:var(--ventilation)">💨 Ventilation mécanique</div>
         <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Protocoles médicaux — Réglages et stratégies ventilatoires.</p>
         <div class="doc-list">
-          <div class="doc-item" style="border-left:3px solid var(--ventilation)" onclick="openDoc('vm-sdra')">
-            <div class="doc-item-icon" style="background:rgba(96,165,250,.15);color:var(--ventilation)">💨</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Ventilation mécanique protectrice — SDRA</div>
-              <div class="doc-item-meta">Version 5.0 · Jan 2025</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--ventilation)" onclick="openDoc('vni')">
-            <div class="doc-item-icon" style="background:rgba(96,165,250,.15);color:var(--ventilation)">💨</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Ventilation non invasive (VNI) — Indications et modalités</div>
-              <div class="doc-item-meta">Version 3.1 · Déc 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--ventilation)" onclick="openDoc('sevrage-vm')">
-            <div class="doc-item-icon" style="background:rgba(96,165,250,.15);color:var(--ventilation)">💨</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Sevrage de la ventilation mécanique — Épreuve EVS</div>
-              <div class="doc-item-meta">Version 3.2 · Nov 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--ventilation)" onclick="openDoc('oxygeno')">
-            <div class="doc-item-icon" style="background:rgba(96,165,250,.15);color:var(--ventilation)">💨</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Oxygénothérapie à haut débit (OHD) — Indications</div>
-              <div class="doc-item-meta">Version 2.0 · Oct 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
         </div>
       </div>
 
@@ -1079,70 +866,6 @@ console.log('✅ Supabase initialisé');
         <div class="section-title" style="color:var(--nursing)">🩺 Protocoles de soins infirmiers</div>
         <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Protocoles et procédures autonomes infirmiers — IDE et AS.</p>
         <div class="doc-list">
-          <div class="doc-item" style="border-left:3px solid var(--nursing)" onclick="openDoc('aspiration-tracheale')">
-            <div class="doc-item-icon" style="background:rgba(45,212,191,.15);color:var(--nursing)">🩺</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Aspiration trachéale — Technique stérile</div>
-              <div class="doc-item-meta">Version 3.0 · Fév 2025</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--nursing)" onclick="openDoc('surveillance-ventile')">
-            <div class="doc-item-icon" style="background:rgba(45,212,191,.15);color:var(--nursing)">🩺</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Surveillance du patient ventilé — Paramètres et alarmes</div>
-              <div class="doc-item-meta">Version 2.1 · Jan 2025</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--nursing)" onclick="openDoc('soins-vvc')">
-            <div class="doc-item-icon" style="background:rgba(45,212,191,.15);color:var(--nursing)">🩺</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Soins de cathéters veineux centraux — Pansements</div>
-              <div class="doc-item-meta">Version 4.2 · Déc 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--nursing)" onclick="openDoc('preparation-pse')">
-            <div class="doc-item-icon" style="background:rgba(45,212,191,.15);color:var(--nursing)">🩺</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Préparation des PSE — Drogues vasoactives</div>
-              <div class="doc-item-meta">Version 2.0 · Nov 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--nursing)" onclick="openDoc('sonde-gastrique')">
-            <div class="doc-item-icon" style="background:rgba(45,212,191,.15);color:var(--nursing)">🩺</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Pose de sonde gastrique — Vérification du positionnement</div>
-              <div class="doc-item-meta">Version 1.5 · Oct 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--nursing)" onclick="openDoc('soins-tracheotomie')">
-            <div class="doc-item-icon" style="background:rgba(45,212,191,.15);color:var(--nursing)">🩺</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Soins de trachéotomie — Changement de canule</div>
-              <div class="doc-item-meta">Version 3.1 · Sep 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--nursing)" onclick="openDoc('gestion-alarmes')">
-            <div class="doc-item-icon" style="background:rgba(45,212,191,.15);color:var(--nursing)">🩺</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Gestion des alarmes — Scope, respirateur, PSE</div>
-              <div class="doc-item-meta">Version 2.3 · Août 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--nursing)" onclick="openDoc('hygiene-isolement')">
-            <div class="doc-item-icon" style="background:rgba(45,212,191,.15);color:var(--nursing)">🩺</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Hygiène et isolement — Contact, gouttelettes, air</div>
-              <div class="doc-item-meta">Version 5.0 · Juil 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
         </div>
       </div>
 
@@ -1151,38 +874,6 @@ console.log('✅ Supabase initialisé');
         <div class="section-title" style="color:var(--sedation)">😴 Sédation et analgésie</div>
         <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Protocoles médicaux — Prescription et ajustement par le médecin.</p>
         <div class="doc-list">
-          <div class="doc-item" style="border-left:3px solid var(--sedation)" onclick="openDoc('protocole-sedation')">
-            <div class="doc-item-icon" style="background:rgba(167,139,250,.15);color:var(--sedation)">😴</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Protocole sédation-analgésie 2025</div>
-              <div class="doc-item-meta">Version 4.1 · Fév 2025</div>
-            </div>
-            <span class="doc-item-badge badge-new">NOUVEAU</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--sedation)" onclick="openDoc('delirium')">
-            <div class="doc-item-icon" style="background:rgba(167,139,250,.15);color:var(--sedation)">😴</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Prévention et prise en charge du delirium</div>
-              <div class="doc-item-meta">Version 2.0 · Jan 2025</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--sedation)" onclick="openDoc('sevrage-sedation')">
-            <div class="doc-item-icon" style="background:rgba(167,139,250,.15);color:var(--sedation)">😴</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Sevrage de sédation — Critères RASS et protocole</div>
-              <div class="doc-item-meta">Version 1.2 · Déc 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--sedation)" onclick="openDoc('curarisation-sdra')">
-            <div class="doc-item-icon" style="background:rgba(167,139,250,.15);color:var(--sedation)">😴</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Curarisation en SDRA — Indications et surveillance</div>
-              <div class="doc-item-meta">Version 2.1 · Nov 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
         </div>
       </div>
 
@@ -1191,38 +882,6 @@ console.log('✅ Supabase initialisé');
         <div class="section-title" style="color:var(--coordination)">👥 Procédures d'équipe pluridisciplinaires</div>
         <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Procédures nécessitant une coordination médico-infirmière.</p>
         <div class="doc-list">
-          <div class="doc-item" style="border-left:3px solid var(--coordination)" onclick="openDoc('decubitus')">
-            <div class="doc-item-icon" style="background:rgba(251,146,60,.15);color:var(--coordination)">👥</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Décubitus ventral — Procédure complète et surveillance</div>
-              <div class="doc-item-meta">Version 4.0 · Jan 2025</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--coordination)" onclick="openDoc('pose-vvc')">
-            <div class="doc-item-icon" style="background:rgba(251,146,60,.15);color:var(--coordination)">👥</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Pose de VVC — Technique écho-guidée et asepsie</div>
-              <div class="doc-item-meta">Version 2.2 · Déc 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--coordination)" onclick="openDoc('transfert-intra')">
-            <div class="doc-item-icon" style="background:rgba(251,146,60,.15);color:var(--coordination)">👥</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Transfert intra-hospitalier — Check-list patient critique</div>
-              <div class="doc-item-meta">Version 2.0 · Oct 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--coordination)" onclick="openDoc('ecmo-installation')">
-            <div class="doc-item-icon" style="background:rgba(251,146,60,.15);color:var(--coordination)">👥</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Installation ECMO — Procédure et surveillance initiale</div>
-              <div class="doc-item-meta">Version 1.3 · Sep 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
         </div>
       </div>
 
@@ -1231,62 +890,6 @@ console.log('✅ Supabase initialisé');
         <div class="section-title" style="color:var(--neutral)">📋 Autres protocoles</div>
         <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Nutrition, transfusion, hypothermie, antibiothérapie et autres protocoles spécifiques.</p>
         <div class="doc-list">
-          <div class="doc-item" style="border-left:3px solid var(--medical)" onclick="openDoc('antibio-serv')">
-            <div class="doc-item-icon" style="background:rgba(59,130,246,.15);color:var(--medical)">💊</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Antibiothérapie probabiliste — Recommandations service</div>
-              <div class="doc-item-meta">Version 6.0 · Fév 2025</div>
-            </div>
-            <span class="doc-item-badge badge-new">NOUVEAU</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--medical)" onclick="openDoc('antifongiques-proto')">
-            <div class="doc-item-icon" style="background:rgba(59,130,246,.15);color:var(--medical)">💊</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Antifongiques — Indications et posologies</div>
-              <div class="doc-item-meta">Version 3.0 · Nov 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--medical)" onclick="openDoc('desescalade-atb')">
-            <div class="doc-item-icon" style="background:rgba(59,130,246,.15);color:var(--medical)">💊</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Désescalade antibiotique — Critères et adaptation</div>
-              <div class="doc-item-meta">Version 2.1 · Oct 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--neutral)" onclick="openDoc('nutrition-proto')">
-            <div class="doc-item-icon" style="background:rgba(148,163,184,.15);color:var(--neutral)">📋</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Nutrition entérale et parentérale</div>
-              <div class="doc-item-meta">Version 4.0 · Jan 2025</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--urgent)" onclick="openDoc('transfusion')">
-            <div class="doc-item-icon" style="background:rgba(239,68,68,.15);color:var(--urgent)">🩸</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Transfusion — Seuils et indications en réanimation</div>
-              <div class="doc-item-meta">Version 2.2 · Déc 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--medical)" onclick="openDoc('hypothermie-acr')">
-            <div class="doc-item-icon" style="background:rgba(59,130,246,.15);color:var(--medical)">❄️</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Hypothermie thérapeutique post-ACR</div>
-              <div class="doc-item-meta">Version 1.7 · Nov 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
-          <div class="doc-item" style="border-left:3px solid var(--neutral)" onclick="openDoc('don-organes')">
-            <div class="doc-item-icon" style="background:rgba(148,163,184,.15);color:var(--neutral)">🫀</div>
-            <div class="doc-item-info">
-              <div class="doc-item-title">Don d'organes — Démarche et prise en charge donneur</div>
-              <div class="doc-item-meta">Version 2.5 · Oct 2024</div>
-            </div>
-            <span class="doc-item-badge badge-pdf">PDF</span>
-          </div>
         </div>
       </div>
 
@@ -1294,42 +897,6 @@ console.log('✅ Supabase initialisé');
       <div class="tab-panel" id="protocoles-videos-proto-t">
         <div class="section-title" style="color:var(--media)">🎬 Vidéos explicatives — Protocoles</div>
         <div class="video-grid">
-          <div class="video-card" onclick="openVideo('','Décubitus ventral — Procédure complète en équipe')">
-            <div class="video-thumb">
-              <div class="video-thumb-placeholder">
-                <div class="video-play-btn" style="background:var(--media)">▶</div>
-                <div class="video-coming">Vidéo à venir</div>
-              </div>
-            </div>
-            <div class="video-info">
-              <div class="video-title">Décubitus ventral — Procédure complète en équipe</div>
-              <div class="video-meta"><span>Équipe Réanimation</span><span>Emplacement réservé</span></div>
-            </div>
-          </div>
-          <div class="video-card" onclick="openVideo('','Pose de voie veineuse centrale — Technique écho-guidée')">
-            <div class="video-thumb">
-              <div class="video-thumb-placeholder">
-                <div class="video-play-btn" style="background:var(--media)">▶</div>
-                <div class="video-coming">Vidéo à venir</div>
-              </div>
-            </div>
-            <div class="video-info">
-              <div class="video-title">Pose VVC — Technique écho-guidée</div>
-              <div class="video-meta"><span>Dr Dupont</span><span>Emplacement réservé</span></div>
-            </div>
-          </div>
-          <div class="video-card" onclick="openVideo('','Réanimation cardio-pulmonaire — RCP adulte')">
-            <div class="video-thumb">
-              <div class="video-thumb-placeholder">
-                <div class="video-play-btn" style="background:var(--media)">▶</div>
-                <div class="video-coming">Vidéo à venir</div>
-              </div>
-            </div>
-            <div class="video-info">
-              <div class="video-title">Réanimation cardio-pulmonaire — RCP adulte</div>
-              <div class="video-meta"><span>Équipe Réanimation</span><span>Emplacement réservé</span></div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -1825,86 +1392,77 @@ async function startUpload() {
     const storagePath = `documents/${category}/${fileName}`;
     
     // Upload vers Supabase Storage
-    const storageRef = storage.ref(storagePath);
-    const uploadTask = storageRef.put(selectedFile);
-    
-    // Suivre la progression
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        document.getElementById('upload-progress-bar').style.width = progress + '%';
-        document.getElementById('upload-progress-text').textContent = Math.round(progress) + '%';
-      },
-      (error) => {
-        console.error('Erreur upload:', error);
-        showToast('Erreur lors de l\'upload', 'error');
-        btnUpload.disabled = false;
-        btnUpload.textContent = '📤 Publier le document';
-      },
-      async () => {
-        // Upload terminé
-        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-        
-        // Préparer les métadonnées
-        const tags = document.getElementById('upload-tags').value
-          .split(',')
-          .map(t => t.trim())
-          .filter(t => t);
-        
-        const docData = {
-          titre: title,
-          description: document.getElementById('upload-description').value.trim(),
-          categorie: category,
-          type: ext,
-          taille: selectedFile.size,
-          url: downloadURL,
-          storagePath: storagePath,
-          tags: tags,
-          version: document.getElementById('upload-version').value.trim(),
-          auteur: userProfile.nom,
-          auteur_id: currentUser.id,
-          date_creation: new Date().toISOString(),
-          date_modification: new Date().toISOString(),
-          statut: 'actif',
-          nbVues: 0,
-          nbTelechargements: 0
-        };
-        
-        // Sauvegarder dans Firestore
-        const { data: docRef, error: addErr } = await sbClient.from('documents').insert(docData).select().single(); if(addErr) throw addErr;
-        
-        // Log activité
-        await logActivity('upload_document', {
-          docId: docRef.id,
-          titre: title,
-          categorie: category
-        });
-        
-        // Créer notification pour tous les users
-        await createNotification({
-          type: 'nouveau_document',
-          titre: 'Nouveau document publié',
-          message: `${title}`,
-          icone: '📄',
-          lien: `/documents/${docRef.id}`,
-          destinataire: 'all'
-        });
-        
-        showToast('✅ Document publié avec succès !', 'success');
-        
-        // Reset
-        setTimeout(() => {
-          cancelUpload();
-          btnUpload.disabled = false;
-          btnUpload.textContent = '📤 Publier le document';
-          
-          // Rafraîchir la liste des documents
-          if (typeof loadDocumentsList === 'function') {
-            loadDocumentsList();
-          }
-        }, 1500);
+    document.getElementById('upload-progress-bar').style.width = '0%';
+    document.getElementById('upload-progress-text').textContent = '0%';
+
+    const { error: uploadError } = await sbClient.storage
+      .from(STORAGE_BUCKET)
+      .upload(storagePath, selectedFile, { upsert: false });
+
+    if (uploadError) throw uploadError;
+
+    document.getElementById('upload-progress-bar').style.width = '100%';
+    document.getElementById('upload-progress-text').textContent = '100%';
+
+    // Préparer les métadonnées
+    const tags = document.getElementById('upload-tags').value
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t);
+
+    const docData = {
+      titre: title,
+      description: document.getElementById('upload-description').value.trim(),
+      categorie: category,
+      type: ext,
+      taille: selectedFile.size,
+      storage_path: storagePath,
+      tags: tags,
+      version: document.getElementById('upload-version').value.trim(),
+      auteur: userProfile.nom,
+      auteur_id: currentUser.id,
+      date_creation: new Date().toISOString(),
+      date_modification: new Date().toISOString(),
+      statut: 'actif',
+      nb_vues: 0,
+      nb_telechargements: 0,
+      telechargeable: ['protocoles', 'veille'].includes(category)
+    };
+
+    // Sauvegarder dans Supabase
+    const { data: docRef, error: addErr } = await sbClient.from('documents').insert(docData).select().single();
+    if (addErr) throw addErr;
+
+    // Log activité
+    await logActivity('upload_document', {
+      docId: docRef.id,
+      titre: title,
+      categorie: category
+    });
+
+    // Créer notification pour tous les users
+    await createNotification({
+      type: 'nouveau_document',
+      titre: 'Nouveau document publié',
+      message: `${title}`,
+      icone: '📄',
+      lien: `/documents/${docRef.id}`,
+      destinataire: 'all'
+    });
+
+    showToast('✅ Document publié avec succès !', 'success');
+
+    // Reset
+    setTimeout(() => {
+      cancelUpload();
+      btnUpload.disabled = false;
+      btnUpload.textContent = '📤 Publier le document';
+
+      // Rafraîchir la liste des documents
+      if (typeof loadDocumentsList === 'function') {
+        loadDocumentsList();
       }
-    );
+    }, 1500);
     
   } catch (error) {
     console.error('Erreur:', error);
@@ -2426,9 +1984,11 @@ async function deleteDocument(docId) {
   
   try {
     // Supprimer de Storage
-    await storage.ref(doc.storagePath).delete();
-    
-    // Supprimer de Firestore
+    if (doc.storage_path) {
+      await sbClient.storage.from(STORAGE_BUCKET).remove([doc.storage_path]);
+    }
+
+    // Supprimer de Supabase
     await sbClient.from('documents').delete().eq('id', docId);
     
     await logActivity('delete_document', { docId, titre: doc.titre });
@@ -3787,7 +3347,7 @@ if (document.getElementById('users-list') && userRole === 'superadmin') {
 console.log('✅ Gestionnaire d\'utilisateurs chargé');
 </script>
 
-<!-- ========================================== -->
+<!-- ==========================================
      SUPABASE AUTH — RéaApp
      Copier après supabase-config.html dans le <head>
      ═══════════════════════════════════════════════════════════════ -->
@@ -3974,6 +3534,8 @@ function showApp() {
   document.getElementById('login-screen')?.classList.add('hidden');
   document.getElementById('app')?.classList.add('visible');
   showPage('accueil');
+  loadNewsWidget();
+  if (userRole === 'superadmin') loadUsersList();
 }
 
 // Log d'activité
@@ -3990,8 +3552,69 @@ async function logActivity(action, details = {}) {
   }
 }
 
+// Charger le widget Actualités depuis Supabase
+async function loadNewsWidget() {
+  const container = document.getElementById('news-items-list');
+  const dateEl = document.getElementById('news-last-update');
+  if (!container) return;
+
+  try {
+    const { data: docs, error } = await sbClient
+      .from('documents')
+      .select('id, titre, categorie, description, date_creation, date_modification')
+      .eq('actif', true)
+      .order('date_modification', { ascending: false })
+      .limit(5);
+
+    if (error) throw error;
+
+    if (!docs || !docs.length) {
+      container.innerHTML = '<div class="news-item" style="pointer-events:none"><div class="news-item-header"><span class="news-item-title" style="padding-left:0;color:var(--muted)">Aucun document disponible</span></div></div>';
+      if (dateEl) dateEl.textContent = '';
+      return;
+    }
+
+    if (dateEl) {
+      const latest = new Date(docs[0].date_modification);
+      dateEl.textContent = 'Dernière mise à jour : ' + latest.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    container.innerHTML = docs.map(doc => {
+      const modified = new Date(doc.date_modification);
+      const created  = new Date(doc.date_creation);
+      const isModified = (modified - created) > 86400000;
+      const ageDays    = (Date.now() - modified) / 86400000;
+
+      let badgeClass, badgeLabel;
+      if (isModified)      { badgeClass = 'update'; badgeLabel = 'MODIFIÉ'; }
+      else if (ageDays < 3){ badgeClass = 'new';    badgeLabel = 'NOUVEAU'; }
+      else                 { badgeClass = 'added';  badgeLabel = 'AJOUTÉ';  }
+
+      const timeStr = formatNotificationTime(doc.date_modification);
+      const desc    = doc.description
+        ? doc.description.slice(0, 120) + (doc.description.length > 120 ? '…' : '')
+        : doc.categorie;
+
+      return `
+        <div class="news-item" onclick="openDoc('${doc.id}')">
+          <div class="news-item-header">
+            <span class="news-badge ${badgeClass}">${badgeLabel}</span>
+            <span class="news-item-title">${doc.titre}</span>
+            <span class="news-item-time">${timeStr}</span>
+          </div>
+          <div class="news-item-desc">${desc}</div>
+        </div>`;
+    }).join('');
+
+  } catch (err) {
+    console.error('Erreur chargement actualités:', err);
+    container.innerHTML = '<div class="news-item" style="pointer-events:none"><div class="news-item-header"><span class="news-item-title" style="padding-left:0;color:var(--muted)">Erreur de chargement</span></div></div>';
+  }
+}
+
 console.log('✅ Système d\'authentification Supabase chargé');
 </script>
+<!-- ==========================================
      SUPABASE NOTIFICATIONS — RéaApp
      Copier après supabase-auth.html
      ═══════════════════════════════════════════════════════════════ -->
@@ -5397,6 +5020,98 @@ function navigateTo(page) {
 }
 
 console.log('✅ Utils Supabase chargés');
+</script>
+
+<!-- ═══ BIBLIOGRAPHIE DYNAMIQUE ═══ -->
+<script>
+(function() {
+  'use strict';
+
+  // Appel de la Netlify Function au chargement de la section veille
+  let biblioCalled = false;
+
+  function formatDate(raw) {
+    if (!raw) return '';
+    // ISO datetime → date lisible
+    const d = new Date(raw);
+    if (!isNaN(d)) return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+    return raw;
+  }
+
+  function renderBottomLine(articles, errorMsg) {
+    const container = document.getElementById('biblio-tbl-items');
+    const sub = document.getElementById('tbl-sub');
+    if (!container) return;
+
+    if (errorMsg || !articles || articles.length === 0) {
+      container.innerHTML = `<div class="tbl-item"><div class="tbl-item-dot" style="background:var(--warn);opacity:.6"></div><span class="tbl-item-text" style="color:var(--muted)">Impossible de charger les articles (${errorMsg || 'aucun résultat'}).</span></div>`;
+      if (sub) sub.textContent = 'Erreur de chargement';
+      return;
+    }
+
+    if (sub) sub.textContent = `${articles.length} article${articles.length > 1 ? 's' : ''} — mis à jour maintenant`;
+
+    container.innerHTML = articles.map(a => {
+      const dateStr = formatDate(a.date);
+      const metaStr = [a.author, dateStr].filter(Boolean).join(' · ');
+      return `<div class="tbl-item" onclick="window.open('${a.url}','_blank')" style="cursor:pointer">
+        <div class="tbl-item-dot"></div>
+        <span class="tbl-item-text">${a.title}</span>
+        ${metaStr ? `<span class="tbl-item-year" style="white-space:nowrap">${metaStr}</span>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function renderCCR(items, errorMsg) {
+    const container = document.getElementById('biblio-ccr-items');
+    const sub = document.getElementById('ccr-sub');
+    if (!container) return;
+
+    if (errorMsg || !items || items.length === 0) {
+      container.innerHTML = `<div class="tbl-item"><div class="tbl-item-dot" style="background:var(--accent2);opacity:.4"></div><span class="tbl-item-text" style="color:var(--muted)">Impossible de charger les RCTs (${errorMsg || 'section introuvable'}).</span></div>`;
+      if (sub) sub.textContent = 'Erreur de chargement';
+      return;
+    }
+
+    if (sub) sub.textContent = `${items.length} RCT${items.length > 1 ? 's' : ''} — Randomised Controlled Trials`;
+
+    container.innerHTML = items.map(item => {
+      const clickAttr = item.url ? `onclick="window.open('${item.url}','_blank')" style="cursor:pointer"` : '';
+      return `<div class="tbl-item" ${clickAttr}>
+        <div class="tbl-item-dot" style="background:var(--accent2)"></div>
+        <span class="tbl-item-text">${item.title}</span>
+      </div>`;
+    }).join('');
+  }
+
+  async function fetchBiblio() {
+    if (biblioCalled) return;
+    biblioCalled = true;
+    try {
+      const res = await fetch('/.netlify/functions/fetch-biblio');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      renderBottomLine(data.bottomLine, data.bottomLineError);
+      renderCCR(data.ccr, data.ccrError);
+    } catch (err) {
+      renderBottomLine(null, err.message);
+      renderCCR(null, err.message);
+    }
+  }
+
+  // Déclencher au premier affichage de la section veille
+  const originalShowPage = window.showPage;
+  window.showPage = function(id) {
+    if (typeof originalShowPage === 'function') originalShowPage(id);
+    if (id === 'veille') fetchBiblio();
+  };
+
+  // Si la page veille est active au chargement
+  document.addEventListener('DOMContentLoaded', () => {
+    const veillePage = document.getElementById('page-veille');
+    if (veillePage && veillePage.classList.contains('active')) fetchBiblio();
+  });
+})();
 </script>
 
 <!-- CSS toast animation -->
