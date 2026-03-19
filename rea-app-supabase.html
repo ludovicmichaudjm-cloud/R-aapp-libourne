@@ -508,6 +508,7 @@ console.log('✅ Supabase initialisé');
     .pdf-placeholder-title{font-size:18px;font-weight:500;margin-bottom:8px;color:var(--text)}
     .pdf-placeholder-desc{font-size:14px;line-height:1.6;margin-bottom:24px}
     .pdf-placeholder-url{font-size:12px;font-family:var(--mono);background:var(--soft);padding:8px 14px;border-radius:8px;color:var(--accent)}
+    @media(max-width:768px){
       #app.visible{grid-template-columns:1fr;grid-template-rows:56px 1fr}
       .sidebar{display:none}.main{padding:20px 16px}
       .stats-row{grid-template-columns:repeat(2,1fr)}
@@ -683,6 +684,7 @@ console.log('✅ Supabase initialisé');
       <div class="sidebar-label">Administration</div>
       <div class="nav-item admin-nav" data-page="admin" onclick="showPage('admin')"><div class="icon">🔐</div>Espace Admin</div>
       <div class="nav-item admin-nav" data-page="admin-upload" onclick="showPage('admin');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));this.classList.add('active');setTimeout(()=>switchTab('admin','upload',document.querySelector('#tabs-admin button:first-child')),50)"><div class="icon">📤</div>Gestion docs</div>
+      <div class="nav-item admin-nav" id="nav-upload" data-page="upload" onclick="showPage('admin');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));this.classList.add('active');setTimeout(()=>switchTab('admin','upload',document.querySelector('#tabs-admin button:first-child')),50)"><div class="icon">📤</div>Upload</div>
     </div>
     <div class="sidebar-footer"><div style="font-size:11px;font-family:var(--mono);color:var(--muted);text-align:center">RéaApp v1.0 · <span id="sidebar-role-label">—</span></div></div>
   </nav>
