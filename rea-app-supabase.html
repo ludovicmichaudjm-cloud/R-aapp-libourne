@@ -682,6 +682,7 @@ console.log('✅ Supabase initialisé');
     <div class="sidebar-section" id="admin-nav-section" style="display:none">
       <div class="sidebar-label">Administration</div>
       <div class="nav-item admin-nav" data-page="admin" onclick="showPage('admin')"><div class="icon">🔐</div>Espace Admin</div>
+      <div class="nav-item admin-nav" data-page="admin-upload" onclick="showPage('admin');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));this.classList.add('active');setTimeout(()=>switchTab('admin','upload',document.querySelector('#tabs-admin button:first-child')),50)"><div class="icon">📤</div>Gestion docs</div>
     </div>
     <div class="sidebar-footer"><div style="font-size:11px;font-family:var(--mono);color:var(--muted);text-align:center">RéaApp v1.0 · <span id="sidebar-role-label">—</span></div></div>
   </nav>
@@ -691,6 +692,33 @@ console.log('✅ Supabase initialisé');
     <div class="page active" id="page-accueil">
       <div class="page-header"><div class="page-eyebrow">// TABLEAU DE BORD</div><h1 class="page-title" id="greeting">Bonjour</h1><p class="page-sub">Ressources cliniques et outils du service de Réanimation.</p></div>
       
+      <!-- BANDEAU ACCÈS RAPIDE -->
+      <div class="quick-access-banner">
+        <div class="quick-access-title">🏥 Accès rapide</div>
+        <div class="quick-access-grid">
+          <div class="quick-access-card urgent" onclick="showPage('protocoles');setTimeout(()=>switchTab('protocoles','urgences-t',document.querySelector('[onclick*=urgences-t]')),100)">
+            <div class="qa-icon">🚨</div>
+            <div class="qa-label">Urgences</div>
+          </div>
+          <div class="quick-access-card protocols" onclick="showPage('protocoles')">
+            <div class="qa-icon">📋</div>
+            <div class="qa-label">Protocoles</div>
+          </div>
+          <div class="quick-access-card courses" onclick="showPage('cours')">
+            <div class="qa-icon">📚</div>
+            <div class="qa-label">Cours</div>
+          </div>
+          <div class="quick-access-card tools" onclick="showPage('outils')">
+            <div class="qa-icon">⚕️</div>
+            <div class="qa-label">Outils</div>
+          </div>
+          <div class="quick-access-card biblio" onclick="showPage('veille')">
+            <div class="qa-icon">🔬</div>
+            <div class="qa-label">Biblio</div>
+          </div>
+        </div>
+      </div>
+
       <!-- ACTUALITÉS -->
       <div class="news-widget">
         <div class="news-header">
@@ -699,38 +727,6 @@ console.log('✅ Supabase initialisé');
           <span class="news-date" id="news-last-update">Chargement…</span>
         </div>
         <div class="news-items" id="news-items-list">
-        </div>
-      </div>
-
-      <!-- BANDEAU ACCÈS RAPIDE -->
-      <div class="quick-access-banner">
-        <div class="quick-access-title">🏥 Accès rapide</div>
-        <div class="quick-access-grid">
-          <div class="quick-access-card urgent" onclick="showPage('protocoles');setTimeout(()=>switchTab('protocoles','urgences-t',document.querySelector('[onclick*=urgences-t]')),100)">
-            <div class="qa-icon">🚨</div>
-            <div class="qa-label">Urgences</div>
-            <div class="qa-count">3</div>
-          </div>
-          <div class="quick-access-card protocols" onclick="showPage('protocoles')">
-            <div class="qa-icon">📋</div>
-            <div class="qa-label">Protocoles</div>
-            <div class="qa-count">30</div>
-          </div>
-          <div class="quick-access-card courses" onclick="showPage('cours')">
-            <div class="qa-icon">📚</div>
-            <div class="qa-label">Cours</div>
-            <div class="qa-count">12</div>
-          </div>
-          <div class="quick-access-card tools" onclick="showPage('outils')">
-            <div class="qa-icon">⚕️</div>
-            <div class="qa-label">Outils</div>
-            <div class="qa-count">6</div>
-          </div>
-          <div class="quick-access-card biblio" onclick="showPage('veille')">
-            <div class="qa-icon">🔬</div>
-            <div class="qa-label">Biblio</div>
-            <div class="qa-count">5</div>
-          </div>
         </div>
       </div>
     </div>
@@ -1269,6 +1265,9 @@ let selectedFile = null;
 // Initialiser la dropzone
 function initializeDropzone() {
   const dropzone = document.getElementById('dropzone');
+  if (!dropzone) return;
+  if (dropzone.dataset.initialized) return;
+  dropzone.dataset.initialized = 'true';
   const fileInput = document.getElementById('file-input');
   
   // Clic sur la dropzone
@@ -2378,14 +2377,14 @@ function loadRecentDocuments(docs) {
 async function loadRecentActivity() {
   try {
     const { data: logs } = await sbClient.from('activity_logs')
-      .select('*').order('created_at', { ascending: false }).limit(10);
+      .select('*').order('timestamp', { ascending: false }).limit(10);
     const container = document.getElementById('stats-activity');
     if (!container) return;
     if (!logs?.length) { container.innerHTML = '<div class="stats-loading">Aucune activité</div>'; return; }
     const labels = { login: 's\'est connecté', logout: 's\'est déconnecté', upload_document: 'a uploadé un document', edit_document: 'a modifié un document', delete_document: 'a supprimé un document' };
     container.innerHTML = logs.map(log => `
       <div class="activity-item">
-        <div class="activity-time">${new Date(log.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}</div>
+        <div class="activity-time">${new Date(log.timestamp).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}</div>
         <div class="activity-user">${(log.user_email||'').split('@')[0] || 'Utilisateur'}</div>
         <div class="activity-action">${labels[log.action] || log.action}</div>
       </div>`).join('');
@@ -2917,436 +2916,6 @@ function closeToolOverlay(){
 
 </script>
 
-<!-- ========================================== -->
-<!-- FIREBASE UTILS - COPIER ICI LE CONTENU DE supabase-utils.html --><!-- ═══════════════════════════════════════════════════════════════
-     FIREBASE USERS - Gestion des utilisateurs (Super Admin only)
-     À copier dans la page Admin (onglet Utilisateurs)
-     ═══════════════════════════════════════════════════════════════ -->
-
-<!-- HTML -->
-<div id="users-manager" class="users-container" data-superadmin-only>
-  
-  <!-- Bouton ajouter utilisateur -->
-  <div class="users-header">
-    <button onclick="openAddUserModal()" class="btn-primary">➕ Ajouter un utilisateur</button>
-  </div>
-  
-  <!-- Liste des utilisateurs -->
-  <div id="users-list" class="users-list">
-    <div class="users-loading">⏳ Chargement...</div>
-  </div>
-  
-</div>
-
-<!-- Modal ajout/édition utilisateur -->
-<div id="user-modal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 id="user-modal-title">➕ Nouvel utilisateur</h3>
-      <button onclick="closeUserModal()" class="btn-close">✕</button>
-    </div>
-    
-    <div class="modal-body">
-      <input type="hidden" id="edit-user-id">
-      
-      <div class="form-group">
-        <label>Nom complet *</label>
-        <input type="text" id="user-nom" placeholder="Dr. Jean Martin" required>
-      </div>
-      
-      <div class="form-group">
-        <label>Email *</label>
-        <input type="email" id="user-email" placeholder="jean.martin@ch-robert-boulin.fr" required>
-      </div>
-      
-      <div class="form-group" id="password-group">
-        <label>Mot de passe *</label>
-        <input type="password" id="user-password" placeholder="Minimum 6 caractères" minlength="6">
-        <small style="color:var(--muted);font-size:12px">Le mot de passe peut être changé plus tard par l'utilisateur</small>
-      </div>
-      
-      <div class="form-group">
-        <label>Service</label>
-        <input type="text" id="user-service" placeholder="Réanimation" value="Réanimation">
-      </div>
-      
-      <div class="form-group">
-        <label>Rôle *</label>
-        <select id="user-role" required>
-          <option value="reader">👀 Lecteur (consultation uniquement)</option>
-          <option value="admin">🔧 Administrateur (upload + gestion docs)</option>
-          <option value="superadmin">👑 Super Admin (accès complet)</option>
-        </select>
-      </div>
-    </div>
-    
-    <div class="modal-footer">
-      <button onclick="closeUserModal()" class="btn-secondary">Annuler</button>
-      <button onclick="saveUser()" id="btn-save-user" class="btn-primary">💾 Enregistrer</button>
-    </div>
-  </div>
-</div>
-
-<!-- CSS -->
-<style>
-.users-container { max-width: 1000px; margin: 0 auto; }
-
-.users-header {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 24px;
-}
-
-.users-list {
-  display: grid;
-  gap: 16px;
-}
-
-.users-loading {
-  text-align: center;
-  padding: 60px;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.user-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  display: grid;
-  grid-template-columns: 60px 1fr auto;
-  gap: 16px;
-  align-items: center;
-  transition: all 0.2s;
-}
-
-.user-card:hover {
-  border-color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.user-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 700;
-  color: white;
-}
-
-.user-avatar.superadmin {
-  background: linear-gradient(135deg, #f59e0b, #f97316);
-}
-
-.user-avatar.admin {
-  background: linear-gradient(135deg, var(--primary), #60a5fa);
-}
-
-.user-avatar.reader {
-  background: linear-gradient(135deg, #6b7280, #9ca3af);
-}
-
-.user-info { flex: 1; }
-
-.user-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-
-.user-email {
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-
-.user-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.user-role-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.user-role-badge.superadmin {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-}
-
-.user-role-badge.admin {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--primary);
-}
-
-.user-role-badge.reader {
-  background: rgba(107, 114, 128, 0.1);
-  color: #6b7280;
-}
-
-.user-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.user-btn {
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.user-btn:hover {
-  background: var(--hover);
-}
-
-.user-btn.danger:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444;
-  color: #ef4444;
-}
-
-.user-inactive {
-  opacity: 0.5;
-}
-</style>
-
-<!-- JavaScript -->
-<script>
-allUsers = [];
-isEditMode = false;
-
-// Charger la liste des utilisateurs
-async function loadUsersList() {
-  if (userRole !== 'superadmin') {
-    console.log('⚠️ Accès refusé: Super Admin requis');
-    return;
-  }
-  
-  try {
-    const usersListEl = document.getElementById('users-list');
-    usersListEl.innerHTML = '<div class="users-loading">⏳ Chargement...</div>';
-    
-    const { data: usersLoaded, error: usersLoadErr } = await sbClient.from('profiles').select('*').order('nom'); if(usersLoadErr) throw usersLoadErr; allUsers = (usersLoaded||[]).map(u=>({uid:u.id,...u}));
-    
-    renderUsers(allUsers);
-    
-  } catch (error) {
-    console.error('Erreur chargement users:', error);
-    showToast('Erreur de chargement', 'error');
-  }
-}
-
-// Afficher les utilisateurs
-function renderUsers(users) {
-  const usersListEl = document.getElementById('users-list');
-  
-  if (users.length === 0) {
-    usersListEl.innerHTML = '<div class="users-loading">Aucun utilisateur</div>';
-    return;
-  }
-  
-  const roleLabels = {
-    'superadmin': '👑 Super Admin',
-    'admin': '🔧 Administrateur',
-    'reader': '👀 Lecteur'
-  };
-  
-  usersListEl.innerHTML = users.map(user => {
-    const initials = user.nom.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-    const lastAccess = user.dernierAcces?.toDate ? 
-      user.dernier_acces ? new Date(user.dernier_acces).toLocaleDateString('fr-FR') : 'Jamais' : 
-      'Jamais';
-    
-    return `
-      <div class="user-card ${!user.actif ? 'user-inactive' : ''}">
-        <div class="user-avatar ${user.role}">${initials}</div>
-        <div class="user-info">
-          <div class="user-name">${user.nom} ${!user.actif ? '(Désactivé)' : ''}</div>
-          <div class="user-email">${user.email}</div>
-          <div class="user-meta">
-            <span class="user-role-badge ${user.role}">${roleLabels[user.role]}</span>
-            <span>Service: ${user.service || 'N/A'}</span>
-            <span>Dernière connexion: ${lastAccess}</span>
-          </div>
-        </div>
-        <div class="user-actions">
-          <button onclick="editUser('${user.uid}')" class="user-btn">✏️ Modifier</button>
-          <button onclick="toggleUserStatus('${user.uid}', ${!user.actif})" class="user-btn">
-            ${user.actif ? '⏸ Désactiver' : '▶️ Activer'}
-          </button>
-          ${user.id !== currentUser.id ? `
-            <button onclick="deleteUser('${user.uid}')" class="user-btn danger">🗑 Supprimer</button>
-          ` : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-// Ouvrir modal ajout
-function openAddUserModal() {
-  isEditMode = false;
-  document.getElementById('user-modal-title').textContent = '➕ Nouvel utilisateur';
-  document.getElementById('edit-user-id').value = '';
-  document.getElementById('user-nom').value = '';
-  document.getElementById('user-email').value = '';
-  document.getElementById('user-password').value = '';
-  document.getElementById('user-service').value = 'Réanimation';
-  document.getElementById('user-role').value = 'reader';
-  document.getElementById('password-group').style.display = 'block';
-  document.getElementById('user-modal').classList.add('open');
-}
-
-// Éditer utilisateur
-function editUser(uid) {
-  const user = allUsers.find(u => u.uid === uid);
-  if (!user) return;
-  
-  isEditMode = true;
-  document.getElementById('user-modal-title').textContent = '✏️ Modifier l\'utilisateur';
-  document.getElementById('edit-user-id').value = uid;
-  document.getElementById('user-nom').value = user.nom;
-  document.getElementById('user-email').value = user.email;
-  document.getElementById('user-service').value = user.service || '';
-  document.getElementById('user-role').value = user.role;
-  document.getElementById('password-group').style.display = 'none'; // Pas de changement de MDP en édition
-  document.getElementById('user-modal').classList.add('open');
-}
-
-// Fermer modal
-function closeUserModal() {
-  document.getElementById('user-modal').classList.remove('open');
-}
-
-// Sauvegarder utilisateur
-async function saveUser() {
-  const nom = document.getElementById('user-nom').value.trim();
-  const email = document.getElementById('user-email').value.trim();
-  const password = document.getElementById('user-password').value;
-  const service = document.getElementById('user-service').value.trim();
-  const role = document.getElementById('user-role').value;
-  
-  if (!nom || !email || (!isEditMode && !password)) {
-    showToast('Veuillez remplir tous les champs obligatoires', 'error');
-    return;
-  }
-  
-  const btnSave = document.getElementById('btn-save-user');
-  btnSave.disabled = true;
-  btnSave.textContent = '⏳ Enregistrement...';
-  
-  try {
-    if (isEditMode) {
-      // Mise à jour
-      const uid = document.getElementById('edit-user-id').value;
-      await sbClient.from('profiles').update({
-        nom,
-        service,
-        role
-      });
-      
-      showToast('✅ Utilisateur modifié', 'success');
-      
-    } else {
-      // Création (NÉCESSITE CLOUD FUNCTION)
-      // ⚠️ La création d'utilisateurs Firebase Auth ne peut se faire que côté serveur
-      // Pour l'instant, on crée juste le document Firestore
-      // L'utilisateur devra être créé manuellement dans Supabase Console
-      
-      showToast('⚠️ Création manuelle requise', 'warning');
-      alert(`Pour créer cet utilisateur :
-      
-1. Allez dans Supabase Console → Authentication
-2. Ajoutez l'utilisateur avec :
-   - Email: ${email}
-   - Mot de passe: ${password}
-3. Copiez l'UID généré
-4. Créez le document dans Firestore :
-   Collection: users
-   Document ID: [UID copié]
-   Données: nom, email, service, role, actif=true
-      
-OU configurez une Cloud Function pour automatiser ceci.`);
-    }
-    
-    await logActivity(isEditMode ? 'edit_user' : 'create_user', { nom, email, role });
-    
-    closeUserModal();
-    loadUsersList();
-    
-  } catch (error) {
-    console.error('Erreur sauvegarde user:', error);
-    showToast('Erreur d\'enregistrement', 'error');
-  } finally {
-    btnSave.disabled = false;
-    btnSave.textContent = '💾 Enregistrer';
-  }
-}
-
-// Activer/désactiver utilisateur
-async function toggleUserStatus(uid, activate) {
-  try {
-    await sbClient.from('profiles').update({
-      actif: activate
-    });
-    
-    showToast(`✅ Utilisateur ${activate ? 'activé' : 'désactivé'}`, 'success');
-    loadUsersList();
-    
-  } catch (error) {
-    console.error('Erreur:', error);
-    showToast('Erreur', 'error');
-  }
-}
-
-// Supprimer utilisateur
-async function deleteUser(uid) {
-  const user = allUsers.find(u => u.uid === uid);
-  if (!user) return;
-  
-  if (!confirm(`Supprimer l'utilisateur "${user.nom}" ?\n\n⚠️ ATTENTION : Vous devrez également désactiver manuellement cet utilisateur dans la Supabase Console → Authentication.`)) {
-    return;
-  }
-  
-  try {
-    await sbClient.from('profiles').delete().eq('id', uid);
-    
-    showToast('✅ Document utilisateur supprimé (supprimez aussi dans Auth)', 'success');
-    loadUsersList();
-    
-  } catch (error) {
-    console.error('Erreur suppression:', error);
-    showToast('Erreur de suppression', 'error');
-  }
-}
-
-// Charger au démarrage
-if (document.getElementById('users-list') && userRole === 'superadmin') {
-  loadUsersList();
-}
-
-console.log('✅ Gestionnaire d\'utilisateurs chargé');
-</script>
-
 <!-- ==========================================
      SUPABASE AUTH — RéaApp
      Copier après supabase-config.html dans le <head>
@@ -3536,6 +3105,7 @@ function showApp() {
   showPage('accueil');
   loadNewsWidget();
   if (userRole === 'superadmin') loadUsersList();
+  initializeDropzone();
 }
 
 // Log d'activité
@@ -4233,429 +3803,6 @@ tick();setInterval(tick,1000);
 </script>
 
 <!-- ========================================== -->
-<!-- FIREBASE UTILS - COPIER ICI LE CONTENU DE supabase-utils.html --><!-- ═══════════════════════════════════════════════════════════════
-     FIREBASE USERS - Gestion des utilisateurs (Super Admin only)
-     À copier dans la page Admin (onglet Utilisateurs)
-     ═══════════════════════════════════════════════════════════════ -->
-
-<!-- HTML -->
-<div id="users-manager" class="users-container" data-superadmin-only>
-  
-  <!-- Bouton ajouter utilisateur -->
-  <div class="users-header">
-    <button onclick="openAddUserModal()" class="btn-primary">➕ Ajouter un utilisateur</button>
-  </div>
-  
-  <!-- Liste des utilisateurs -->
-  <div id="users-list" class="users-list">
-    <div class="users-loading">⏳ Chargement...</div>
-  </div>
-  
-</div>
-
-<!-- Modal ajout/édition utilisateur -->
-<div id="user-modal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 id="user-modal-title">➕ Nouvel utilisateur</h3>
-      <button onclick="closeUserModal()" class="btn-close">✕</button>
-    </div>
-    
-    <div class="modal-body">
-      <input type="hidden" id="edit-user-id">
-      
-      <div class="form-group">
-        <label>Nom complet *</label>
-        <input type="text" id="user-nom" placeholder="Dr. Jean Martin" required>
-      </div>
-      
-      <div class="form-group">
-        <label>Email *</label>
-        <input type="email" id="user-email" placeholder="jean.martin@ch-robert-boulin.fr" required>
-      </div>
-      
-      <div class="form-group" id="password-group">
-        <label>Mot de passe *</label>
-        <input type="password" id="user-password" placeholder="Minimum 6 caractères" minlength="6">
-        <small style="color:var(--muted);font-size:12px">Le mot de passe peut être changé plus tard par l'utilisateur</small>
-      </div>
-      
-      <div class="form-group">
-        <label>Service</label>
-        <input type="text" id="user-service" placeholder="Réanimation" value="Réanimation">
-      </div>
-      
-      <div class="form-group">
-        <label>Rôle *</label>
-        <select id="user-role" required>
-          <option value="reader">👀 Lecteur (consultation uniquement)</option>
-          <option value="admin">🔧 Administrateur (upload + gestion docs)</option>
-          <option value="superadmin">👑 Super Admin (accès complet)</option>
-        </select>
-      </div>
-    </div>
-    
-    <div class="modal-footer">
-      <button onclick="closeUserModal()" class="btn-secondary">Annuler</button>
-      <button onclick="saveUser()" id="btn-save-user" class="btn-primary">💾 Enregistrer</button>
-    </div>
-  </div>
-</div>
-
-<!-- CSS -->
-<style>
-.users-container { max-width: 1000px; margin: 0 auto; }
-
-.users-header {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 24px;
-}
-
-.users-list {
-  display: grid;
-  gap: 16px;
-}
-
-.users-loading {
-  text-align: center;
-  padding: 60px;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.user-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  display: grid;
-  grid-template-columns: 60px 1fr auto;
-  gap: 16px;
-  align-items: center;
-  transition: all 0.2s;
-}
-
-.user-card:hover {
-  border-color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.user-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 700;
-  color: white;
-}
-
-.user-avatar.superadmin {
-  background: linear-gradient(135deg, #f59e0b, #f97316);
-}
-
-.user-avatar.admin {
-  background: linear-gradient(135deg, var(--primary), #60a5fa);
-}
-
-.user-avatar.reader {
-  background: linear-gradient(135deg, #6b7280, #9ca3af);
-}
-
-.user-info { flex: 1; }
-
-.user-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-
-.user-email {
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-
-.user-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.user-role-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.user-role-badge.superadmin {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-}
-
-.user-role-badge.admin {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--primary);
-}
-
-.user-role-badge.reader {
-  background: rgba(107, 114, 128, 0.1);
-  color: #6b7280;
-}
-
-.user-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.user-btn {
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.user-btn:hover {
-  background: var(--hover);
-}
-
-.user-btn.danger:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444;
-  color: #ef4444;
-}
-
-.user-inactive {
-  opacity: 0.5;
-}
-</style>
-
-<!-- JavaScript -->
-<script>
-allUsers = [];
-isEditMode = false;
-
-// Charger la liste des utilisateurs
-async function loadUsersList() {
-  if (userRole !== 'superadmin') {
-    console.log('⚠️ Accès refusé: Super Admin requis');
-    return;
-  }
-  
-  try {
-    const usersListEl = document.getElementById('users-list');
-    if(usersListEl) usersListEl.innerHTML = '<div class="users-loading">⏳ Chargement...</div>';
-    const { data, error } = await sbClient.from('profiles').select('*').order('nom');
-    if(error) throw error;
-    allUsers = (data || []).map(u => ({...u, uid: u.id}));
-    
-    renderUsers(allUsers);
-    
-  } catch (error) {
-    console.error('Erreur chargement users:', error);
-    showToast('Erreur de chargement', 'error');
-  }
-}
-
-// Afficher les utilisateurs
-function renderUsers(users) {
-  const usersListEl = document.getElementById('users-list');
-  
-  if (users.length === 0) {
-    usersListEl.innerHTML = '<div class="users-loading">Aucun utilisateur</div>';
-    return;
-  }
-  
-  const roleLabels = {
-    'superadmin': '👑 Super Admin',
-    'admin': '🔧 Administrateur',
-    'reader': '👀 Lecteur'
-  };
-  
-  usersListEl.innerHTML = users.map(user => {
-    const initials = user.nom.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-    const lastAccess = user.dernier_acces ? new Date(user.dernier_acces).toLocaleDateString('fr-FR') : 'Jamais';
-    
-    return `
-      <div class="user-card ${!user.actif ? 'user-inactive' : ''}">
-        <div class="user-avatar ${user.role}">${initials}</div>
-        <div class="user-info">
-          <div class="user-name">${user.nom} ${!user.actif ? '(Désactivé)' : ''}</div>
-          <div class="user-email">${user.email}</div>
-          <div class="user-meta">
-            <span class="user-role-badge ${user.role}">${roleLabels[user.role]}</span>
-            <span>Service: ${user.service || 'N/A'}</span>
-            <span>Dernière connexion: ${lastAccess}</span>
-          </div>
-        </div>
-        <div class="user-actions">
-          <button onclick="editUser('${user.uid}')" class="user-btn">✏️ Modifier</button>
-          <button onclick="toggleUserStatus('${user.uid}', ${!user.actif})" class="user-btn">
-            ${user.actif ? '⏸ Désactiver' : '▶️ Activer'}
-          </button>
-          ${user.uid !== currentUser.uid ? `
-            <button onclick="deleteUser('${user.uid}')" class="user-btn danger">🗑 Supprimer</button>
-          ` : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-// Ouvrir modal ajout
-function openAddUserModal() {
-  isEditMode = false;
-  document.getElementById('user-modal-title').textContent = '➕ Nouvel utilisateur';
-  document.getElementById('edit-user-id').value = '';
-  document.getElementById('user-nom').value = '';
-  document.getElementById('user-email').value = '';
-  document.getElementById('user-password').value = '';
-  document.getElementById('user-service').value = 'Réanimation';
-  document.getElementById('user-role').value = 'reader';
-  document.getElementById('password-group').style.display = 'block';
-  document.getElementById('user-modal').classList.add('open');
-}
-
-// Éditer utilisateur
-function editUser(uid) {
-  const user = allUsers.find(u => u.uid === uid);
-  if (!user) return;
-  
-  isEditMode = true;
-  document.getElementById('user-modal-title').textContent = '✏️ Modifier l\'utilisateur';
-  document.getElementById('edit-user-id').value = uid;
-  document.getElementById('user-nom').value = user.nom;
-  document.getElementById('user-email').value = user.email;
-  document.getElementById('user-service').value = user.service || '';
-  document.getElementById('user-role').value = user.role;
-  document.getElementById('password-group').style.display = 'none'; // Pas de changement de MDP en édition
-  document.getElementById('user-modal').classList.add('open');
-}
-
-// Fermer modal
-function closeUserModal() {
-  document.getElementById('user-modal').classList.remove('open');
-}
-
-// Sauvegarder utilisateur
-async function saveUser() {
-  const nom = document.getElementById('user-nom').value.trim();
-  const email = document.getElementById('user-email').value.trim();
-  const password = document.getElementById('user-password').value;
-  const service = document.getElementById('user-service').value.trim();
-  const role = document.getElementById('user-role').value;
-  
-  if (!nom || !email || (!isEditMode && !password)) {
-    showToast('Veuillez remplir tous les champs obligatoires', 'error');
-    return;
-  }
-  
-  const btnSave = document.getElementById('btn-save-user');
-  btnSave.disabled = true;
-  btnSave.textContent = '⏳ Enregistrement...';
-  
-  try {
-    if (isEditMode) {
-      const uid = document.getElementById('edit-user-id').value;
-      const { error } = await sbClient.from('profiles').update({ nom, role }).eq('id', uid);
-      if(error) throw error;
-      
-      showToast('✅ Utilisateur modifié', 'success');
-      
-    } else {
-      // Création (NÉCESSITE CLOUD FUNCTION)
-      // ⚠️ La création d'utilisateurs Supabase Auth ne peut se faire que côté serveur
-      // Pour l'instant, on crée juste le document Supabase DB
-      // L'utilisateur devra être créé manuellement dans Supabase Console
-      
-      showToast('⚠️ Création manuelle requise', 'warning');
-      alert(`Pour créer cet utilisateur :\n\n1. Allez dans Supabase Console → Authentication
-2. Ajoutez l'utilisateur avec :
-   - Email: ${email}
-   - Mot de passe: ${password}
-3. Copiez l'UID généré
-4. Créez le document dans Supabase DB :
-   Collection: users
-   Document ID: [UID copié]
-   Données: nom, email, service, role, actif=true
-      
-OU configurez une Cloud Function pour automatiser ceci.`);
-    }
-    
-    await logActivity(isEditMode ? 'edit_user' : 'create_user', { nom, email, role });
-    
-    closeUserModal();
-    loadUsersList();
-    
-  } catch (error) {
-    console.error('Erreur sauvegarde user:', error);
-    showToast('Erreur d\'enregistrement', 'error');
-  } finally {
-    btnSave.disabled = false;
-    btnSave.textContent = '💾 Enregistrer';
-  }
-}
-
-// Activer/désactiver utilisateur
-async function toggleUserStatus(uid, activate) {
-  try {
-    const { error } = await sbClient.from('profiles').update({ actif: activate }).eq('id', uid);
-    if(error) throw error;
-    
-    showToast(`✅ Utilisateur ${activate ? 'activé' : 'désactivé'}`, 'success');
-    loadUsersList();
-    
-  } catch (error) {
-    console.error('Erreur:', error);
-    showToast('Erreur', 'error');
-  }
-}
-
-// Supprimer utilisateur
-async function deleteUser(uid) {
-  const user = allUsers.find(u => u.uid === uid);
-  if (!user) return;
-  
-  if (!confirm(`Supprimer l'utilisateur "${user.nom}" ?\n\n⚠️ ATTENTION : Vous devrez également supprimer manuellement cet utilisateur de Supabase Authentication dans la console Firebase.`)) {
-    return;
-  }
-  
-  try {
-    const { error } = await sbClient.from('profiles').delete().eq('id', uid);
-    if(error) throw error;
-    
-    showToast('✅ Document utilisateur supprimé (supprimez aussi dans Auth)', 'success');
-    loadUsersList();
-    
-  } catch (error) {
-    console.error('Erreur suppression:', error);
-    showToast('Erreur de suppression', 'error');
-  }
-}
-
-// Charger au démarrage
-if (document.getElementById('users-list') && userRole === 'superadmin') {
-  loadUsersList();
-}
-
-console.log('✅ Gestionnaire d\'utilisateurs chargé');
-</script>
-
-<!-- ========================================== -->
 
 <script>
 // ═══ UTILS SUPABASE ═══
@@ -4843,7 +3990,7 @@ async function loadStats() {
     const [docsResult, usersResult, logsResult] = await Promise.all([
       sbClient.from('documents').select('id, categorie, nb_vues, date_creation').eq('actif', true),
       sbClient.from('profiles').select('id, role, actif'),
-      sbClient.from('activity_logs').select('id, action, created_at').gte('created_at',
+      sbClient.from('activity_logs').select('id, action, timestamp').gte('timestamp',
         new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
     ]);
 
